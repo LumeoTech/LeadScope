@@ -2,6 +2,7 @@ package com.crmscanner.crm.controller;
 
 import com.crmscanner.auth.entity.User;
 import com.crmscanner.crm.dto.*;
+import com.crmscanner.crm.service.DailyAutoLeadScannerService;
 import com.crmscanner.crm.service.LeadService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -26,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 public class LeadController {
 
     private final LeadService leadService;
+    private final DailyAutoLeadScannerService dailyAutoLeadScannerService;
 
     @GetMapping
     @Operation(summary = "Listar leads", description = "Busca paginada com filtros (vendedores visualizam apenas suas próprias oportunidades)")
@@ -148,5 +150,17 @@ public class LeadController {
                 "processed", count,
                 "message", "Agente executado com sucesso! " + count + " leads qualificados com AI score, chance de aceite e potencial de mercado."
         ));
+    }
+
+    @PostMapping("/auto-scan-daily")
+    @Operation(summary = "Busca diária de 10 leads", description = "Executa a rotina de prospecção autônoma que descobre e insere 10 novos leads qualificados")
+    public ResponseEntity<java.util.List<LeadResponse>> autoScanDaily(@AuthenticationPrincipal User currentUser) {
+        return ResponseEntity.ok(dailyAutoLeadScannerService.scanAndGenerateDailyLeads(10, currentUser));
+    }
+
+    @GetMapping("/auto-scan-status")
+    @Operation(summary = "Status da busca diária", description = "Retorna o status atual da rotina de 10 leads por dia")
+    public ResponseEntity<DailyAutoLeadScannerService.DailyScanStatus> getDailyScanStatus() {
+        return ResponseEntity.ok(dailyAutoLeadScannerService.getDailyScanStatus());
     }
 }

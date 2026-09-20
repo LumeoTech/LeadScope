@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { api, Lead, LeadStatus, Company, UserInfo } from '../services/api';
+import { api, Lead, LeadStatus, Company, UserInfo, DailyScanStatus } from '../services/api';
 import { LeadDetailsModal } from '../components/LeadDetailsModal';
 import { getUserTheme } from '../utils/userColors';
 import {
@@ -30,7 +30,8 @@ import {
   Check,
   Filter as FilterIcon,
   Columns,
-  Bot
+  Bot,
+  Zap
 } from 'lucide-react';
 
 export const KanbanView: React.FC = () => {
@@ -44,6 +45,8 @@ export const KanbanView: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
   const [leadScope, setLeadScope] = useState<'MY' | 'ALL'>('ALL');
   const [runningAgent, setRunningAgent] = useState(false);
+  const [dailyScanStatus, setDailyScanStatus] = useState<DailyScanStatus | null>(null);
+  const [runningDailyScan, setRunningDailyScan] = useState(false);
 
   // View Mode: Table (default like Uxerflow screenshot) or Kanban
   const [viewMode, setViewMode] = useState<'TABLE' | 'KANBAN'>('TABLE');
@@ -105,16 +108,18 @@ export const KanbanView: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [statusRes, leadsRes, compRes, usersRes] = await Promise.all([
+      const [statusRes, leadsRes, compRes, usersRes, scanStatusRes] = await Promise.all([
         api.leadStatuses.list(),
         api.leads.list(),
         api.companies.list({ active: true }),
         api.users.listAll().catch(() => []),
+        api.leads.getDailyScanStatus().catch(() => null),
       ]);
       setStatuses(statusRes || []);
       setLeads(leadsRes.content || []);
       setCompanies(compRes.content || []);
       setSystemUsers(Array.isArray(usersRes) ? usersRes.filter(u => u.active !== false) : []);
+      if (scanStatusRes) setDailyScanStatus(scanStatusRes);
     } catch (e) {
       console.error(e);
     } finally {
@@ -189,6 +194,20 @@ export const KanbanView: React.FC = () => {
       alert('Erro ao executar agente de qualificação: ' + (err.message || 'Erro desconhecido'));
     } finally {
       setRunningAgent(false);
+    }
+  };
+
+  const handleRunDailyAutoScan = async () => {
+    setRunningDailyScan(true);
+    try {
+      const newLeads = await api.leads.autoScanDaily();
+      setToastMsg(`⚡ Busca diária concluída! ${newLeads.length} novos leads qualificados adicionados ao funil.`);
+      setTimeout(() => setToastMsg(null), 4000);
+      await loadData();
+    } catch (err: any) {
+      alert('Erro na busca diária de leads: ' + (err.message || 'Erro de conexão'));
+    } finally {
+      setRunningDailyScan(false);
     }
   };
 
@@ -401,11 +420,32 @@ export const KanbanView: React.FC = () => {
   return (
     <div style={{ padding: '4px 0', width: '100%' }}>
       {/* 1. Header do Título (Idêntico ao 'Product' no screenshot) */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-        <div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
           <h1 style={{ fontSize: '1.65rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0, letterSpacing: '-0.02em' }}>
             {viewMode === 'TABLE' ? 'Oportunidades & Leads' : 'Funil de Vendas'}
           </h1>
+          {dailyScanStatus && (
+            <div
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                padding: '4px 12px',
+                borderRadius: '20px',
+                fontSize: '0.76rem',
+                fontWeight: '600',
+                background: 'rgba(16, 185, 129, 0.1)',
+                color: '#10b981',
+                border: '1px solid rgba(16, 185, 129, 0.3)',
+                boxShadow: '0 1px 4px rgba(16, 185, 129, 0.08)'
+              }}
+              title="Busca diária automática programada para rodar diariamente às 06:00 (10 leads/dia)"
+            >
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }} />
+              <span>Busca Diária: <strong>{dailyScanStatus.leadsToday}/{dailyScanStatus.dailyTarget}</strong> leads hoje</span>
+            </div>
+          )}
         </div>
 
         {/* Scope Toggle: Meus Leads vs Todos */}
@@ -807,6 +847,30 @@ export const KanbanView: React.FC = () => {
             <Download size={14} />
             <span>Exportar</span>
           </button>
+
+          {/* Daily Auto Lead Scanner Trigger */}
+          {currentUser?.role !== 'VIEWER' && (
+            <button
+              type="button"
+              onClick={handleRunDailyAutoScan}
+              disabled={runningDailyScan}
+              className="btn btn-secondary btn-sm"
+              style={{
+                padding: '7px 12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.15))',
+                borderColor: 'rgba(245, 158, 11, 0.4)',
+                color: '#f59e0b',
+                fontWeight: '600'
+              }}
+              title="Busca Diária Automática: Gera 10 novos leads qualificados B2B para hoje"
+            >
+              <Zap size={14} className={runningDailyScan ? 'spin' : ''} fill="#f59e0b" />
+              <span>{runningDailyScan ? 'Buscando 10 Leads...' : '⚡ Buscar 10 Leads (Diário)'}</span>
+            </button>
+          )}
 
           {/* AI Autonomous Qualification Trigger */}
           {currentUser?.role !== 'VIEWER' && (

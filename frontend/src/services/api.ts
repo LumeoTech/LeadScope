@@ -139,6 +139,14 @@ export interface LeadNote {
   createdAt: string;
 }
 
+export interface DailyScanStatus {
+  leadsToday: number;
+  dailyTarget: number;
+  autoScanActive: boolean;
+  lastRun: string;
+  scheduleDescription: string;
+}
+
 export interface Agreement {
   id: number;
   companyId?: number;
@@ -492,6 +500,12 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ targetUserId, note }),
       }),
+    autoScanDaily: () =>
+      request<Lead[]>('/leads/auto-scan-daily', {
+        method: 'POST',
+      }),
+    getDailyScanStatus: () =>
+      request<DailyScanStatus>('/leads/auto-scan-status'),
   },
 
   activities: {

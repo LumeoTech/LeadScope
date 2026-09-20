@@ -40,6 +40,10 @@ public interface LeadRepository extends JpaRepository<Lead, Long> {
 
     long countByStatusId(Long statusId);
 
+    long countBySourceAndCreatedAtAfter(String source, java.time.LocalDateTime createdAt);
+
+    long countByCreatedAtAfter(java.time.LocalDateTime createdAt);
+
     java.util.Optional<Lead> findTopByOrderByIdDesc();
 
     @org.springframework.data.jpa.repository.Modifying

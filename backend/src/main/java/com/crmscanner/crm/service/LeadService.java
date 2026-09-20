@@ -455,7 +455,7 @@ public class LeadService {
 
         int processed = 0;
         for (Lead lead : unqualified) {
-            String website = lead.getCompany() != null ? lead.getCompany().getWebsite() : lead.getWebsite();
+            String website = lead.getCompany() != null ? lead.getCompany().getWebsite() : null;
             String state = lead.getCompany() != null ? lead.getCompany().getEstado() : null;
 
             double costOfLiving = (state != null && (state.equalsIgnoreCase("SP") || state.equalsIgnoreCase("RJ") || state.equalsIgnoreCase("DF")))
@@ -465,8 +465,8 @@ public class LeadService {
             int acceptanceChance = 70 + (int)(Math.random() * 25);
             int score = (int)(acceptanceChance * 0.95);
 
-            lead.setAcceptanceChance(acceptanceChance);
-            lead.setCostOfLiving(costOfLiving);
+            lead.setAcceptanceChance(java.math.BigDecimal.valueOf(acceptanceChance));
+            lead.setCostOfLiving(String.valueOf(costOfLiving));
             lead.setLocationPotential(potential);
             lead.setScore(score);
             lead.setScoreRationale(String.format("Empresa com presença digital ativa e site comercial (%s). Demanda qualificada para soluções B2B com potencial %s e chance de aceite de %d%%.",
