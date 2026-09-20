@@ -15,7 +15,9 @@ import {
   Target,
   HelpCircle,
   X,
-  ArrowRight
+  ArrowRight,
+  Globe,
+  Mail
 } from 'lucide-react';
 import { ActiveTab } from './Sidebar';
 
@@ -62,6 +64,8 @@ export const CommandPaletteModal: React.FC<CommandPaletteModalProps> = ({
     { label: 'Agenda & Reuniões', tab: 'agenda', icon: Calendar, category: 'Navegação' },
     { label: 'Campanhas de Prospecção', tab: 'campaigns', icon: Rocket, category: 'Workspace' },
     { label: 'Metas Comerciais', tab: 'goals', icon: Target, category: 'Workspace' },
+    { label: 'Sites & Portais', tab: 'sites', icon: Globe, category: 'Conteúdo' },
+    { label: 'Templates de E-mail', tab: 'templates', icon: Mail, category: 'Conteúdo' },
     { label: 'Gestão de Usuários', tab: 'users', icon: Users, category: 'Administração' },
     { label: 'Auditoria de Sistema', tab: 'audit', icon: ShieldAlert, category: 'Administração' },
     {

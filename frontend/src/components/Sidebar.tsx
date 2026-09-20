@@ -13,7 +13,8 @@ import {
   ChevronsRight,
   PanelLeftClose,
   ChevronDown,
-  Globe
+  Globe,
+  Mail
 } from 'lucide-react';
 
 export type ActiveTab =
@@ -27,7 +28,8 @@ export type ActiveTab =
   | 'users'
   | 'campaigns'
   | 'goals'
-  | 'sites';
+  | 'sites'
+  | 'templates';
 
 interface SidebarProps {
   activeTab: ActiveTab;
@@ -195,7 +197,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* 3. MENU PRINCIPAL */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px', overflowY: 'auto' }}>
+        {/* GRUPO 1: PRINCIPAL */}
+        {!isCollapsed ? (
+          <div style={{
+            fontSize: '0.68rem',
+            fontWeight: '700',
+            letterSpacing: '0.07em',
+            textTransform: 'uppercase',
+            color: '#525866',
+            padding: '8px 10px 6px 10px',
+            userSelect: 'none'
+          }}>
+            Principal
+          </div>
+        ) : (
+          <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.05)', margin: '6px 4px' }} />
+        )}
+
         {/* Dashboard */}
         <button
           onClick={() => setActiveTab('dashboard')}
@@ -206,17 +225,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {!isCollapsed && <span>Dashboard</span>}
         </button>
 
-        {/* Content Calendar / Agenda */}
-        <button
-          onClick={() => setActiveTab('agenda')}
-          style={getNavItemStyle(activeTab === 'agenda', isCollapsed)}
-          title="Content Calendar"
-        >
-          <Calendar size={16} color={activeTab === 'agenda' ? '#ffffff' : '#8c93a0'} />
-          {!isCollapsed && <span>Content Calendar</span>}
-        </button>
-
-        {/* Campaigns / Oportunidades & Leads */}
+        {/* Campaigns */}
         <button
           onClick={() => setActiveTab('kanban')}
           style={getNavItemStyle(activeTab === 'kanban', isCollapsed)}
@@ -226,7 +235,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {!isCollapsed && <span>Campaigns</span>}
         </button>
 
-        {/* Analytics / Scanner */}
+        {/* Analytics */}
         <button
           onClick={() => setActiveTab('scanner')}
           style={getNavItemStyle(activeTab === 'scanner', isCollapsed)}
@@ -236,7 +245,71 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {!isCollapsed && <span>Analytics</span>}
         </button>
 
-        {/* Team / Equipe */}
+        {/* GRUPO 2: CONTEÚDO */}
+        {!isCollapsed ? (
+          <div style={{
+            fontSize: '0.68rem',
+            fontWeight: '700',
+            letterSpacing: '0.07em',
+            textTransform: 'uppercase',
+            color: '#525866',
+            padding: '16px 10px 6px 10px',
+            userSelect: 'none'
+          }}>
+            Conteúdo
+          </div>
+        ) : (
+          <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.05)', margin: '10px 4px 6px' }} />
+        )}
+
+        {/* Content Calendar */}
+        <button
+          onClick={() => setActiveTab('agenda')}
+          style={getNavItemStyle(activeTab === 'agenda', isCollapsed)}
+          title="Content Calendar"
+        >
+          <Calendar size={16} color={activeTab === 'agenda' ? '#ffffff' : '#8c93a0'} />
+          {!isCollapsed && <span>Content Calendar</span>}
+        </button>
+
+        {/* Sites */}
+        <button
+          onClick={() => setActiveTab('sites')}
+          style={getNavItemStyle(activeTab === 'sites', isCollapsed)}
+          title="Sites"
+        >
+          <Globe size={16} color={activeTab === 'sites' ? '#ffffff' : '#8c93a0'} />
+          {!isCollapsed && <span>Sites</span>}
+        </button>
+
+        {/* Templates */}
+        <button
+          onClick={() => setActiveTab('templates')}
+          style={getNavItemStyle(activeTab === 'templates', isCollapsed)}
+          title="Templates"
+        >
+          <Mail size={16} color={activeTab === 'templates' ? '#ffffff' : '#8c93a0'} />
+          {!isCollapsed && <span>Templates</span>}
+        </button>
+
+        {/* GRUPO 3: GESTÃO */}
+        {!isCollapsed ? (
+          <div style={{
+            fontSize: '0.68rem',
+            fontWeight: '700',
+            letterSpacing: '0.07em',
+            textTransform: 'uppercase',
+            color: '#525866',
+            padding: '16px 10px 6px 10px',
+            userSelect: 'none'
+          }}>
+            Gestão
+          </div>
+        ) : (
+          <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.05)', margin: '10px 4px 6px' }} />
+        )}
+
+        {/* Team */}
         <button
           onClick={() => setActiveTab('users')}
           style={getNavItemStyle(activeTab === 'users', isCollapsed)}
@@ -262,7 +335,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
           )}
         </button>
 
-        {/* Integrations / Empresas & Parcerias */}
+        {/* Integrations */}
         <button
           onClick={() => setActiveTab('companies')}
           style={getNavItemStyle(activeTab === 'companies', isCollapsed)}
@@ -271,20 +344,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <Share2 size={16} color={activeTab === 'companies' ? '#ffffff' : '#8c93a0'} />
           {!isCollapsed && <span>Integrations</span>}
         </button>
-
-        {/* Sites & Templates */}
-        <button
-          onClick={() => setActiveTab('sites')}
-          style={getNavItemStyle(activeTab === 'sites', isCollapsed)}
-          title="Sites & Templates"
-        >
-          <Globe size={16} color={activeTab === 'sites' ? '#ffffff' : '#8c93a0'} />
-          {!isCollapsed && <span>Sites & Templates</span>}
-        </button>
       </div>
 
-      {/* 4. FOOTER / SUPPORT & SETTINGS */}
-      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+      {/* 4. FOOTER / SUPPORT & SETTINGS (Separados por linha divisória) */}
+      <div style={{
+        marginTop: 'auto',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '3px',
+        borderTop: '1px solid rgba(255, 255, 255, 0.07)',
+        paddingTop: '10px'
+      }}>
         <button
           type="button"
           onClick={onOpenHelp}

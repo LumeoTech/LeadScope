@@ -632,6 +632,7 @@ export const api = {
       request<void>(`/sites/${id}`, {
         method: 'DELETE',
       }),
+    listAllTemplates: () => request<SiteEmailTemplate[]>('/sites/all-templates'),
     listTemplates: (siteId: number) => request<SiteEmailTemplate[]>(`/sites/${siteId}/templates`),
     createTemplate: (siteId: number, data: Partial<SiteEmailTemplate>) =>
       request<SiteEmailTemplate>(`/sites/${siteId}/templates`, {

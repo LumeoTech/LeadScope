@@ -18,6 +18,7 @@ import { UpgradeModal } from './components/UpgradeModal';
 import { CommandPaletteModal } from './components/CommandPaletteModal';
 import { PublicAgreementView } from './views/PublicAgreementView';
 import { SitesView } from './views/SitesView';
+import { TemplatesView } from './views/TemplatesView';
 import { AcceptInviteView } from './views/AcceptInviteView';
 
 export const App: React.FC = () => {
@@ -77,7 +78,7 @@ export const App: React.FC = () => {
   }, [user, loadPendingUsersCount]);
 
   useEffect(() => {
-    if ((user?.role === 'VENDEDOR' || user?.role === 'VIEWER') && (activeTab === 'audit' || activeTab === 'users' || activeTab === 'sites')) {
+    if ((user?.role === 'VENDEDOR' || user?.role === 'VIEWER') && (activeTab === 'audit' || activeTab === 'users' || activeTab === 'sites' || activeTab === 'templates')) {
       setActiveTab('kanban');
     }
   }, [user, activeTab]);
@@ -142,6 +143,7 @@ export const App: React.FC = () => {
           {activeTab === 'users' && <UsersView onRefreshPendingCount={loadPendingUsersCount} />}
           {activeTab === 'audit' && <AuditView />}
           {activeTab === 'sites' && <SitesView />}
+          {activeTab === 'templates' && <TemplatesView />}
         </main>
       </div>
 

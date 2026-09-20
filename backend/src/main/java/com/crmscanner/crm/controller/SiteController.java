@@ -59,6 +59,12 @@ public class SiteController {
 
     // ==================== TEMPLATES ====================
 
+    @GetMapping("/all-templates")
+    @Operation(summary = "Listar todos os templates de e-mail de todos os sites")
+    public ResponseEntity<List<TemplateResponse>> listAllTemplates() {
+        return ResponseEntity.ok(siteService.listAllTemplates());
+    }
+
     @GetMapping("/{id}/templates")
     @Operation(summary = "Listar templates de e-mail do site")
     public ResponseEntity<List<TemplateResponse>> listTemplates(@PathVariable Long id) {

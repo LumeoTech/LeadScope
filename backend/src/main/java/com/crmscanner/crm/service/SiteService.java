@@ -93,6 +93,13 @@ public class SiteService {
     // ==================== TEMPLATES ====================
 
     @Transactional(readOnly = true)
+    public List<TemplateResponse> listAllTemplates() {
+        return templateRepository.findAll().stream()
+                .map(TemplateResponse::fromEntity)
+                .toList();
+    }
+
+    @Transactional(readOnly = true)
     public List<TemplateResponse> listTemplates(Long siteId) {
         return templateRepository.findBySiteId(siteId).stream()
                 .map(TemplateResponse::fromEntity)
