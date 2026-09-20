@@ -1,88 +1,61 @@
+# CRM + Scanner — Sistema Comercial
 
-# LeadScope
-
-<p align="center">
-  <strong>Scanner de Empresas e Plataforma de Gestão Comercial</strong>
-</p>
-
-<p align="center">
-  Transformando dados empresariais em oportunidades comerciais.
-</p>
+Plataforma de CRM integrada a um Scanner de empresas.
+Backend em Java 21 + Spring Boot. Frontend em React + TypeScript + Vite.
 
 ---
 
-## Sobre o Projeto
-
-O **LeadScope** é uma plataforma de prospecção comercial que integra um scanner de empresas a um sistema de CRM, permitindo centralizar a descoberta de potenciais clientes e o gerenciamento de oportunidades em um único ambiente.
-
-A plataforma foi projetada para auxiliar equipes comerciais na identificação de empresas, organização de leads, acompanhamento de negociações e gerenciamento do relacionamento com clientes.
-
-O projeto busca unir automação, organização de dados e produtividade em uma solução escalável e intuitiva.
-
-## Principais Recursos
-
-- Scanner de empresas com dados de fontes externas
-- Organização e gerenciamento de leads
-- Pipeline de oportunidades comerciais
-- Histórico de interações e contatos
-- Gerenciamento de reuniões e propostas
-- Cadastro e acompanhamento de clientes
-- Controle de acesso e permissões
-- Distribuição organizada de leads
-- Análise de presença digital
-- Visualização geográfica de empresas
-
-## Stack Tecnológica
+## Stack
 
 | Camada | Tecnologia |
-|---|---|
-| Backend | Java 21 |
-| Framework | Spring Boot |
-| Frontend | React + TypeScript |
-| Build Frontend | Vite |
-| Estilização | Tailwind CSS |
-| Banco de Dados | PostgreSQL |
-| Persistência | Spring Data JPA |
-| Migrações | Flyway |
+|--------|-----------|
+| Backend | Java 21, Spring Boot 4.x, Maven |
+| Banco | PostgreSQL 16 + Flyway |
 | Segurança | Spring Security + JWT |
-| Documentação | OpenAPI / Swagger |
-| Infraestrutura | Docker |
-| Versionamento | Git + GitHub |
+| Frontend | React, TypeScript, Vite, Tailwind CSS |
+| Infra local | Docker Compose |
+| Docs API | Swagger / OpenAPI |
 
-## Arquitetura
+---
 
-O projeto utiliza uma arquitetura organizada por camadas e domínios, buscando garantir:
+## Pré-requisitos
 
-- Separação de responsabilidades
-- Manutenibilidade do código
-- Segurança e controle de acesso
-- Facilidade de testes
-- Evolução e escalabilidade da aplicação
+- Java 21 LTS (Temurin recomendado): https://adoptium.net/
+- Node.js LTS: https://nodejs.org/
+- Docker Desktop: https://www.docker.com/products/docker-desktop/
 
-## Execução Local
+---
 
-### Pré-requisitos
+## Como rodar localmente
 
-- Java 21
-- Node.js
-- Docker Desktop
-- Git
+### 1. Configurar variáveis de ambiente
 
-### Backend
+```bash
+cp .env.example .env
+# Edite .env se necessário (os valores padrão funcionam em dev)
+```
+
+### 2. Subir o banco de dados
+
+```bash
+docker compose up -d
+```
+
+O PostgreSQL estará disponível em `localhost:5432`.
+O pgAdmin (interface visual) estará em `http://localhost:5050`.
+
+### 3. Iniciar o backend
 
 ```bash
 cd backend
 ./mvnw spring-boot:run
 ```
 
-No Windows:
+A API estará em: http://localhost:8080
+Swagger UI: http://localhost:8080/swagger-ui.html
+Health check: http://localhost:8080/api/health
 
-```powershell
-cd backend
-.\mvnw.cmd spring-boot:run
-```
-
-### Frontend
+### 4. Iniciar o frontend (Fase 9)
 
 ```bash
 cd frontend
@@ -90,41 +63,67 @@ npm install
 npm run dev
 ```
 
-### Banco de Dados
+---
 
-O PostgreSQL pode ser executado utilizando Docker, conforme as configurações presentes no projeto.
+## Estrutura do projeto
 
-## Configuração de Ambiente
-
-As credenciais e chaves de integração devem ser configuradas por meio de variáveis de ambiente.
-
-**Nunca exponha informações sensíveis no código-fonte ou no repositório público.**
-
-## Status do Projeto
-
-> Em desenvolvimento
-
-Novos recursos e melhorias serão implementados progressivamente durante a evolução da plataforma.
-
-## Objetivos Técnicos
-
-Este projeto também tem como finalidade aplicar conhecimentos de:
-
-- Desenvolvimento de APIs REST
-- Arquitetura de software
-- Segurança de aplicações
-- Modelagem de banco de dados
-- Integração com serviços externos
-- Desenvolvimento frontend e backend
-- Testes automatizados
-- Boas práticas de engenharia de software
+```
+meu-backend/
+├── backend/                  ← Spring Boot (Java 21)
+│   ├── src/main/java/com/crmscanner/
+│   │   ├── auth/             ← autenticação e JWT
+│   │   ├── crm/              ← leads, empresas, status
+│   │   ├── scanner/          ← scanner de empresas
+│   │   ├── distribution/     ← distribuição de leads
+│   │   ├── audit/            ← auditoria e histórico
+│   │   ├── config/           ← configurações Spring
+│   │   ├── exception/        ← tratamento de erros
+│   │   └── common/           ← utilitários compartilhados
+│   └── src/main/resources/
+│       ├── application.yml
+│       └── db/migration/     ← scripts Flyway (V1__, V2__...)
+├── frontend/                 ← React + TypeScript + Vite (Fase 9)
+├── docker-compose.yml        ← PostgreSQL + pgAdmin
+├── .env.example              ← modelo de variáveis de ambiente
+└── README.md
+```
 
 ---
 
-<p align="center">
-  Desenvolvido com foco em tecnologia, organização e inovação.
-</p>
+## Fases de desenvolvimento
 
-<p align="center">
-  <strong>LeadScope</strong>
-</p>
+- [x] **Fase 0** — Diagnóstico e organização
+- [x] **Fase 1** — Fundação do backend (Spring Boot + estrutura)
+- [x] **Fase 2** — Banco de dados e migrações Flyway
+- [x] **Fase 3** — Autenticação JWT e usuários
+- [x] **Fase 4** — Permissões e auditoria
+- [x] **Fase 5** — CRM: leads, empresas, status
+- [x] **Fase 6** — Distribuição gradual de leads
+- [x] **Fase 7** — Scanner de empresas
+- [x] **Fase 8** — Reuniões, propostas, clientes
+- [x] **Fase 9** — Frontend React
+- [x] **Fase 10** — Testes, segurança e deploy
+
+---
+
+## Como executar os testes
+
+```bash
+cd backend
+./mvnw test
+```
+
+---
+
+## Deploy Completo com Docker Compose
+
+Para subir toda a aplicação (PostgreSQL, Backend Spring Boot, Frontend React e pgAdmin):
+
+```bash
+docker compose up --build -d
+```
+
+- **Frontend:** http://localhost:3000
+- **Backend API:** http://localhost:8080/api
+- **Swagger UI:** http://localhost:8080/swagger-ui.html
+- **pgAdmin:** http://localhost:5050 (login: `admin@crm.local` / `admin123`)

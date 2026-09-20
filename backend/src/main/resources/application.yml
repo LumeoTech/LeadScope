@@ -1,0 +1,70 @@
+spring:
+  application:
+    name: crm-backend
+
+  # ==================== BANCO DE DADOS ====================
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:crmdb}
+    username: ${DB_USER:crmuser}
+    password: ${DB_PASSWORD:crmpassword}
+    driver-class-name: org.postgresql.Driver
+
+  # ==================== JPA / HIBERNATE ====================
+  jpa:
+    hibernate:
+      # validate: Hibernate verifica se o schema bate com as entidades, sem alterar nada
+      # (Flyway que cuida das alterações de schema)
+      ddl-auto: validate
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        default_schema: public
+
+  # ==================== FLYWAY (MIGRAÇÕES) ====================
+  flyway:
+    enabled: true
+    baseline-on-migrate: true
+    locations: classpath:db/migration
+    # Cada script SQL fica em: src/main/resources/db/migration/
+    # Nomeados como: V1__create_users.sql, V2__create_leads.sql, etc.
+
+# ==================== SERVIDOR ====================
+server:
+  port: ${SERVER_PORT:8080}
+  error:
+    # Não expõe detalhes de erro em produção
+    include-message: never
+    include-stacktrace: never
+
+# ==================== SWAGGER / OPENAPI ====================
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    # Agrupa os endpoints por tag (módulo)
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+# ==================== JWT ====================
+app:
+  jwt:
+    secret: ${JWT_SECRET:chave-secreta-local-minimo-256-bits-troque-em-producao}
+    # Tempo de vida do access token (24 horas em ms em dev)
+    access-token-expiration: ${JWT_ACCESS_EXPIRATION:86400000}
+    # Tempo de vida do refresh token (7 dias em ms)
+    refresh-token-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
+  google:
+    places:
+      api-key: ${GOOGLE_MAPS_API_KEY:}
+
+# ==================== LOGGING ====================
+logging:
+  level:
+    com.crmscanner: DEBUG
+    org.springframework.security: INFO
+    org.flywaydb: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

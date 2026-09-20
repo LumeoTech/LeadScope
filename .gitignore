@@ -1,0 +1,30 @@
+# Variáveis de ambiente e credenciais
+.env
+.env.*
+*.local
+*.pem
+*.key
+
+# Dependências (Node, Python, Java, Go, PHP, .NET)
+node_modules/
+vendor/
+target/
+__pycache__/
+*.pyc
+bin/
+obj/
+
+# Logs e builds
+*.log
+dist/
+build/
+coverage/
+
+# IDEs e sistema
+.vscode/
+.idea/
+.agents/
+.antigravity/
+*.swp
+.DS_Store
+Thumbs.db
