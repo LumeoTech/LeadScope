@@ -459,8 +459,8 @@ export const api = {
         method: 'PATCH',
         body: JSON.stringify({ statusId, notes }),
       }),
-    assign: (id: number, vendorId: number) =>
-      request<Lead>(`/leads/${id}/assign/${vendorId}`, {
+    assign: (id: number, vendorId?: number | null) =>
+      request<Lead>(`/leads/${id}/assign/${vendorId || 0}`, {
         method: 'PATCH',
       }),
     delete: (id: number) =>

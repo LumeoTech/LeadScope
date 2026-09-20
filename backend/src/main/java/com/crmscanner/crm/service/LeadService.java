@@ -220,6 +220,26 @@ public class LeadService {
     @Transactional
     public LeadResponse assignLead(Long id, Long vendorId, User currentUser) {
         Lead lead = getLeadEntity(id);
+        checkNotViewer(currentUser, "atribuir responsável");
+        checkReassignmentPermission(lead, currentUser);
+
+        String oldVendorName = lead.getAssignedTo() != null ? lead.getAssignedTo().getName() : "Não atribuído";
+
+        if (vendorId == null || vendorId <= 0) {
+            lead.setAssignedTo(null);
+            Lead updated = leadRepository.save(lead);
+
+            auditService.log(
+                    "LEAD",
+                    updated.getId(),
+                    "UNASSIGN",
+                    Map.of("assignedTo", oldVendorName),
+                    Map.of("assignedTo", "Não atribuído"),
+                    "Lead desatribuído"
+            );
+
+            return LeadResponse.fromEntity(updated);
+        }
 
         User newVendor = userRepository.findById(vendorId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vendedor", vendorId));
@@ -228,7 +248,6 @@ public class LeadService {
             throw new BusinessException("O usuário selecionado está inativo.");
         }
 
-        String oldVendorName = lead.getAssignedTo() != null ? lead.getAssignedTo().getName() : "Não atribuído";
         lead.setAssignedTo(newVendor);
         Lead updated = leadRepository.save(lead);
 

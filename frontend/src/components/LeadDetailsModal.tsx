@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { api, Lead, LeadNote, Proposal, Agreement, LeadStatus } from '../services/api';
 import { AgreementModal } from './AgreementModal';
+import { getUserTheme } from '../utils/userColors';
 import {
   X,
   Building2,
@@ -62,20 +63,9 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
   // Agreement Modal
   const [isAgreementModalOpen, setIsAgreementModalOpen] = useState(false);
 
-  // System Users for Transfer / Send
+  // System Users for Direct Responsibility Selector
   const [systemUsers, setSystemUsers] = useState<any[]>([]);
-
-  // Transfer Modal
-  const [showTransferModal, setShowTransferModal] = useState(false);
-  const [transferTargetUserId, setTransferTargetUserId] = useState<number | ''>('');
-  const [transferReason, setTransferReason] = useState('');
-  const [transferLoading, setTransferLoading] = useState(false);
-
-  // Send Modal
-  const [showSendModal, setShowSendModal] = useState(false);
-  const [sendTargetUserId, setSendTargetUserId] = useState<number | ''>('');
-  const [sendNote, setSendNote] = useState('');
-  const [sendLoading, setSendLoading] = useState(false);
+  const [assigningLoading, setAssigningLoading] = useState(false);
 
   // Manual Value Edit
   const [editingValue, setEditingValue] = useState(false);
@@ -116,15 +106,13 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (showTransferModal) setShowTransferModal(false);
-        else if (showSendModal) setShowSendModal(false);
-        else if (showDiscardReasonModal) setShowDiscardReasonModal(false);
+        if (showDiscardReasonModal) setShowDiscardReasonModal(false);
         else onClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [showTransferModal, showSendModal, showDiscardReasonModal, onClose]);
+  }, [showDiscardReasonModal, onClose]);
 
   const loadSystemUsers = async () => {
     try {
@@ -135,57 +123,24 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
     }
   };
 
-  const handleConfirmTransfer = async () => {
+  const handleDirectAssign = async (targetUserId: number | null) => {
     if (!currentLead) return;
-    if (!transferTargetUserId) {
-      alert('Selecione o usuário de destino.');
+    if (currentUser?.role === 'VIEWER') {
+      alert('Usuários com perfil Visualizador não podem alterar o responsável.');
       return;
     }
-    const leadIdToTransfer = currentLead.id;
-    setTransferLoading(true);
+    setAssigningLoading(true);
     try {
-      await api.leads.transfer(leadIdToTransfer, Number(transferTargetUserId), transferReason.trim());
-      setShowTransferModal(false);
-      onClose();
-      if (onLeadRemoved) {
-        onLeadRemoved(leadIdToTransfer);
-      }
+      const updated = await api.leads.assign(currentLead.id, targetUserId || 0);
+      setCurrentLead(updated);
+      onLeadUpdated(updated);
       if (onShowToast) {
-        onShowToast('Lead transferido com sucesso!');
-      } else {
-        alert('Lead transferido com sucesso!');
+        onShowToast(`Responsável definido: ${updated.assignedToName || 'Não atribuído'}`);
       }
     } catch (err: any) {
-      alert('Erro ao transferir lead: ' + (err.message || 'Erro desconhecido'));
+      alert('Erro ao alterar responsável: ' + (err.message || 'Erro desconhecido'));
     } finally {
-      setTransferLoading(false);
-    }
-  };
-
-  const handleConfirmSend = async () => {
-    if (!currentLead) return;
-    if (!sendTargetUserId) {
-      alert('Selecione o usuário de destino.');
-      return;
-    }
-    const leadIdToSend = currentLead.id;
-    setSendLoading(true);
-    try {
-      await api.leads.sendToUser(leadIdToSend, Number(sendTargetUserId), sendNote.trim());
-      setShowSendModal(false);
-      onClose();
-      if (onLeadRemoved) {
-        onLeadRemoved(leadIdToSend);
-      }
-      if (onShowToast) {
-        onShowToast('Lead enviado com sucesso!');
-      } else {
-        alert('Lead enviado com sucesso!');
-      }
-    } catch (err: any) {
-      alert('Erro ao enviar lead: ' + (err.message || 'Erro desconhecido'));
-    } finally {
-      setSendLoading(false);
+      setAssigningLoading(false);
     }
   };
 
@@ -299,6 +254,7 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
   const website = currentLead.companyWebsite || currentLead.website;
   const email = currentLead.companyEmail || (currentLead as any).email;
   const address = [currentLead.companyCidade, currentLead.companyEstado].filter(Boolean).join(' - ') || 'Endereço não informado';
+  const leadTheme = getUserTheme(currentLead.assignedToId, currentLead.assignedToName);
 
   return (
     <>
@@ -321,8 +277,8 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
           flexDirection: 'column',
           background: 'var(--bg-secondary)',
           borderRadius: 'var(--radius-lg)',
-          border: '1px solid var(--border-subtle)',
-          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.6)',
+          border: currentLead.assignedToId ? `1.5px solid ${leadTheme.border}80` : '1px solid var(--border-subtle)',
+          boxShadow: currentLead.assignedToId ? `0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 24px ${leadTheme.glow}` : '0 25px 60px -15px rgba(0, 0, 0, 0.6)',
           overflow: 'hidden'
         }}>
           {/* Header */}
@@ -500,62 +456,83 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
           <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
             {activeTab === 'info' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-                {/* Attribution and Reassignment Bar */}
+                {/* Attribution and Direct Responsibility Selector */}
                 <div style={{
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'space-between',
-                  padding: '12px 18px',
-                  background: 'rgba(255, 255, 255, 0.03)',
-                  border: '1px solid var(--border-subtle)',
-                  borderRadius: '10px',
+                  padding: '16px 20px',
+                  background: currentLead.assignedToId ? leadTheme.bgSubtle : 'rgba(255, 255, 255, 0.03)',
+                  border: currentLead.assignedToId ? `1.5px solid ${leadTheme.border}` : '1px solid var(--border-subtle)',
+                  borderRadius: '12px',
+                  boxShadow: currentLead.assignedToId ? `0 0 16px ${leadTheme.glow}` : 'none',
                   flexWrap: 'wrap',
-                  gap: '12px'
+                  gap: '14px'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{
-                      width: '32px',
-                      height: '32px',
+                      width: '40px',
+                      height: '40px',
                       borderRadius: '50%',
-                      background: currentLead.assignedToName ? 'rgba(59, 130, 246, 0.15)' : 'rgba(156, 163, 175, 0.15)',
-                      color: currentLead.assignedToName ? '#60a5fa' : 'var(--text-muted)',
+                      background: leadTheme.bg,
+                      border: `2px solid ${leadTheme.border}`,
+                      color: leadTheme.text,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontWeight: '700',
-                      fontSize: '0.82rem'
+                      fontWeight: '800',
+                      fontSize: '1rem',
+                      boxShadow: currentLead.assignedToId ? `0 0 10px ${leadTheme.glow}` : 'none',
+                      flexShrink: 0
                     }}>
-                      <User size={16} />
+                      {(currentLead.assignedToName || 'U').charAt(0).toUpperCase()}
                     </div>
                     <div>
-                      <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', display: 'block' }}>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', display: 'block', textTransform: 'uppercase', letterSpacing: '0.05em', fontWeight: '700' }}>
                         Responsável pelo Lead
                       </span>
-                      <strong style={{ fontSize: '0.92rem', color: currentLead.assignedToName ? '#93c5fd' : 'var(--text-muted)' }}>
-                        {currentLead.assignedToName ? `👤 Atendido por: ${currentLead.assignedToName}` : '⚠️ Nenhum responsável atribuído'}
+                      <strong style={{ fontSize: '1rem', color: currentLead.assignedToId ? leadTheme.text : 'var(--text-muted)' }}>
+                        {currentLead.assignedToName ? currentLead.assignedToName : 'Nenhum responsável atribuído'}
                       </strong>
                     </div>
                   </div>
 
-                  {!isViewer && (
-                    <div>
-                      {canReassign ? (
-                        <button
-                          type="button"
-                          onClick={() => setShowTransferModal(true)}
-                          className="btn btn-secondary btn-sm"
-                          style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', padding: '6px 12px' }}
-                        >
-                          <ArrowRightLeft size={14} />
-                          <span>Reatribuir / Transferir Lead</span>
-                        </button>
-                      ) : (
-                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                          🔒 Somente admin ou o responsável ({currentLead.assignedToName}) podem reatribuir
-                        </span>
-                      )}
-                    </div>
-                  )}
+                  {/* Seleção Direta de quem está com o lead */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '500' }}>
+                      Atribuir para:
+                    </span>
+                    <select
+                      disabled={isViewer || assigningLoading}
+                      value={currentLead.assignedToId || ''}
+                      onChange={(e) => {
+                        const val = e.target.value ? Number(e.target.value) : null;
+                        handleDirectAssign(val);
+                      }}
+                      className="input"
+                      style={{
+                        minWidth: '220px',
+                        padding: '8px 12px',
+                        fontSize: '0.84rem',
+                        fontWeight: '600',
+                        color: currentLead.assignedToId ? leadTheme.text : 'var(--text-muted)',
+                        background: 'var(--bg-surface)',
+                        border: `1.5px solid ${currentLead.assignedToId ? leadTheme.border : 'var(--border-subtle)'}`,
+                        borderRadius: '8px',
+                        cursor: isViewer ? 'not-allowed' : 'pointer',
+                        outline: 'none'
+                      }}
+                    >
+                      <option value="" style={{ background: '#18191f', color: '#9ca3af' }}>— Não atribuído (Livre) —</option>
+                      {systemUsers
+                        .filter(u => u.active !== false)
+                        .map(u => (
+                          <option key={u.id} value={u.id} style={{ background: '#18191f', color: '#ffffff' }}>
+                            {u.name} ({u.role || 'Usuário'})
+                          </option>
+                        ))}
+                    </select>
+                  </div>
                 </div>
 
                 {/* AI Qualification Panel (LeadScope Autonomous Agent) */}
@@ -862,26 +839,6 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
 
                   <button
                     type="button"
-                    onClick={() => setShowTransferModal(true)}
-                    className="btn btn-secondary"
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                  >
-                    <ArrowRightLeft size={16} />
-                    <span>Transferir Lead</span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setShowSendModal(true)}
-                    className="btn btn-secondary"
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-                  >
-                    <Share2 size={16} />
-                    <span>Enviar para Usuário</span>
-                  </button>
-
-                  <button
-                    type="button"
                     onClick={() => setActiveTab('documents')}
                     className="btn btn-secondary"
                     style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
@@ -1181,258 +1138,6 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
                 style={{ background: '#ef4444', borderColor: '#ef4444' }}
               >
                 {statusUpdating ? 'Descartando...' : 'Confirmar Descarte'}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Transferir Lead */}
-      {showTransferModal && (
-        <div
-          onClick={() => setShowTransferModal(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.7)',
-            backdropFilter: 'blur(4px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '20px'
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="glass-panel"
-            style={{
-              width: '100%',
-              maxWidth: '440px',
-              background: 'var(--bg-surface)',
-              borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--border-subtle)',
-              padding: '24px',
-              boxShadow: 'var(--shadow-xl)'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '8px',
-                  background: 'rgba(99, 102, 241, 0.15)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: 'var(--accent-primary)'
-                }}>
-                  <ArrowRightLeft size={16} />
-                </div>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
-                  Transferir Lead
-                </h3>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowTransferModal(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.4 }}>
-              Selecione o usuário de destino. O lead será transferido imediatamente para a carteira dele e sairá da sua lista.
-            </p>
-
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>
-                Usuário destinatário *
-              </label>
-              <select
-                value={transferTargetUserId}
-                onChange={(e) => setTransferTargetUserId(e.target.value ? Number(e.target.value) : '')}
-                className="input"
-                style={{ width: '100%', cursor: 'pointer' }}
-              >
-                <option value="">Selecione um usuário...</option>
-                {systemUsers
-                  .filter(u => u.active)
-                  .map(u => (
-                    <option key={u.id} value={u.id}>
-                      {u.name} ({u.email}) — {u.role}
-                    </option>
-                  ))}
-              </select>
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>
-                Motivo da transferência (opcional)
-              </label>
-              <textarea
-                rows={2}
-                value={transferReason}
-                onChange={(e) => setTransferReason(e.target.value)}
-                placeholder="Ex: Mudança de carteira regional / Especialista do segmento..."
-                className="input"
-                style={{ width: '100%', resize: 'none' }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-              <button
-                type="button"
-                onClick={() => setShowTransferModal(false)}
-                className="btn btn-secondary"
-                disabled={transferLoading}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmTransfer}
-                disabled={transferLoading || !transferTargetUserId}
-                className="btn btn-primary"
-                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                {transferLoading ? (
-                  <>
-                    <div className="spin" style={{ width: '14px', height: '14px', border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%' }} />
-                    <span>Transferindo...</span>
-                  </>
-                ) : (
-                  <span>Confirmar Transferência</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal: Enviar para Usuário (Atribuição Intencional) */}
-      {showSendModal && (
-        <div
-          onClick={() => setShowSendModal(false)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.7)',
-            backdropFilter: 'blur(4px)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            zIndex: 1000,
-            padding: '20px'
-          }}
-        >
-          <div
-            onClick={(e) => e.stopPropagation()}
-            className="glass-panel"
-            style={{
-              width: '100%',
-              maxWidth: '440px',
-              background: 'var(--bg-surface)',
-              borderRadius: 'var(--radius-lg)',
-              border: '1px solid var(--border-subtle)',
-              padding: '24px',
-              boxShadow: 'var(--shadow-xl)'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '8px',
-                  background: 'rgba(59, 130, 246, 0.15)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  color: '#3b82f6'
-                }}>
-                  <Share2 size={16} />
-                </div>
-                <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
-                  Enviar Lead para Usuário
-                </h3>
-              </div>
-
-              <button
-                type="button"
-                onClick={() => setShowSendModal(false)}
-                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
-              >
-                <X size={18} />
-              </button>
-            </div>
-
-            <p style={{ fontSize: '0.84rem', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.4 }}>
-              O destinatário receberá uma notificação em tempo real no sistema informando sobre a chegada deste novo lead.
-            </p>
-
-            <div style={{ marginBottom: '14px' }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>
-                Selecione o usuário *
-              </label>
-              <select
-                value={sendTargetUserId}
-                onChange={(e) => setSendTargetUserId(e.target.value ? Number(e.target.value) : '')}
-                className="input"
-                style={{ width: '100%', cursor: 'pointer' }}
-              >
-                <option value="">Selecione um usuário...</option>
-                {systemUsers
-                  .filter(u => u.active)
-                  .map(u => (
-                    <option key={u.id} value={u.id}>
-                      {u.name} ({u.email}) — {u.role}
-                    </option>
-                  ))}
-              </select>
-            </div>
-
-            <div style={{ marginBottom: '20px' }}>
-              <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>
-                Observações de envio (opcional)
-              </label>
-              <textarea
-                rows={2}
-                value={sendNote}
-                onChange={(e) => setSendNote(e.target.value)}
-                placeholder="Ex: Cliente aguarda ligação no período da tarde..."
-                className="input"
-                style={{ width: '100%', resize: 'none' }}
-              />
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
-              <button
-                type="button"
-                onClick={() => setShowSendModal(false)}
-                className="btn btn-secondary"
-                disabled={sendLoading}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={handleConfirmSend}
-                disabled={sendLoading || !sendTargetUserId}
-                className="btn btn-primary"
-                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-              >
-                {sendLoading ? (
-                  <>
-                    <div className="spin" style={{ width: '14px', height: '14px', border: '2px solid #fff', borderTopColor: 'transparent', borderRadius: '50%' }} />
-                    <span>Enviando...</span>
-                  </>
-                ) : (
-                  <span>Enviar Lead</span>
-                )}
               </button>
             </div>
           </div>

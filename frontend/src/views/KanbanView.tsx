@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { api, Lead, LeadStatus, Company, UserInfo } from '../services/api';
 import { LeadDetailsModal } from '../components/LeadDetailsModal';
+import { getUserTheme } from '../utils/userColors';
 import {
   Plus,
   Search,
@@ -36,6 +37,8 @@ export const KanbanView: React.FC = () => {
   const [statuses, setStatuses] = useState<LeadStatus[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [systemUsers, setSystemUsers] = useState<UserInfo[]>([]);
+  const [toastMsg, setToastMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
@@ -102,18 +105,42 @@ export const KanbanView: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [statusRes, leadsRes, compRes] = await Promise.all([
+      const [statusRes, leadsRes, compRes, usersRes] = await Promise.all([
         api.leadStatuses.list(),
         api.leads.list(),
         api.companies.list({ active: true }),
+        api.users.listAll().catch(() => []),
       ]);
       setStatuses(statusRes || []);
       setLeads(leadsRes.content || []);
       setCompanies(compRes.content || []);
+      setSystemUsers(Array.isArray(usersRes) ? usersRes.filter(u => u.active !== false) : []);
     } catch (e) {
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleAssignLead = async (leadId: number, targetUserId: number | null) => {
+    try {
+      const updated = await api.leads.assign(leadId, targetUserId || 0);
+      setLeads(prev => prev.map(l => l.id === leadId ? {
+        ...l,
+        assignedToId: updated.assignedToId,
+        assignedToName: updated.assignedToName
+      } : l));
+      if (selectedLead && selectedLead.id === leadId) {
+        setSelectedLead(prev => prev ? {
+          ...prev,
+          assignedToId: updated.assignedToId,
+          assignedToName: updated.assignedToName
+        } : null);
+      }
+      setToastMsg(`Responsável atualizado: ${updated.assignedToName || 'Não atribuído'}`);
+      setTimeout(() => setToastMsg(null), 3000);
+    } catch (err: any) {
+      alert('Erro ao atribuir responsável: ' + (err.message || 'Erro desconhecido'));
     }
   };
 
@@ -979,28 +1006,60 @@ export const KanbanView: React.FC = () => {
                         </td>
                       )}
 
-                      {/* Responsável Real */}
-                      {visibleColumns.owner && (
-                        <td style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <div style={{
-                              width: '22px',
-                              height: '22px',
-                              borderRadius: '50%',
-                              background: 'var(--bg-hover)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              fontSize: '0.68rem',
-                              fontWeight: '700',
-                              color: 'var(--text-primary)'
-                            }}>
-                              {(lead.assignedToName || lead.ownerName || 'U').charAt(0).toUpperCase()}
+                      {/* Responsável Real com Escolha Direta e Perfil Colorido */}
+                      {visibleColumns.owner && (() => {
+                        const rowTheme = getUserTheme(lead.assignedToId, lead.assignedToName);
+                        return (
+                          <td onClick={(e) => e.stopPropagation()} style={{ color: 'var(--text-secondary)', fontSize: '0.82rem' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <div style={{
+                                width: '24px',
+                                height: '24px',
+                                borderRadius: '50%',
+                                background: rowTheme.bg,
+                                border: `1.5px solid ${rowTheme.border}`,
+                                color: rowTheme.text,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '0.7rem',
+                                fontWeight: '700',
+                                flexShrink: 0,
+                                boxShadow: lead.assignedToId ? `0 0 8px ${rowTheme.glow}` : 'none'
+                              }}>
+                                {(lead.assignedToName || lead.ownerName || 'U').charAt(0).toUpperCase()}
+                              </div>
+                              <select
+                                value={lead.assignedToId || ''}
+                                onChange={(e) => {
+                                  const val = e.target.value ? Number(e.target.value) : null;
+                                  handleAssignLead(lead.id, val);
+                                }}
+                                title="Alterar responsável"
+                                style={{
+                                  fontSize: '0.78rem',
+                                  fontWeight: lead.assignedToId ? '600' : '400',
+                                  color: lead.assignedToId ? rowTheme.text : 'var(--text-muted)',
+                                  background: 'var(--bg-hover)',
+                                  border: `1px solid ${lead.assignedToId ? rowTheme.border + '70' : 'var(--border-subtle)'}`,
+                                  borderRadius: '6px',
+                                  padding: '4px 8px',
+                                  cursor: 'pointer',
+                                  outline: 'none',
+                                  maxWidth: '180px'
+                                }}
+                              >
+                                <option value="" style={{ background: '#18191f', color: '#9ca3af' }}>Não atribuído</option>
+                                {systemUsers.map((u) => (
+                                  <option key={u.id} value={u.id} style={{ background: '#18191f', color: '#ffffff' }}>
+                                    {u.name} ({u.role || 'Usuário'})
+                                  </option>
+                                ))}
+                              </select>
                             </div>
-                            <span>{lead.assignedToName || lead.ownerName || 'Não atribuído'}</span>
-                          </div>
-                        </td>
-                      )}
+                          </td>
+                        );
+                      })()}
 
                       {/* Status Badge Real */}
                       {visibleColumns.status && (
@@ -1240,6 +1299,7 @@ export const KanbanView: React.FC = () => {
                 <div style={{ padding: '12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '10px', flex: 1 }}>
                   {columnLeads.map((lead) => {
                     const isSelected = selectedLeadIds.includes(lead.id);
+                    const cardTheme = getUserTheme(lead.assignedToId, lead.assignedToName);
 
                     return (
                       <div
@@ -1249,8 +1309,23 @@ export const KanbanView: React.FC = () => {
                           padding: '12px',
                           cursor: 'pointer',
                           position: 'relative',
-                          border: isSelected ? '1px solid var(--accent-coral)' : '1px solid var(--border-subtle)',
-                          transition: 'transform 0.15s ease, box-shadow 0.15s ease',
+                          border: isSelected
+                            ? '1.5px solid var(--accent-coral)'
+                            : lead.assignedToId
+                              ? `1.5px solid ${cardTheme.border}`
+                              : '1px solid var(--border-subtle)',
+                          borderLeft: lead.assignedToId
+                            ? `4px solid ${cardTheme.border}`
+                            : '4px solid var(--border-subtle)',
+                          boxShadow: isSelected
+                            ? '0 0 12px rgba(255, 107, 107, 0.3)'
+                            : lead.assignedToId
+                              ? `0 0 14px ${cardTheme.glow}`
+                              : 'none',
+                          background: lead.assignedToId
+                            ? `linear-gradient(180deg, ${cardTheme.bgSubtle} 0%, rgba(20, 21, 26, 0.95) 45%)`
+                            : 'var(--bg-surface)',
+                          transition: 'transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease',
                           borderRadius: '8px'
                         }}
                         onClick={() => setSelectedLead(lead)}
@@ -1313,7 +1388,7 @@ export const KanbanView: React.FC = () => {
                           {renderPriorityBadge(lead.priority)}
                         </div>
 
-                        {/* Footer do Card com Botões de Avanço de Status */}
+                        {/* Footer do Card com Perfil do Responsável e Escolha Direta */}
                         <div
                           style={{
                             marginTop: '10px',
@@ -1321,15 +1396,68 @@ export const KanbanView: React.FC = () => {
                             borderTop: '1px solid var(--border-subtle)',
                             display: 'flex',
                             justifyContent: 'space-between',
-                            alignItems: 'center'
+                            alignItems: 'center',
+                            gap: '6px'
                           }}
                           onClick={(e) => e.stopPropagation()}
                         >
-                          <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-                            {lead.assignedToName || 'Sem dono'}
-                          </span>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', minWidth: 0, flex: 1 }}>
+                            {/* Avatar do Responsável com cor do perfil */}
+                            <div
+                              style={{
+                                width: '22px',
+                                height: '22px',
+                                borderRadius: '50%',
+                                background: cardTheme.bg,
+                                border: `1.5px solid ${cardTheme.border}`,
+                                color: cardTheme.text,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '0.66rem',
+                                fontWeight: '700',
+                                flexShrink: 0,
+                                boxShadow: lead.assignedToId ? `0 0 6px ${cardTheme.glow}` : 'none'
+                              }}
+                              title={lead.assignedToName ? `Responsável: ${lead.assignedToName}` : 'Sem responsável'}
+                            >
+                              {(lead.assignedToName || 'U').charAt(0).toUpperCase()}
+                            </div>
 
-                          <div style={{ display: 'flex', gap: '4px' }}>
+                            {/* Dropdown direto para escolher quem está com o lead */}
+                            <select
+                              value={lead.assignedToId || ''}
+                              onChange={(e) => {
+                                const val = e.target.value ? Number(e.target.value) : null;
+                                handleAssignLead(lead.id, val);
+                              }}
+                              title="Definir responsável pelo lead"
+                              style={{
+                                width: '100%',
+                                fontSize: '0.73rem',
+                                fontWeight: lead.assignedToId ? '600' : '400',
+                                color: lead.assignedToId ? cardTheme.text : 'var(--text-muted)',
+                                background: lead.assignedToId ? cardTheme.bgSubtle : 'transparent',
+                                border: `1px solid ${lead.assignedToId ? cardTheme.border + '60' : 'var(--border-subtle)'}`,
+                                borderRadius: '5px',
+                                padding: '2px 4px',
+                                cursor: 'pointer',
+                                outline: 'none',
+                                textOverflow: 'ellipsis',
+                                overflow: 'hidden',
+                                whiteSpace: 'nowrap'
+                              }}
+                            >
+                              <option value="" style={{ background: '#18191f', color: '#9ca3af' }}>Não atribuído</option>
+                              {systemUsers.map((u) => (
+                                <option key={u.id} value={u.id} style={{ background: '#18191f', color: '#ffffff' }}>
+                                  {u.name} ({u.role || 'Usuário'})
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '4px', flexShrink: 0 }}>
                             {index > 0 && (
                               <button
                                 type="button"
@@ -1670,6 +1798,31 @@ export const KanbanView: React.FC = () => {
               </div>
             </form>
           </div>
+        </div>
+      )}
+
+      {/* Floating Notification Toast */}
+      {toastMsg && (
+        <div style={{
+          position: 'fixed',
+          bottom: '24px',
+          right: '24px',
+          background: '#181920',
+          color: '#ffffff',
+          border: '1px solid #3b82f6',
+          boxShadow: '0 10px 30px rgba(0, 0, 0, 0.6)',
+          padding: '12px 20px',
+          borderRadius: '10px',
+          fontSize: '0.86rem',
+          fontWeight: '600',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          zIndex: 99999,
+          animation: 'fadeIn 0.2s ease-out'
+        }}>
+          <Check size={18} color="#10b981" />
+          <span>{toastMsg}</span>
         </div>
       )}
     </div>

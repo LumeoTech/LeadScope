@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { UserInfo, api } from './services/api';
+import { accountManager } from './services/accountManager';
 import { Navbar } from './components/Navbar';
 import { Sidebar, ActiveTab } from './components/Sidebar';
 import { LoginView } from './views/LoginView';
@@ -69,6 +70,14 @@ export const App: React.FC = () => {
     setInitializing(false);
   }, []);
 
+  // Synchronize current active session in accountManager
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (user && token) {
+      accountManager.saveCurrentSession(token, user, 'Efferd LLC');
+    }
+  }, [user]);
+
   useEffect(() => {
     if (user && user.role === 'ADMIN') {
       loadPendingUsersCount();
@@ -96,6 +105,17 @@ export const App: React.FC = () => {
   }, []);
 
   const handleLogout = () => {
+    if (user?.email) {
+      accountManager.removeAccount(user.email);
+    }
+    const remaining = accountManager.getAccounts();
+    if (remaining.length > 0) {
+      const next = accountManager.switchAccount(remaining[0].user.email);
+      if (next) {
+        setUser(next.user);
+        return;
+      }
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
@@ -114,6 +134,7 @@ export const App: React.FC = () => {
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
+        currentUser={user}
         userRole={user.role}
         pendingUsersCount={pendingUsersCount}
         onOpenHelp={() => setIsHelpOpen(true)}
@@ -121,6 +142,8 @@ export const App: React.FC = () => {
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
+        onLogout={handleLogout}
+        onAccountSwitched={(newUser) => setUser(newUser)}
       />
 
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflowY: 'auto' }}>
