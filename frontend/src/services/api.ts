@@ -1,8 +1,6 @@
-const rawApiUrl = import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).trim() : '';
-const cleanApiUrl = (rawApiUrl.startsWith('http://') || rawApiUrl.startsWith('https://'))
-  ? rawApiUrl.replace(/\/$/, '')
-  : '';
-const BASE_URL = `${cleanApiUrl}/api`;
+const rawApiUrl = import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL) : '';
+const urlMatch = rawApiUrl.match(/https?:\/\/[a-zA-Z0-9.-]+(:\d+)?/);
+const BASE_URL = urlMatch ? `${urlMatch[0]}/api` : '/api';
 
 export interface UserInfo {
   id: number;
