@@ -21,7 +21,8 @@ import {
   ExternalLink,
   Mail,
   ArrowRightLeft,
-  Share2
+  Share2,
+  DollarSign
 } from 'lucide-react';
 
 interface LeadDetailsModalProps {
@@ -76,14 +77,41 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
   const [sendNote, setSendNote] = useState('');
   const [sendLoading, setSendLoading] = useState(false);
 
+  // Manual Value Edit
+  const [editingValue, setEditingValue] = useState(false);
+  const [leadValueInput, setLeadValueInput] = useState<string>('');
+  const [savingValue, setSavingValue] = useState(false);
+
   useEffect(() => {
     setCurrentLead(lead);
     if (lead) {
       setSelectedStatusId(lead.statusId);
+      setLeadValueInput(lead.value && Number(lead.value) > 0 ? String(lead.value) : '');
       loadLeadDetails(lead.id);
       loadSystemUsers();
     }
   }, [lead]);
+
+  const handleSaveValue = async () => {
+    if (!currentLead) return;
+    setSavingValue(true);
+    try {
+      const numVal = leadValueInput.trim() ? Number(leadValueInput.trim()) : null;
+      await api.leads.update(currentLead.id, {
+        value: numVal !== null ? numVal : undefined,
+        title: currentLead.title,
+        priority: currentLead.priority
+      });
+      const updatedLead = { ...currentLead, value: numVal !== null ? numVal : undefined };
+      setCurrentLead(updatedLead);
+      if (onLeadUpdated) onLeadUpdated(updatedLead);
+      setEditingValue(false);
+    } catch (err: any) {
+      alert('Erro ao atualizar valor: ' + (err.message || 'Erro desconhecido'));
+    } finally {
+      setSavingValue(false);
+    }
+  };
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -569,6 +597,83 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
                         ★ ★ ★ ★ ☆
                       </span>
                     </div>
+                  </div>
+
+                  {/* Valor Estimado da Oportunidade */}
+                  <div className="card" style={{ padding: '16px' }}>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <DollarSign size={14} color="var(--accent-primary)" />
+                        <span>Valor Estimado da Oportunidade</span>
+                      </div>
+                      {!editingValue && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setLeadValueInput(currentLead.value && Number(currentLead.value) > 0 ? String(currentLead.value) : '');
+                            setEditingValue(true);
+                          }}
+                          style={{
+                            background: 'none',
+                            border: 'none',
+                            color: 'var(--accent-primary)',
+                            fontSize: '0.75rem',
+                            cursor: 'pointer',
+                            padding: '0',
+                            fontWeight: '600'
+                          }}
+                        >
+                          {currentLead.value && Number(currentLead.value) > 0 ? 'Editar' : '+ Inserir Valor'}
+                        </button>
+                      )}
+                    </div>
+
+                    {editingValue ? (
+                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="Ex: 1500.00"
+                          value={leadValueInput}
+                          onChange={(e) => setLeadValueInput(e.target.value)}
+                          className="input"
+                          style={{ padding: '5px 10px', fontSize: '0.85rem', flex: 1 }}
+                          autoFocus
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSaveValue}
+                          disabled={savingValue}
+                          className="btn btn-primary btn-sm"
+                          style={{ padding: '5px 12px', fontSize: '0.75rem' }}
+                        >
+                          {savingValue ? '...' : 'Salvar'}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingValue(false)}
+                          className="btn btn-secondary btn-sm"
+                          style={{ padding: '5px 10px', fontSize: '0.75rem' }}
+                        >
+                          Cancelar
+                        </button>
+                      </div>
+                    ) : (
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{
+                          fontWeight: '700',
+                          color: currentLead.value && Number(currentLead.value) > 0 ? 'var(--text-primary)' : 'var(--text-muted)',
+                          fontSize: '1.05rem'
+                        }}>
+                          {currentLead.value && Number(currentLead.value) > 0
+                            ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(currentLead.value)
+                            : 'Sem valor definido'}
+                        </span>
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                          Manual
+                        </span>
+                      </div>
+                    )}
                   </div>
                 </div>
 

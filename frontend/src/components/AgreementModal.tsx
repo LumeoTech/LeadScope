@@ -29,7 +29,7 @@ export const AgreementModal: React.FC<AgreementModalProps> = ({
   onAgreementCreated
 }) => {
   const [title, setTitle] = useState('Acordo Comercial de Prestação de Serviços');
-  const [value, setValue] = useState(2500);
+  const [value, setValue] = useState(lead?.value || 0);
   const [terms, setTerms] = useState('');
   const [clientEmail, setClientEmail] = useState('');
   const [loading, setLoading] = useState(false);
@@ -220,9 +220,9 @@ As partes reconhecem a plena validade jurídica do aceite por meio digital deste
                 <input
                   type="number"
                   className="input"
-                  value={value}
+                  value={value || ''}
                   onChange={(e) => setValue(Number(e.target.value))}
-                  placeholder="2500"
+                  placeholder="0.00"
                 />
               </div>
 

@@ -917,9 +917,9 @@ export const KanbanView: React.FC = () => {
                       {/* Valor Estimado */}
                       {visibleColumns.value && (
                         <td style={{ fontWeight: '600', color: 'var(--text-primary)' }}>
-                          {lead.value
+                          {lead.value && Number(lead.value) > 0
                             ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(lead.value)
-                            : 'R$ 0,00'}
+                            : <span style={{ color: 'var(--text-muted)', fontWeight: '400' }}>—</span>}
                         </td>
                       )}
 
@@ -1599,7 +1599,7 @@ export const KanbanView: React.FC = () => {
                     type="number"
                     step="0.01"
                     className="input"
-                    placeholder="2500.00"
+                    placeholder="0.00"
                     value={newValue}
                     onChange={(e) => setNewValue(e.target.value)}
                   />

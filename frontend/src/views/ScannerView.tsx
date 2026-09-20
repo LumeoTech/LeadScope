@@ -433,8 +433,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
         statusId: 1, // "Novo"
         title: `Oportunidade: ${lead.name} (${lead.category})`,
         priority: 'MEDIA',
-        source: 'PROSPECCAO',
-        value: 2500
+        source: 'PROSPECCAO'
       });
 
       setLeads(prev => prev.map(item =>
