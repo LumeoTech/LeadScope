@@ -1,22 +1,18 @@
 import React from 'react';
-import { LumeoLogo } from './LumeoLogo';
 import {
-  LayoutDashboard,
-  Kanban,
-  Radar,
-  Building2,
-  FileCheck2,
+  LayoutGrid,
   Calendar,
-  ShieldAlert,
+  Flag,
+  BarChart2,
   Users,
+  Share2,
+  HelpCircle,
+  Settings,
   Search,
   ChevronsLeft,
   ChevronsRight,
-  Rocket,
-  ChevronRight,
-  HelpCircle,
-  FolderDot,
-  Target
+  PanelLeftClose,
+  ChevronDown
 } from 'lucide-react';
 
 export type ActiveTab =
@@ -49,21 +45,29 @@ export const Sidebar: React.FC<SidebarProps> = ({
   userRole,
   pendingUsersCount = 0,
   onOpenHelp,
-  onOpenUpgrade,
   onOpenCommandPalette,
   isCollapsed = false,
   onToggleCollapse
 }) => {
   return (
     <aside
-      className="sidebar"
       style={{
         width: isCollapsed ? '72px' : '240px',
-        transition: 'width 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+        minWidth: isCollapsed ? '72px' : '240px',
+        background: '#0f1012',
+        borderRight: '1px solid rgba(255, 255, 255, 0.07)',
+        padding: '18px 12px',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'sticky',
+        top: 0,
+        height: '100vh',
+        zIndex: 100,
+        transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
         overflowX: 'hidden'
       }}
     >
-      {/* 1. Header do Workspace (Lumeo Tech) */}
+      {/* 1. Header do Workspace (Efferd LLC / LeadScope) */}
       <div style={{
         display: 'flex',
         alignItems: 'center',
@@ -71,25 +75,56 @@ export const Sidebar: React.FC<SidebarProps> = ({
         marginBottom: '16px',
         padding: '0 4px'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }} onClick={() => setActiveTab('dashboard')}>
-          <LumeoLogo size={26} showText={!isCollapsed} />
+        <div
+          onClick={() => setActiveTab('dashboard')}
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+        >
+          {/* Stylized Node/Flux Icon */}
+          <div style={{
+            width: '24px',
+            height: '24px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: '#ffffff',
+            flexShrink: 0
+          }}>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M4 6h16" />
+              <path d="M4 12h10" />
+              <path d="M4 18h14" />
+              <circle cx="18" cy="12" r="2" fill="#ffffff" />
+            </svg>
+          </div>
+
+          {!isCollapsed && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981' }} />
+              <span style={{ fontSize: '0.9rem', fontWeight: '700', color: '#ffffff', letterSpacing: '-0.01em' }}>
+                Efferd LLC
+              </span>
+              <ChevronDown size={13} color="#6e7481" />
+            </div>
+          )}
         </div>
 
-        <button
-          type="button"
-          onClick={onToggleCollapse}
-          title={isCollapsed ? 'Expandir menu' : 'Recolher menu'}
-          style={{
-            background: 'none',
-            border: 'none',
-            color: 'var(--text-muted)',
-            cursor: 'pointer',
-            padding: '4px',
-            borderRadius: '4px'
-          }}
-        >
-          {isCollapsed ? <ChevronsRight size={16} /> : <ChevronsLeft size={16} />}
-        </button>
+        {!isCollapsed && (
+          <button
+            type="button"
+            onClick={onToggleCollapse}
+            title="Recolher menu"
+            style={{
+              background: 'none',
+              border: 'none',
+              color: '#6e7481',
+              cursor: 'pointer',
+              padding: '4px',
+              borderRadius: '4px'
+            }}
+          >
+            <ChevronsLeft size={16} />
+          </button>
+        )}
       </div>
 
       {/* 2. Campo de Busca no Menu (Atalho ⌘K) */}
@@ -98,24 +133,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClick={onOpenCommandPalette}
           style={{
             position: 'relative',
-            marginBottom: '16px',
+            marginBottom: '18px',
             cursor: 'pointer'
           }}
-          title="Abrir busca rápida (⌘K)"
+          title="Search (⌘K)"
         >
-          <Search size={14} color="var(--text-muted)" style={{ position: 'absolute', left: '10px', top: '9px' }} />
+          <Search size={14} color="#5e6471" style={{ position: 'absolute', left: '10px', top: '9px' }} />
           <input
             type="text"
-            placeholder="Buscar no sistema (⌘ K)"
+            placeholder="Search..."
             readOnly
             style={{
               width: '100%',
-              padding: '6px 36px 6px 30px',
-              fontSize: '0.8rem',
-              background: 'var(--bg-hover)',
-              border: '1px solid var(--border-subtle)',
-              borderRadius: 'var(--radius-md)',
-              color: 'var(--text-secondary)',
+              padding: '6px 36px 6px 32px',
+              fontSize: '0.82rem',
+              background: '#16171a',
+              border: '1px solid rgba(255, 255, 255, 0.08)',
+              borderRadius: '8px',
+              color: '#8c93a0',
               outline: 'none',
               cursor: 'pointer'
             }}
@@ -123,13 +158,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <span style={{
             position: 'absolute',
             right: '8px',
-            top: '7px',
+            top: '6px',
             fontSize: '0.68rem',
-            color: 'var(--text-muted)',
-            border: '1px solid var(--border-subtle)',
+            color: '#686f7d',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
             padding: '1px 5px',
             borderRadius: '4px',
-            background: 'var(--bg-surface)'
+            background: '#1e2025'
           }}>
             ⌘ K
           </span>
@@ -138,19 +173,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <button
           type="button"
           onClick={onOpenCommandPalette}
-          title="Busca rápida (⌘K)"
+          title="Search (⌘K)"
           style={{
             width: '100%',
             height: '36px',
             borderRadius: '8px',
-            border: '1px solid var(--border-subtle)',
-            background: 'var(--bg-hover)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
+            background: '#16171a',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            marginBottom: '16px',
+            marginBottom: '18px',
             cursor: 'pointer',
-            color: 'var(--text-muted)'
+            color: '#8c93a0'
           }}
         >
           <Search size={15} />
@@ -158,221 +193,154 @@ export const Sidebar: React.FC<SidebarProps> = ({
       )}
 
       {/* 3. MENU PRINCIPAL */}
-      {!isCollapsed && <div className="uxer-sidebar-label">PRINCIPAL</div>}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+        {/* Dashboard */}
         <button
           onClick={() => setActiveTab('dashboard')}
-          className={`uxer-nav-item ${activeTab === 'dashboard' ? 'active' : ''}`}
+          style={getNavItemStyle(activeTab === 'dashboard', isCollapsed)}
           title="Dashboard"
         >
-          <LayoutDashboard size={16} />
+          <LayoutGrid size={16} color={activeTab === 'dashboard' ? '#ffffff' : '#8c93a0'} />
           {!isCollapsed && <span>Dashboard</span>}
         </button>
 
-        <button
-          onClick={() => setActiveTab('kanban')}
-          className={`uxer-nav-item ${activeTab === 'kanban' ? 'active' : ''}`}
-          title="Seus Clientes"
-        >
-          <Kanban size={16} />
-          {!isCollapsed && <span style={{ flex: 1 }}>Seus Clientes</span>}
-        </button>
-      </div>
-
-      {/* 4. FERRAMENTAS COMERCIAIS */}
-      {!isCollapsed && <div className="uxer-sidebar-label">OPERAÇÕES</div>}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '8px' }}>
-        <button
-          onClick={() => setActiveTab('scanner')}
-          className={`uxer-nav-item ${activeTab === 'scanner' ? 'active' : ''}`}
-          title="Prospecção"
-        >
-          <Radar size={16} />
-          {!isCollapsed && <span>Prospecção</span>}
-        </button>
-
-        <button
-          onClick={() => setActiveTab('companies')}
-          className={`uxer-nav-item ${activeTab === 'companies' ? 'active' : ''}`}
-          title="Empresas"
-        >
-          <Building2 size={16} />
-          {!isCollapsed && <span>Empresas</span>}
-        </button>
-
-        <button
-          onClick={() => setActiveTab('proposals')}
-          className={`uxer-nav-item ${activeTab === 'proposals' ? 'active' : ''}`}
-          title="Negócios e Propostas"
-        >
-          <FileCheck2 size={16} />
-          {!isCollapsed && <span>Negócios & Propostas</span>}
-        </button>
-
+        {/* Content Calendar / Agenda */}
         <button
           onClick={() => setActiveTab('agenda')}
-          className={`uxer-nav-item ${activeTab === 'agenda' ? 'active' : ''}`}
-          title="Agenda & Reuniões"
+          style={getNavItemStyle(activeTab === 'agenda', isCollapsed)}
+          title="Content Calendar"
         >
-          <Calendar size={16} />
-          {!isCollapsed && <span>Agenda & Reuniões</span>}
+          <Calendar size={16} color={activeTab === 'agenda' ? '#ffffff' : '#8c93a0'} />
+          {!isCollapsed && <span>Content Calendar</span>}
         </button>
-      </div>
 
-      {/* 5. PLANEJAMENTO */}
-      {!isCollapsed && <div className="uxer-sidebar-label">PLANEJAMENTO</div>}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginBottom: '14px' }}>
+        {/* Campaigns / Oportunidades & Leads */}
         <button
-          onClick={() => setActiveTab('campaigns')}
-          className={`uxer-nav-item ${activeTab === 'campaigns' ? 'active' : ''}`}
-          title="Campanhas"
-          style={{ width: '100%', textAlign: 'left' }}
+          onClick={() => setActiveTab('kanban')}
+          style={getNavItemStyle(activeTab === 'kanban', isCollapsed)}
+          title="Campaigns"
         >
-          <span style={{ width: '8px', height: '8px', borderRadius: '3px', background: '#3b82f6', flexShrink: 0 }}></span>
+          <Flag size={16} color={activeTab === 'kanban' ? '#ffffff' : '#8c93a0'} />
+          {!isCollapsed && <span>Campaigns</span>}
+        </button>
+
+        {/* Analytics / Scanner */}
+        <button
+          onClick={() => setActiveTab('scanner')}
+          style={getNavItemStyle(activeTab === 'scanner', isCollapsed)}
+          title="Analytics"
+        >
+          <BarChart2 size={16} color={activeTab === 'scanner' ? '#ffffff' : '#8c93a0'} />
+          {!isCollapsed && <span>Analytics</span>}
+        </button>
+
+        {/* Team / Equipe */}
+        <button
+          onClick={() => setActiveTab('users')}
+          style={getNavItemStyle(activeTab === 'users', isCollapsed)}
+          title="Team"
+        >
+          <Users size={16} color={activeTab === 'users' ? '#ffffff' : '#8c93a0'} />
           {!isCollapsed && (
             <>
-              <span style={{ flex: 1, fontSize: '0.82rem' }}>Campanhas</span>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', background: 'var(--bg-hover)', padding: '1px 6px', borderRadius: '8px' }}>
-                5
-              </span>
+              <span style={{ flex: 1 }}>Team</span>
+              {Boolean(pendingUsersCount && pendingUsersCount > 0) && (
+                <span style={{
+                  background: '#ef4444',
+                  color: '#ffffff',
+                  fontSize: '0.7rem',
+                  fontWeight: '700',
+                  padding: '2px 6px',
+                  borderRadius: '10px'
+                }}>
+                  {pendingUsersCount}
+                </span>
+              )}
             </>
           )}
         </button>
 
+        {/* Integrations / Empresas & Parcerias */}
         <button
-          onClick={() => setActiveTab('goals')}
-          className={`uxer-nav-item ${activeTab === 'goals' ? 'active' : ''}`}
-          title="Metas Comerciais"
-          style={{ width: '100%', textAlign: 'left' }}
+          onClick={() => setActiveTab('companies')}
+          style={getNavItemStyle(activeTab === 'companies', isCollapsed)}
+          title="Integrations"
         >
-          <span style={{ width: '8px', height: '8px', borderRadius: '3px', background: '#ec4899', flexShrink: 0 }}></span>
-          {!isCollapsed && (
-            <>
-              <span style={{ flex: 1, fontSize: '0.82rem' }}>Metas Comerciais</span>
-              <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', background: 'var(--bg-hover)', padding: '1px 6px', borderRadius: '8px' }}>
-                4
-              </span>
-            </>
-          )}
+          <Share2 size={16} color={activeTab === 'companies' ? '#ffffff' : '#8c93a0'} />
+          {!isCollapsed && <span>Integrations</span>}
         </button>
       </div>
 
-      {/* 6. ADMIN & CONFIGURAÇÕES */}
-      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '2px', borderTop: '1px solid var(--border-subtle)', paddingTop: '12px' }}>
-        {userRole !== 'VENDEDOR' && (
-          <button
-            onClick={() => setActiveTab('users')}
-            className={`uxer-nav-item ${activeTab === 'users' ? 'active' : ''}`}
-            title="Usuários"
-          >
-            <Users size={16} />
-            {!isCollapsed && (
-              <>
-                <span style={{ flex: 1 }}>Usuários</span>
-                {Boolean(pendingUsersCount && pendingUsersCount > 0) && (
-                  <span style={{
-                    background: '#ef4444',
-                    color: '#ffffff',
-                    fontSize: '0.7rem',
-                    fontWeight: '700',
-                    padding: '2px 6px',
-                    borderRadius: '10px'
-                  }}>
-                    {pendingUsersCount}
-                  </span>
-                )}
-              </>
-            )}
-          </button>
-        )}
-
-        {userRole !== 'VENDEDOR' && (
-          <button
-            onClick={() => setActiveTab('audit')}
-            className={`uxer-nav-item ${activeTab === 'audit' ? 'active' : ''}`}
-            title="Auditoria"
-          >
-            <ShieldAlert size={16} />
-            {!isCollapsed && <span>Auditoria</span>}
-          </button>
-        )}
-
-        {/* Central de Ajuda Funcional */}
+      {/* 4. FOOTER / SUPPORT & SETTINGS */}
+      <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: '3px' }}>
         <button
           type="button"
           onClick={onOpenHelp}
-          className="uxer-nav-item"
-          title="Central de Ajuda & Documentação"
-          style={{ width: '100%', textAlign: 'left' }}
+          style={getNavItemStyle(false, isCollapsed)}
+          title="Support"
         >
-          <HelpCircle size={16} />
-          {!isCollapsed && <span>Central de Ajuda</span>}
+          <HelpCircle size={16} color="#8c93a0" />
+          {!isCollapsed && <span>Support</span>}
         </button>
 
-        {/* Card Upgrade & Unlock Funcional */}
-        {!isCollapsed ? (
-          <div
-            onClick={onOpenUpgrade}
-            title="Ver licença e plano"
-            style={{
-              marginTop: '12px',
-              padding: '12px',
-              borderRadius: 'var(--radius-md)',
-              background: 'var(--bg-hover)',
-              border: '1px solid var(--border-subtle)',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px',
-              cursor: 'pointer',
-              transition: 'all 0.15s ease'
-            }}
-          >
-            <div style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '8px',
-              background: 'linear-gradient(135deg, #ff5722 0%, #f4511e 100%)',
-              color: '#fff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexShrink: 0
-            }}>
-              <Rocket size={16} />
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <div style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-primary)', lineHeight: 1.2 }}>
-                Upgrade & unlock
-              </div>
-              <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                all features
-              </div>
-            </div>
-            <ChevronRight size={14} color="var(--accent-coral)" />
-          </div>
-        ) : (
+        <button
+          type="button"
+          onClick={() => setActiveTab('audit')}
+          style={getNavItemStyle(activeTab === 'audit', isCollapsed)}
+          title="Settings"
+        >
+          <Settings size={16} color="#8c93a0" />
+          {!isCollapsed && <span>Settings</span>}
+        </button>
+
+        {/* Bottom copyright line */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: isCollapsed ? 'center' : 'space-between',
+          padding: '12px 6px 0',
+          borderTop: '1px solid rgba(255, 255, 255, 0.05)',
+          marginTop: '8px',
+          color: '#555b67',
+          fontSize: '0.72rem'
+        }}>
+          {!isCollapsed && <span>© Efferd LLC</span>}
           <button
             type="button"
-            onClick={onOpenUpgrade}
-            title="Upgrade & Licença"
+            onClick={onToggleCollapse}
+            title={isCollapsed ? 'Expandir' : 'Recolher'}
             style={{
-              width: '100%',
-              height: '36px',
-              marginTop: '10px',
-              borderRadius: '8px',
+              background: 'none',
               border: 'none',
-              background: 'linear-gradient(135deg, #ff5722 0%, #f4511e 100%)',
-              color: '#fff',
+              color: '#555b67',
+              cursor: 'pointer',
+              padding: '2px',
               display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer'
+              alignItems: 'center'
             }}
           >
-            <Rocket size={16} />
+            {isCollapsed ? <ChevronsRight size={14} /> : <PanelLeftClose size={14} />}
           </button>
-        )}
+        </div>
       </div>
     </aside>
   );
 };
+
+const getNavItemStyle = (isActive: boolean, isCollapsed: boolean): React.CSSProperties => ({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: isCollapsed ? 'center' : 'flex-start',
+  gap: '10px',
+  padding: '9px 12px',
+  borderRadius: '8px',
+  background: isActive ? '#22252a' : 'transparent',
+  color: isActive ? '#ffffff' : '#8c93a0',
+  fontSize: '0.84rem',
+  fontWeight: isActive ? '600' : '500',
+  cursor: 'pointer',
+  border: 'none',
+  width: '100%',
+  textAlign: 'left',
+  transition: 'all 0.15s ease'
+});

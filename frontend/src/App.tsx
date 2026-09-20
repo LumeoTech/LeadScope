@@ -102,28 +102,28 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
-      <Navbar
-        user={user}
-        onLogout={handleLogout}
-        onNavigateTab={(tab) => setActiveTab(tab)}
+    <div style={{ minHeight: '100vh', display: 'flex', background: '#0c0d0f' }}>
+      <Sidebar
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        userRole={user.role}
         pendingUsersCount={pendingUsersCount}
+        onOpenHelp={() => setIsHelpOpen(true)}
+        onOpenUpgrade={() => setIsUpgradeOpen(true)}
+        onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
+        isCollapsed={isSidebarCollapsed}
+        onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
       />
-      
-      <div className="app-container">
-        <Sidebar
-          activeTab={activeTab}
-          setActiveTab={setActiveTab}
-          userRole={user.role}
+
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', minWidth: 0, height: '100vh', overflowY: 'auto' }}>
+        <Navbar
+          user={user}
+          onLogout={handleLogout}
+          onNavigateTab={(tab) => setActiveTab(tab)}
           pendingUsersCount={pendingUsersCount}
-          onOpenHelp={() => setIsHelpOpen(true)}
-          onOpenUpgrade={() => setIsUpgradeOpen(true)}
-          onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
-          isCollapsed={isSidebarCollapsed}
-          onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
         />
 
-        <main className="main-content">
+        <main className="main-content" style={{ flex: 1, paddingTop: '12px' }}>
           {activeTab === 'dashboard' && <DashboardView setActiveTab={setActiveTab} />}
           {activeTab === 'kanban' && <KanbanView />}
           {activeTab === 'scanner' && <ScannerView onNavigate={(tab) => setActiveTab(tab)} />}
