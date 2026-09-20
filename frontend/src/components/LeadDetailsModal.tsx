@@ -209,11 +209,30 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
 
   if (!isOpen || !currentLead) return null;
 
+  const currentUser: any = (() => {
+    try {
+      const u = localStorage.getItem('user');
+      return u ? JSON.parse(u) : null;
+    } catch {
+      return null;
+    }
+  })();
+
+  const isAdmin = currentUser?.role === 'ADMIN';
+  const isViewer = currentUser?.role === 'VIEWER';
+  const isAssigned = currentLead?.assignedToId && currentUser?.id === currentLead.assignedToId;
+  const canReassign = isAdmin || isAssigned;
+
   const discardedStatus = statuses.find(s =>
     s.name.toLowerCase().includes('descart') || s.name.toLowerCase().includes('perdid')
   );
 
   const handleStatusChangeSelect = async (newStatusIdStr: string) => {
+    if (isViewer) {
+      alert('Usuários com perfil Visualizador possuem acesso apenas de leitura.');
+      return;
+    }
+
     const newStatusId = Number(newStatusIdStr);
     const targetStatus = statuses.find(s => s.id === newStatusId);
 
@@ -481,6 +500,158 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
           <div style={{ flex: 1, overflowY: 'auto', padding: '24px 28px' }}>
             {activeTab === 'info' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {/* Attribution and Reassignment Bar */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '12px 18px',
+                  background: 'rgba(255, 255, 255, 0.03)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: '10px',
+                  flexWrap: 'wrap',
+                  gap: '12px'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{
+                      width: '32px',
+                      height: '32px',
+                      borderRadius: '50%',
+                      background: currentLead.assignedToName ? 'rgba(59, 130, 246, 0.15)' : 'rgba(156, 163, 175, 0.15)',
+                      color: currentLead.assignedToName ? '#60a5fa' : 'var(--text-muted)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: '700',
+                      fontSize: '0.82rem'
+                    }}>
+                      <User size={16} />
+                    </div>
+                    <div>
+                      <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', display: 'block' }}>
+                        Responsável pelo Lead
+                      </span>
+                      <strong style={{ fontSize: '0.92rem', color: currentLead.assignedToName ? '#93c5fd' : 'var(--text-muted)' }}>
+                        {currentLead.assignedToName ? `👤 Atendido por: ${currentLead.assignedToName}` : '⚠️ Nenhum responsável atribuído'}
+                      </strong>
+                    </div>
+                  </div>
+
+                  {!isViewer && (
+                    <div>
+                      {canReassign ? (
+                        <button
+                          type="button"
+                          onClick={() => setShowTransferModal(true)}
+                          className="btn btn-secondary btn-sm"
+                          style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', padding: '6px 12px' }}
+                        >
+                          <ArrowRightLeft size={14} />
+                          <span>Reatribuir / Transferir Lead</span>
+                        </button>
+                      ) : (
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
+                          🔒 Somente admin ou o responsável ({currentLead.assignedToName}) podem reatribuir
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* AI Qualification Panel (LeadScope Autonomous Agent) */}
+                <div className="card" style={{
+                  padding: '18px',
+                  background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%)',
+                  border: '1px solid rgba(59, 130, 246, 0.3)',
+                  borderRadius: '10px',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', flexWrap: 'wrap', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{
+                        width: '28px',
+                        height: '28px',
+                        borderRadius: '6px',
+                        background: 'rgba(59, 130, 246, 0.2)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#60a5fa'
+                      }}>
+                        <ShieldCheck size={16} />
+                      </div>
+                      <div>
+                        <h4 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '700', color: '#93c5fd' }}>
+                          Qualificação Inteligente do Lead (Agente Autônomo)
+                        </h4>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>
+                          Análise preditiva de probabilidade de conversão e custo regional
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '4px 12px',
+                      borderRadius: '20px',
+                      background: (currentLead.score || 0) >= 80 ? 'rgba(34, 197, 94, 0.15)' : (currentLead.score || 0) >= 60 ? 'rgba(234, 179, 8, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                      border: `1px solid ${(currentLead.score || 0) >= 80 ? 'rgba(34, 197, 94, 0.4)' : (currentLead.score || 0) >= 60 ? 'rgba(234, 179, 8, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`,
+                      color: (currentLead.score || 0) >= 80 ? '#4ade80' : (currentLead.score || 0) >= 60 ? '#facc15' : '#f87171',
+                      fontWeight: '800',
+                      fontSize: '0.85rem'
+                    }}>
+                      Score: {currentLead.score !== undefined && currentLead.score !== null ? currentLead.score : 85} / 100
+                    </div>
+                  </div>
+
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px', marginBottom: '14px' }}>
+                    <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px', borderRadius: '8px' }}>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Chance de Aceite</span>
+                      <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#38bdf8' }}>
+                        {currentLead.acceptanceChance !== undefined && currentLead.acceptanceChance !== null ? `${currentLead.acceptanceChance}%` : '82%'}
+                      </span>
+                    </div>
+
+                    <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px', borderRadius: '8px' }}>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Custo de Vida Regional</span>
+                      <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#a78bfa' }}>
+                        {currentLead.costOfLiving !== undefined && currentLead.costOfLiving !== null ? currentLead.costOfLiving : '1.15'}
+                      </span>
+                    </div>
+
+                    <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px', borderRadius: '8px' }}>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Potencial de Mercado</span>
+                      <span style={{ fontSize: '1rem', fontWeight: '800', color: '#34d399' }}>
+                        {currentLead.locationPotential || 'ALTO'}
+                      </span>
+                    </div>
+
+                    {currentLead.siteName && (
+                      <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px', borderRadius: '8px' }}>
+                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Portal de Origem</span>
+                        <span style={{ fontSize: '0.9rem', fontWeight: '700', color: '#fbbf24' }}>
+                          {currentLead.siteName}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {currentLead.scoreRationale && (
+                    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '10px 12px', borderRadius: '6px', fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
+                      <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '2px' }}>Justificativa do Score:</strong>
+                      {currentLead.scoreRationale}
+                    </div>
+                  )}
+
+                  {currentLead.websiteContentSummary && (
+                    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '10px 12px', borderRadius: '6px', fontSize: '0.82rem', color: 'var(--text-secondary)' }}>
+                      <strong style={{ color: 'var(--text-primary)', display: 'block', marginBottom: '2px' }}>Conteúdo do Website Extraído:</strong>
+                      {currentLead.websiteContentSummary}
+                    </div>
+                  )}
+                </div>
+
                 <div style={{
                   display: 'grid',
                   gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',

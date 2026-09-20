@@ -28,7 +28,8 @@ import {
   Kanban as KanbanIcon,
   Check,
   Filter as FilterIcon,
-  Columns
+  Columns,
+  Bot
 } from 'lucide-react';
 
 export const KanbanView: React.FC = () => {
@@ -38,7 +39,8 @@ export const KanbanView: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
-  const [leadScope, setLeadScope] = useState<'MY' | 'ALL'>('MY');
+  const [leadScope, setLeadScope] = useState<'MY' | 'ALL'>('ALL');
+  const [runningAgent, setRunningAgent] = useState(false);
 
   // View Mode: Table (default like Uxerflow screenshot) or Kanban
   const [viewMode, setViewMode] = useState<'TABLE' | 'KANBAN'>('TABLE');
@@ -147,6 +149,19 @@ export const KanbanView: React.FC = () => {
       loadData();
     } catch (e: any) {
       alert(e.message || 'Erro ao criar oportunidade');
+    }
+  };
+
+  const handleRunAgent = async () => {
+    setRunningAgent(true);
+    try {
+      const res = await api.leads.runAgent();
+      alert(res.message || 'Agente autônomo executado com sucesso!');
+      loadData();
+    } catch (err: any) {
+      alert('Erro ao executar agente de qualificação: ' + (err.message || 'Erro desconhecido'));
+    } finally {
+      setRunningAgent(false);
     }
   };
 
@@ -766,16 +781,41 @@ export const KanbanView: React.FC = () => {
             <span>Exportar</span>
           </button>
 
-          {/* Primary Button: + Add New Product */}
-          <button
-            type="button"
-            onClick={() => setShowNewLeadModal(true)}
-            className="btn btn-primary"
-            style={{ padding: '8px 16px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
-          >
-            <Plus size={16} />
-            <span>+ Nova Oportunidade</span>
-          </button>
+          {/* AI Autonomous Qualification Trigger */}
+          {currentUser?.role !== 'VIEWER' && (
+            <button
+              type="button"
+              onClick={handleRunAgent}
+              disabled={runningAgent}
+              className="btn btn-secondary btn-sm"
+              style={{
+                padding: '7px 12px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'rgba(59, 130, 246, 0.12)',
+                borderColor: 'rgba(59, 130, 246, 0.3)',
+                color: '#60a5fa'
+              }}
+              title="Executar Agente Autônomo de Qualificação de Leads"
+            >
+              <Bot size={14} className={runningAgent ? 'spin' : ''} />
+              <span>{runningAgent ? 'Qualificando...' : 'Qualificar Leads (IA)'}</span>
+            </button>
+          )}
+
+          {/* Primary Button: + Nova Oportunidade (Oculto para Viewer) */}
+          {currentUser?.role !== 'VIEWER' && (
+            <button
+              type="button"
+              onClick={() => setShowNewLeadModal(true)}
+              className="btn btn-primary"
+              style={{ padding: '8px 16px', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '6px' }}
+            >
+              <Plus size={16} />
+              <span>+ Nova Oportunidade</span>
+            </button>
+          )}
         </div>
       </div>
 

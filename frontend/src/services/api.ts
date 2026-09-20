@@ -86,10 +86,47 @@ export interface Lead {
   expectedClose?: string;
   priority: string;
   source: string;
+  siteId?: number;
+  siteName?: string;
+  acceptanceChance?: number;
+  costOfLiving?: number;
+  locationPotential?: string;
+  scoreRationale?: string;
+  websiteContentSummary?: string;
   createdById: number;
   createdByName?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface Site {
+  id: number;
+  name: string;
+  url: string;
+  slug: string;
+  webhookUrl?: string;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface SiteEmailTemplate {
+  id: number;
+  siteId: number;
+  siteName?: string;
+  name: string;
+  triggerEvent: string;
+  subject: string;
+  bodyHtml: string;
+  active: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface InviteUserRequest {
+  email: string;
+  name?: string;
+  role: string;
 }
 
 export interface LeadNote {
@@ -351,6 +388,11 @@ export const api = {
         method: 'POST',
         body: JSON.stringify(data),
       }),
+    acceptInvite: (data: { email: string; password: string }) =>
+      request<AuthResponse>('/auth/accept-invite', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
     me: () => request<UserInfo>('/auth/me'),
   },
 
@@ -435,6 +477,10 @@ export const api = {
       request<LeadNote>(`/leads/${leadId}/notes`, {
         method: 'POST',
         body: JSON.stringify({ content }),
+      }),
+    runAgent: () =>
+      request<{ status: string; processed: number; message: string }>('/leads/agent/run', {
+        method: 'POST',
       }),
     transfer: (id: number, targetUserId: number, reason?: string) =>
       request<Lead>(`/leads/${id}/transfer`, {
@@ -561,6 +607,45 @@ export const api = {
       request<UserInfo>('/users', {
         method: 'POST',
         body: JSON.stringify(data),
+      }),
+    invite: (data: InviteUserRequest) =>
+      request<UserInfo>('/users/invite', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+  },
+
+  sites: {
+    list: () => request<Site[]>('/sites'),
+    get: (id: number) => request<Site>(`/sites/${id}`),
+    create: (data: Partial<Site>) =>
+      request<Site>('/sites', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    update: (id: number, data: Partial<Site>) =>
+      request<Site>(`/sites/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    delete: (id: number) =>
+      request<void>(`/sites/${id}`, {
+        method: 'DELETE',
+      }),
+    listTemplates: (siteId: number) => request<SiteEmailTemplate[]>(`/sites/${siteId}/templates`),
+    createTemplate: (siteId: number, data: Partial<SiteEmailTemplate>) =>
+      request<SiteEmailTemplate>(`/sites/${siteId}/templates`, {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    updateTemplate: (siteId: number, templateId: number, data: Partial<SiteEmailTemplate>) =>
+      request<SiteEmailTemplate>(`/sites/${siteId}/templates/${templateId}`, {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    deleteTemplate: (siteId: number, templateId: number) =>
+      request<void>(`/sites/${siteId}/templates/${templateId}`, {
+        method: 'DELETE',
       }),
   },
 

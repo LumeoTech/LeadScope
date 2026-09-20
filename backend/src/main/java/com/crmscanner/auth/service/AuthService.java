@@ -62,6 +62,23 @@ public class AuthService {
     }
 
     /**
+     * Define a senha do usuário convidado e retorna access + refresh token com a role pré-definida.
+     */
+    @Transactional
+    public AuthResponse acceptInvite(com.crmscanner.auth.dto.AcceptInviteRequest request) {
+        String normalizedEmail = request.email() != null ? request.email().trim().toLowerCase() : "";
+        User user = userRepository.findByEmail(normalizedEmail)
+                .orElseThrow(() -> new BusinessException("Convite ou usuário não encontrado para o e-mail: " + normalizedEmail));
+
+        user.setPassword(passwordEncoder.encode(request.password()));
+        user.setStatus("ACTIVE");
+        user.setActive(true);
+        User saved = userRepository.save(user);
+
+        return buildAuthResponse(saved);
+    }
+
+    /**
      * Autentica o usuário e retorna access + refresh token.
      */
     @Transactional

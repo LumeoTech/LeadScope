@@ -34,6 +34,7 @@ public class SecurityConfig {
         "/api/auth/register",
         "/api/auth/refresh",
         "/api/contracts/webhook",
+        "/api/sites/capture/**",
         "/api/health",
         "/healthz",
         "/health",

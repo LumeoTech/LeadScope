@@ -17,6 +17,8 @@ import { HelpModal } from './components/HelpModal';
 import { UpgradeModal } from './components/UpgradeModal';
 import { CommandPaletteModal } from './components/CommandPaletteModal';
 import { PublicAgreementView } from './views/PublicAgreementView';
+import { SitesView } from './views/SitesView';
+import { AcceptInviteView } from './views/AcceptInviteView';
 
 export const App: React.FC = () => {
   const [user, setUser] = useState<UserInfo | null>(null);
@@ -35,6 +37,11 @@ export const App: React.FC = () => {
   if (pathname.startsWith('/aceite/')) {
     const token = pathname.replace('/aceite/', '').split('/')[0];
     return <PublicAgreementView token={token} />;
+  }
+
+  // Check for accept invite route or supabase invite link (/invite, /accept-invite, or #type=invite)
+  if (pathname.startsWith('/invite') || pathname.startsWith('/accept-invite') || window.location.hash.includes('type=invite')) {
+    return <AcceptInviteView onLoginSuccess={(loggedInUser) => setUser(loggedInUser)} />;
   }
 
   const loadPendingUsersCount = useCallback(async () => {
@@ -70,7 +77,7 @@ export const App: React.FC = () => {
   }, [user, loadPendingUsersCount]);
 
   useEffect(() => {
-    if (user?.role === 'VENDEDOR' && (activeTab === 'audit' || activeTab === 'users')) {
+    if ((user?.role === 'VENDEDOR' || user?.role === 'VIEWER') && (activeTab === 'audit' || activeTab === 'users' || activeTab === 'sites')) {
       setActiveTab('kanban');
     }
   }, [user, activeTab]);
@@ -134,6 +141,7 @@ export const App: React.FC = () => {
           {activeTab === 'goals' && <GoalsView />}
           {activeTab === 'users' && <UsersView onRefreshPendingCount={loadPendingUsersCount} />}
           {activeTab === 'audit' && <AuditView />}
+          {activeTab === 'sites' && <SitesView />}
         </main>
       </div>
 

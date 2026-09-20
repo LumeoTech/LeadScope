@@ -55,6 +55,28 @@ public class Lead {
     private String source = "MANUAL"; // MANUAL, SCANNER, INDICACAO
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "site_id")
+    private Site site;
+
+    @Column(name = "acceptance_chance", precision = 5, scale = 2)
+    private BigDecimal acceptanceChance;
+
+    @Column(name = "cost_of_living", length = 100)
+    private String costOfLiving;
+
+    @Column(name = "location_potential", length = 100)
+    private String locationPotential;
+
+    @Column(name = "score_rationale", columnDefinition = "TEXT")
+    private String scoreRationale;
+
+    @Column(name = "score")
+    private Integer score;
+
+    @Column(name = "website_content_summary", columnDefinition = "TEXT")
+    private String websiteContentSummary;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;
 

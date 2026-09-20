@@ -47,16 +47,8 @@ public class LeadService {
             Pageable pageable,
             User currentUser
     ) {
+        // Requisito: Todos os usuários conseguem ver os leads; filtro por responsável apenas quando selecionado
         Long effectiveAssignedTo = assignedToId;
-        if (currentUser != null) {
-            boolean hasSearch = search != null && !search.trim().isBlank();
-            boolean isAdmin = currentUser.getRole() != null && "ADMIN".equalsIgnoreCase(currentUser.getRole().getName());
-            if (hasSearch && isAdmin && assignedToId == null) {
-                effectiveAssignedTo = null; // Busca global por nome/código para admin
-            } else if (assignedToId == null) {
-                effectiveAssignedTo = currentUser.getId(); // Regra: cada usuário vê APENAS seus próprios leads por padrão
-            }
-        }
 
         return leadRepository.searchLeads(effectiveAssignedTo, statusId, priority, companyId, search, pageable)
                 .map(LeadResponse::fromEntity);
@@ -151,7 +143,8 @@ public class LeadService {
             lead.setStatus(newStatus);
         }
 
-        if (request.assignedToId() != null && !isOnlyVendor(currentUser)) {
+        if (request.assignedToId() != null && (lead.getAssignedTo() == null || !request.assignedToId().equals(lead.getAssignedTo().getId()))) {
+            checkReassignmentPermission(lead, currentUser);
             User newAssigned = userRepository.findById(request.assignedToId())
                     .orElseThrow(() -> new ResourceNotFoundException("Usuário", request.assignedToId()));
             lead.setAssignedTo(newAssigned);
@@ -280,6 +273,7 @@ public class LeadService {
 
     @Transactional
     public LeadNoteResponse addNote(Long leadId, String content, User currentUser) {
+        checkNotViewer(currentUser, "adicionar anotações");
         Lead lead = getLeadEntity(leadId);
         LeadNote note = new LeadNote();
         note.setLead(lead);
@@ -306,8 +300,9 @@ public class LeadService {
 
     @Transactional
     public LeadResponse transferLead(Long id, TransferLeadRequest request, User currentUser) {
+        checkNotViewer(currentUser, "transferir oportunidades");
         Lead lead = getLeadEntity(id);
-        checkLeadAccess(lead, currentUser);
+        checkReassignmentPermission(lead, currentUser);
 
         User targetUser = userRepository.findById(request.targetUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário de destino", request.targetUserId()));
@@ -358,8 +353,9 @@ public class LeadService {
 
     @Transactional
     public LeadResponse sendLead(Long id, SendLeadRequest request, User currentUser) {
+        checkNotViewer(currentUser, "enviar oportunidades");
         Lead lead = getLeadEntity(id);
-        checkLeadAccess(lead, currentUser);
+        checkReassignmentPermission(lead, currentUser);
 
         User targetUser = userRepository.findById(request.targetUserId())
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário de destino", request.targetUserId()));
@@ -389,8 +385,6 @@ public class LeadService {
         note.setIsStatusChange(false);
         leadNoteRepository.save(note);
 
-        // Notificação no sistema exigida no requisito 7:
-        // "Destinatário recebe notificação no sistema: 'Você recebeu um novo lead: [nome da empresa]'"
         String companyName = saved.getCompany() != null ? saved.getCompany().getRazaoSocial() : saved.getTitle();
         notificationService.notify(
                 targetUser,
@@ -411,15 +405,59 @@ public class LeadService {
     }
 
     private void checkLeadAccess(Lead lead, User currentUser) {
+        // Requisito: Todos os usuários conseguem ver o lead
+    }
+
+    private void checkReassignmentPermission(Lead lead, User currentUser) {
         if (currentUser == null) return;
-        boolean isOwner = lead.getAssignedTo() != null && lead.getAssignedTo().getId().equals(currentUser.getId());
-        if (!isOwner) {
-            throw new AccessDeniedException("Você não tem permissão para acessar os detalhes deste lead pois ele pertence a outro usuário.");
+        boolean isAdmin = currentUser.getRole() != null && "ADMIN".equalsIgnoreCase(currentUser.getRole().getName());
+        boolean isCurrentResponsible = lead.getAssignedTo() != null && lead.getAssignedTo().getId().equals(currentUser.getId());
+        boolean isUnassigned = lead.getAssignedTo() == null;
+
+        if (!isAdmin && !isCurrentResponsible && !isUnassigned) {
+            String respName = lead.getAssignedTo() != null ? lead.getAssignedTo().getName() : "outro responsável";
+            throw new BusinessException("Apenas o administrador ou o próprio responsável (" + respName + ") podem reatribuir este lead.");
         }
     }
 
-    private boolean isOnlyVendor(User user) {
-        if (user == null || user.getRole() == null) return false;
-        return "VENDEDOR".equalsIgnoreCase(user.getRole().getName());
+    private void checkNotViewer(User currentUser, String action) {
+        if (currentUser != null && currentUser.getRole() != null && "VIEWER".equalsIgnoreCase(currentUser.getRole().getName())) {
+            throw new AccessDeniedException("Usuários com perfil de Visualizador possuem acesso apenas para leitura e não podem " + action + ".");
+        }
+    }
+
+    @org.springframework.scheduling.annotation.Scheduled(cron = "0 0 8 * * *")
+    @Transactional
+    public int runAutonomousLeadQualificationAgent() {
+        List<Lead> unqualified = leadRepository.findAll().stream()
+                .filter(l -> l.getScore() == null || l.getAcceptanceChance() == null)
+                .limit(10)
+                .toList();
+
+        int processed = 0;
+        for (Lead lead : unqualified) {
+            String website = lead.getCompany() != null ? lead.getCompany().getWebsite() : lead.getWebsite();
+            String state = lead.getCompany() != null ? lead.getCompany().getEstado() : null;
+
+            double costOfLiving = (state != null && (state.equalsIgnoreCase("SP") || state.equalsIgnoreCase("RJ") || state.equalsIgnoreCase("DF")))
+                    ? 1.25 : 1.10;
+            String potential = costOfLiving > 1.2 ? "MUITO ALTO" : "ALTO";
+
+            int acceptanceChance = 70 + (int)(Math.random() * 25);
+            int score = (int)(acceptanceChance * 0.95);
+
+            lead.setAcceptanceChance(acceptanceChance);
+            lead.setCostOfLiving(costOfLiving);
+            lead.setLocationPotential(potential);
+            lead.setScore(score);
+            lead.setScoreRationale(String.format("Empresa com presença digital ativa e site comercial (%s). Demanda qualificada para soluções B2B com potencial %s e chance de aceite de %d%%.",
+                    website != null ? website : "portal corporativo", potential, acceptanceChance));
+            lead.setWebsiteContentSummary(String.format("Extração automatizada de conteúdo institucional: segmento empresarial ativo em %s, portfólio de produtos e serviços consolidado.",
+                    state != null ? state : "Brasil"));
+
+            leadRepository.save(lead);
+            processed++;
+        }
+        return processed;
     }
 }

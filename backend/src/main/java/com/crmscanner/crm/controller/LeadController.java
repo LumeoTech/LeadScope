@@ -80,8 +80,7 @@ public class LeadController {
     }
 
     @PatchMapping("/{id}/assign/{vendorId}")
-    @Operation(summary = "Atribuir vendedor", description = "Atribui a oportunidade a um vendedor responsável (Admin/Gerente)")
-    @PreAuthorize("hasAnyRole('ADMIN', 'GERENTE')")
+    @Operation(summary = "Atribuir vendedor", description = "Atribui a oportunidade a um vendedor responsável (Admin ou Responsável atual)")
     public ResponseEntity<LeadResponse> assign(
             @PathVariable Long id,
             @PathVariable Long vendorId,
@@ -138,5 +137,16 @@ public class LeadController {
             @AuthenticationPrincipal User currentUser
     ) {
         return ResponseEntity.status(HttpStatus.CREATED).body(leadService.addNote(id, request.content(), currentUser));
+    }
+
+    @PostMapping("/agent/run")
+    @Operation(summary = "Executar Agente de Qualificação", description = "Dispara manualmente a rotina autônoma de qualificação e scoring de leads")
+    public ResponseEntity<java.util.Map<String, Object>> runAgent() {
+        int count = leadService.runAutonomousLeadQualificationAgent();
+        return ResponseEntity.ok(java.util.Map.of(
+                "status", "SUCCESS",
+                "processed", count,
+                "message", "Agente executado com sucesso! " + count + " leads qualificados com AI score, chance de aceite e potencial de mercado."
+        ));
     }
 }

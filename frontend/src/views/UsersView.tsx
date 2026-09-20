@@ -38,6 +38,13 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
   const [createRole, setCreateRole] = useState('ADMIN');
   const [creatingUser, setCreatingUser] = useState(false);
 
+  // Modal Convidar Usuário por Email (Supabase Auth inviteUserByEmail)
+  const [showInviteModal, setShowInviteModal] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteName, setInviteName] = useState('');
+  const [inviteRole, setInviteRole] = useState('VENDEDOR');
+  const [invitingUser, setInvitingUser] = useState(false);
+
   // Modal Confirmação de Exclusão
   const [userToDelete, setUserToDelete] = useState<UserInfo | null>(null);
   const [deletingUser, setDeletingUser] = useState(false);
@@ -70,6 +77,7 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         setShowCreateModal(false);
+        setShowInviteModal(false);
         setUserToDelete(null);
       }
     };
@@ -88,6 +96,46 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
       setMessage({ type: 'error', text: 'Erro ao aprovar usuário: ' + (err.message || 'Erro desconhecido') });
     } finally {
       setActionLoading(null);
+    }
+  };
+
+  const handleRoleChange = async (userId: number, newRole: string) => {
+    try {
+      await api.users.updateRole(userId, newRole);
+      setMessage({ type: 'success', text: `Perfil do usuário atualizado para ${newRole} com sucesso!` });
+      await loadData();
+    } catch (err: any) {
+      setMessage({ type: 'error', text: 'Erro ao atualizar perfil: ' + (err.message || 'Erro') });
+    }
+  };
+
+  const handleInviteUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteEmail.trim()) {
+      alert('Preencha o e-mail do usuário convidado.');
+      return;
+    }
+
+    setInvitingUser(true);
+    try {
+      await api.users.invite({
+        email: inviteEmail.trim().toLowerCase(),
+        name: inviteName.trim() || undefined,
+        role: inviteRole
+      });
+      setMessage({
+        type: 'success',
+        text: `Convite enviado com sucesso para ${inviteEmail}! O usuário definirá sua senha e ingressará como ${inviteRole}.`
+      });
+      setShowInviteModal(false);
+      setInviteEmail('');
+      setInviteName('');
+      setInviteRole('VENDEDOR');
+      await loadData();
+    } catch (err: any) {
+      alert('Erro ao enviar convite: ' + (err.message || 'Erro desconhecido'));
+    } finally {
+      setInvitingUser(false);
     }
   };
 
@@ -195,12 +243,21 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
           </button>
 
           <button
-            onClick={() => setShowCreateModal(true)}
+            onClick={() => setShowInviteModal(true)}
             className="btn btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', fontSize: '0.85rem', background: '#2563eb', borderColor: '#2563eb' }}
+          >
+            <Mail size={16} />
+            <span>+ Convidar por E-mail</span>
+          </button>
+
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="btn btn-secondary"
             style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', fontSize: '0.85rem' }}
           >
             <Plus size={16} />
-            <span>+ Criar usuário</span>
+            <span>Criar direto</span>
           </button>
         </div>
       </div>
@@ -287,6 +344,7 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
               <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-subtle)' }}>
                 <th style={{ padding: '14px 20px', color: 'var(--text-secondary)', fontWeight: '600' }}>Nome</th>
                 <th style={{ padding: '14px 20px', color: 'var(--text-secondary)', fontWeight: '600' }}>E-mail</th>
+                <th style={{ padding: '14px 20px', color: 'var(--text-secondary)', fontWeight: '600' }}>Perfil / Função</th>
                 <th style={{ padding: '14px 20px', color: 'var(--text-secondary)', fontWeight: '600' }}>Status</th>
                 <th style={{ padding: '14px 20px', color: 'var(--text-secondary)', fontWeight: '600' }}>Data de Cadastro</th>
                 <th style={{ padding: '14px 20px', color: 'var(--text-secondary)', fontWeight: '600', textAlign: 'right' }}>Ações</th>
@@ -295,7 +353,7 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
             <tbody>
               {displayedUsers.length === 0 ? (
                 <tr>
-                  <td colSpan={5} style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                  <td colSpan={6} style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
                     {activeTab === 'pending' ? 'Nenhuma solicitação pendente no momento.' : 'Nenhum usuário cadastrado.'}
                   </td>
                 </tr>
@@ -332,6 +390,27 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                           <Mail size={14} color="var(--text-muted)" />
                           <span>{user.email}</span>
                         </div>
+                      </td>
+
+                      <td style={{ padding: '16px 20px' }}>
+                        <select
+                          value={user.role || 'VENDEDOR'}
+                          onChange={(e) => handleRoleChange(user.id, e.target.value)}
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: '6px',
+                            fontSize: '0.78rem',
+                            fontWeight: '600',
+                            background: 'rgba(0, 0, 0, 0.3)',
+                            color: user.role === 'ADMIN' ? '#818cf8' : user.role === 'VIEWER' ? '#f59e0b' : '#34d399',
+                            border: `1px solid ${user.role === 'ADMIN' ? 'rgba(129, 140, 248, 0.4)' : user.role === 'VIEWER' ? 'rgba(245, 158, 11, 0.4)' : 'rgba(52, 211, 153, 0.4)'}`,
+                            cursor: 'pointer'
+                          }}
+                        >
+                          <option value="ADMIN">ADMIN</option>
+                          <option value="VENDEDOR">VENDEDOR</option>
+                          <option value="VIEWER">VIEWER</option>
+                        </select>
                       </td>
 
                       <td style={{ padding: '16px 20px' }}>
@@ -591,6 +670,7 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                 >
                   <option value="ADMIN">Administrador (Acesso Total)</option>
                   <option value="VENDEDOR">Vendedor / Comercial</option>
+                  <option value="VIEWER">Viewer / Visualizador (Somente Leitura)</option>
                 </select>
                 <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
                   Usuários criados pelo administrador já entram ativos imediatamente.
@@ -618,6 +698,155 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                     </>
                   ) : (
                     <span>Salvar e Ativar</span>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Convidar Usuário por Email (Supabase Auth inviteUserByEmail) */}
+      {showInviteModal && (
+        <div
+          onClick={() => setShowInviteModal(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0,0,0,0.65)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 1000,
+            padding: '20px'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="glass-panel"
+            style={{
+              width: '100%',
+              maxWidth: '480px',
+              background: 'var(--bg-surface)',
+              borderRadius: 'var(--radius-lg)',
+              border: '1px solid var(--border-subtle)',
+              padding: '28px',
+              boxShadow: 'var(--shadow-xl)'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <div style={{
+                  width: '34px',
+                  height: '34px',
+                  borderRadius: '8px',
+                  background: 'rgba(37, 99, 235, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#60a5fa'
+                }}>
+                  <Mail size={18} />
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
+                    Convidar Usuário
+                  </h3>
+                  <p style={{ fontSize: '0.8rem', color: 'var(--text-secondary)', margin: 0 }}>
+                    Convite enviado diretamente para o e-mail via Supabase Auth
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setShowInviteModal(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleInviteUser} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>
+                  E-mail do convidado *
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <Mail size={15} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '12px' }} />
+                  <input
+                    type="email"
+                    required
+                    placeholder="novo.membro@empresa.com"
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    className="input"
+                    style={{ width: '100%', paddingLeft: '36px' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>
+                  Nome completo (opcional)
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <User size={15} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '12px' }} />
+                  <input
+                    type="text"
+                    placeholder="Ex: João da Silva"
+                    value={inviteName}
+                    onChange={(e) => setInviteName(e.target.value)}
+                    className="input"
+                    style={{ width: '100%', paddingLeft: '36px' }}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-primary)', marginBottom: '6px' }}>
+                  Função / Permissão (Role) *
+                </label>
+                <select
+                  value={inviteRole}
+                  onChange={(e) => setInviteRole(e.target.value)}
+                  className="input"
+                  style={{ width: '100%', cursor: 'pointer' }}
+                >
+                  <option value="ADMIN">ADMIN - Administrador (Acesso Total)</option>
+                  <option value="VENDEDOR">VENDEDOR - Vendedor (Atendimento de Leads)</option>
+                  <option value="VIEWER">VIEWER - Visualizador (Somente Leitura)</option>
+                </select>
+                <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                  Ao aceitar o convite, o usuário define sua própria senha e já entra no CRM com esta permissão.
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '12px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowInviteModal(false)}
+                  className="btn btn-secondary"
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={invitingUser}
+                  className="btn btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px', background: '#2563eb', borderColor: '#2563eb' }}
+                >
+                  {invitingUser ? (
+                    <>
+                      <div className="spin" style={{ width: '14px', height: '14px', border: '2px solid #ffffff', borderTopColor: 'transparent', borderRadius: '50%' }} />
+                      <span>Enviando convite...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Mail size={15} />
+                      <span>Enviar Convite</span>
+                    </>
                   )}
                 </button>
               </div>

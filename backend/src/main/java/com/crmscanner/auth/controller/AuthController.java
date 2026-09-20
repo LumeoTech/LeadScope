@@ -34,6 +34,12 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
+    @PostMapping("/accept-invite")
+    @Operation(summary = "Aceitar Convite", description = "Define a senha do usuário convidado e realiza o login")
+    public ResponseEntity<AuthResponse> acceptInvite(@Valid @RequestBody com.crmscanner.auth.dto.AcceptInviteRequest request) {
+        return ResponseEntity.ok(authService.acceptInvite(request));
+    }
+
     @PostMapping("/refresh")
     @Operation(summary = "Renovar token", description = "Renova o access token usando um refresh token válido")
     public ResponseEntity<AuthResponse> refresh(@Valid @RequestBody RefreshRequest request) {

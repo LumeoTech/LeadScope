@@ -237,6 +237,63 @@ public class UserService {
         );
     }
 
+    @Transactional
+    public UserResponse inviteUser(com.crmscanner.auth.dto.InviteUserRequest request) {
+        String emailClean = request.email().toLowerCase().trim();
+        if (userRepository.existsByEmail(emailClean)) {
+            throw new BusinessException("Já existe um usuário com o e-mail: " + emailClean);
+        }
+
+        Role role = roleRepository.findByName(request.role().toUpperCase())
+                .orElseThrow(() -> new BusinessException("Perfil inválido: " + request.role()));
+
+        // Tenta enviar convite oficial via Supabase Auth Admin REST API se configurado
+        String supabaseUrl = System.getenv("SUPABASE_URL");
+        String serviceRoleKey = System.getenv("SUPABASE_SERVICE_ROLE_KEY");
+        if (supabaseUrl == null || supabaseUrl.isBlank()) {
+            supabaseUrl = "https://xfhaqicwyyliesisfrjq.supabase.co";
+        }
+
+        if (serviceRoleKey != null && !serviceRoleKey.isBlank()) {
+            try {
+                java.net.http.HttpClient client = java.net.http.HttpClient.newHttpClient();
+                String jsonBody = String.format("{\"email\":\"%s\",\"data\":{\"name\":\"%s\",\"role\":\"%s\"}}",
+                        emailClean, request.name(), role.getName());
+
+                java.net.http.HttpRequest req = java.net.http.HttpRequest.newBuilder()
+                        .uri(java.net.URI.create(supabaseUrl + "/auth/v1/invite"))
+                        .header("Content-Type", "application/json")
+                        .header("apikey", serviceRoleKey)
+                        .header("Authorization", "Bearer " + serviceRoleKey)
+                        .POST(java.net.http.HttpRequest.BodyPublishers.ofString(jsonBody))
+                        .build();
+
+                client.send(req, java.net.http.HttpResponse.BodyHandlers.ofString());
+            } catch (Exception ignored) {}
+        }
+
+        User user = new User();
+        user.setName(request.name().trim());
+        user.setEmail(emailClean);
+        user.setPassword(passwordEncoder.encode(java.util.UUID.randomUUID().toString()));
+        user.setRole(role);
+        user.setActive(true);
+        user.setStatus("INVITED");
+
+        User saved = userRepository.save(user);
+
+        auditService.log(
+                "USER",
+                saved.getId(),
+                "INVITE",
+                null,
+                Map.of("name", saved.getName(), "email", saved.getEmail(), "role", role.getName()),
+                "Convite de acesso enviado para: " + saved.getEmail() + " com o perfil " + role.getName()
+        );
+
+        return UserResponse.fromEntity(saved);
+    }
+
     private User getUserEntity(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário", id));

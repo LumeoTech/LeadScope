@@ -12,7 +12,8 @@ import {
   ChevronsLeft,
   ChevronsRight,
   PanelLeftClose,
-  ChevronDown
+  ChevronDown,
+  Globe
 } from 'lucide-react';
 
 export type ActiveTab =
@@ -25,7 +26,8 @@ export type ActiveTab =
   | 'audit'
   | 'users'
   | 'campaigns'
-  | 'goals';
+  | 'goals'
+  | 'sites';
 
 interface SidebarProps {
   activeTab: ActiveTab;
@@ -268,6 +270,16 @@ export const Sidebar: React.FC<SidebarProps> = ({
         >
           <Share2 size={16} color={activeTab === 'companies' ? '#ffffff' : '#8c93a0'} />
           {!isCollapsed && <span>Integrations</span>}
+        </button>
+
+        {/* Sites & Templates */}
+        <button
+          onClick={() => setActiveTab('sites')}
+          style={getNavItemStyle(activeTab === 'sites', isCollapsed)}
+          title="Sites & Templates"
+        >
+          <Globe size={16} color={activeTab === 'sites' ? '#ffffff' : '#8c93a0'} />
+          {!isCollapsed && <span>Sites & Templates</span>}
         </button>
       </div>
 

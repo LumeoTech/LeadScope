@@ -112,4 +112,11 @@ public class UserController {
         userService.deleteUser(id, currentUser);
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/invite")
+    @Operation(summary = "Convidar usuário por e-mail", description = "Envia convite para cadastro e define a role (Admin, Vendedor, Viewer)")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<UserResponse> invite(@Valid @RequestBody com.crmscanner.auth.dto.InviteUserRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.inviteUser(request));
+    }
 }
