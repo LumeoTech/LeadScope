@@ -4,9 +4,9 @@ spring:
 
   # ==================== BANCO DE DADOS ====================
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:crmdb}${DB_PARAMS:}}
-    username: ${DB_USER:crmuser}
-    password: ${DB_PASSWORD:crmpassword}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:aws-0-us-east-2.pooler.supabase.com}:${DB_PORT:5432}/${DB_NAME:postgres}${DB_PARAMS:?sslmode=require}}
+    username: ${DB_USER:postgres.xfhaqicwyyliesisfrjq}
+    password: ${DB_PASSWORD:@Biel.2006123}
     driver-class-name: org.postgresql.Driver
 
   # ==================== JPA / HIBERNATE ====================

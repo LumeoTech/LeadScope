@@ -11,7 +11,37 @@ public class CrmBackendApplication {
 
     public static void main(String[] args) {
         loadDotenv();
+        fixSupabaseConfig();
         SpringApplication.run(CrmBackendApplication.class, args);
+    }
+
+    private static void fixSupabaseConfig() {
+        String host = System.getenv("DB_HOST");
+        if (host == null || host.isBlank()) {
+            host = System.getProperty("DB_HOST");
+        }
+        if (host != null && host.startsWith("db.") && host.contains(".supabase.co")) {
+            System.setProperty("DB_HOST", "aws-0-us-east-2.pooler.supabase.com");
+            String user = System.getenv("DB_USER");
+            if (user == null || user.isBlank()) {
+                user = System.getProperty("DB_USER");
+            }
+            if (user != null && !user.contains(".")) {
+                int start = 3;
+                int end = host.indexOf(".supabase.co");
+                String ref = host.substring(start, end);
+                System.setProperty("DB_USER", user + "." + ref);
+            }
+        }
+
+        String dsUrl = System.getenv("SPRING_DATASOURCE_URL");
+        if (dsUrl == null || dsUrl.isBlank()) {
+            dsUrl = System.getProperty("SPRING_DATASOURCE_URL");
+        }
+        if (dsUrl != null && dsUrl.contains("db.") && dsUrl.contains(".supabase.co")) {
+            String fixedUrl = dsUrl.replaceAll("db\\.[a-z0-9]+\\.supabase\\.co", "aws-0-us-east-2.pooler.supabase.com");
+            System.setProperty("SPRING_DATASOURCE_URL", fixedUrl);
+        }
     }
 
     private static void loadDotenv() {

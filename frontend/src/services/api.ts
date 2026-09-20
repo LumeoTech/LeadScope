@@ -1,4 +1,8 @@
-const BASE_URL = (import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).replace(/\/$/, '') : '') + '/api';
+const rawApiUrl = import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL).trim() : '';
+const cleanApiUrl = (rawApiUrl.startsWith('http://') || rawApiUrl.startsWith('https://'))
+  ? rawApiUrl.replace(/\/$/, '')
+  : '';
+const BASE_URL = `${cleanApiUrl}/api`;
 
 export interface UserInfo {
   id: number;

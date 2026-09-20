@@ -133,10 +133,13 @@ public class GlobalExceptionHandler {
             HttpServletRequest request) {
 
         log.error("Erro interno não tratado em {}: {}", request.getRequestURI(), ex.getMessage(), ex);
+        String detailMessage = ex.getMessage() != null && !ex.getMessage().isBlank()
+                ? ex.getMessage()
+                : ex.getClass().getSimpleName();
         return ResponseEntity
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiError.of(500, "Internal Server Error",
-                        "Ocorreu um erro interno. Tente novamente mais tarde.",
+                        detailMessage,
                         request.getRequestURI()));
     }
 }
