@@ -4,7 +4,7 @@ spring:
 
   # ==================== BANCO DE DADOS ====================
   datasource:
-    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:crmdb}
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:crmdb}${DB_PARAMS:}}
     username: ${DB_USER:crmuser}
     password: ${DB_PASSWORD:crmpassword}
     driver-class-name: org.postgresql.Driver
