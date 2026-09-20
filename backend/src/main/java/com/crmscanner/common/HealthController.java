@@ -19,14 +19,13 @@ import java.util.Map;
  * GET /api/health → { "status": "UP", "timestamp": "..." }
  */
 @RestController
-@RequestMapping("/api")
 public class HealthController {
 
-    @GetMapping("/health")
+    @GetMapping({"/api/health", "/healthz", "/health"})
     public ResponseEntity<Map<String, Object>> health() {
         return ResponseEntity.ok(Map.of(
                 "status", "UP",
-                "service", "CRM + Scanner API",
+                "service", "Lumeo LeadScope API",
                 "version", "1.0.0",
                 "timestamp", LocalDateTime.now().toString()
         ));
