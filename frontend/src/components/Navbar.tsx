@@ -66,7 +66,8 @@ export const Navbar: React.FC<NavbarProps> = ({
     return name.substring(0, 2).toUpperCase();
   };
 
-  const displayBadgeCount = pendingUsersCount > 0 ? pendingUsersCount : 2;
+  const unreadNotifsCount = systemNotifications.filter(n => !n.isRead).length;
+  const totalBadgeCount = pendingUsersCount + unreadNotifsCount;
 
   return (
     <header
@@ -83,7 +84,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     >
       <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
         
-        {/* ==================== NOTIFICATIONS (BELL WITH BADGE 2) ==================== */}
+        {/* ==================== NOTIFICATIONS (BELL WITH BADGE) ==================== */}
         <div ref={notifRef} style={{ position: 'relative' }}>
           <button
             type="button"
@@ -106,28 +107,30 @@ export const Navbar: React.FC<NavbarProps> = ({
           >
             <Bell size={16} />
 
-            {/* Badge '2' matching screenshot */}
-            <span
-              style={{
-                position: 'absolute',
-                top: '-3px',
-                right: '-3px',
-                minWidth: '17px',
-                height: '17px',
-                borderRadius: '50%',
-                background: '#25282f',
-                border: '1.5px solid #0c0d0f',
-                color: '#ffffff',
-                fontSize: '0.65rem',
-                fontWeight: '700',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: '0 2px'
-              }}
-            >
-              {displayBadgeCount}
-            </span>
+            {/* Real badge count: only shown if there are real unread notifications or pending users */}
+            {totalBadgeCount > 0 && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '-3px',
+                  right: '-3px',
+                  minWidth: '17px',
+                  height: '17px',
+                  borderRadius: '50%',
+                  background: '#10b981',
+                  border: '1.5px solid #0c0d0f',
+                  color: '#ffffff',
+                  fontSize: '0.65rem',
+                  fontWeight: '700',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  padding: '0 2px'
+                }}
+              >
+                {totalBadgeCount}
+              </span>
+            )}
           </button>
 
           {/* Notifications Dropdown */}
@@ -221,7 +224,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 ))
               ) : (
                 <div style={{ padding: '12px 8px', textAlign: 'center', color: '#68707d', fontSize: '0.78rem' }}>
-                  2 novas atualizações sincronizadas no CRM.
+                  Nenhuma notificação pendente no momento.
                 </div>
               )}
             </div>

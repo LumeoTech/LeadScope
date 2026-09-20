@@ -33,74 +33,7 @@ export interface Campaign {
   description?: string;
 }
 
-const DEFAULT_CAMPAIGNS: Campaign[] = [
-  {
-    id: 'camp-1',
-    name: 'Prospecção Clínicas Odontológicas SP',
-    channel: 'SCANNER',
-    status: 'ATIVA',
-    targetLeads: 50,
-    leadsCaptured: 34,
-    conversionRate: 18.5,
-    budget: 1200,
-    spent: 650,
-    startDate: '2026-09-01',
-    description: 'Varredura de clínicas de odontologia na capital e Grande SP via Scanner B2B.'
-  },
-  {
-    id: 'camp-2',
-    name: 'Outreach B2B Médicos & Dermatologia',
-    channel: 'WHATSAPP',
-    status: 'ATIVA',
-    targetLeads: 40,
-    leadsCaptured: 28,
-    conversionRate: 21.0,
-    budget: 800,
-    spent: 420,
-    startDate: '2026-09-05',
-    description: 'Abordagem consultiva por mensagem via WhatsApp Business para secretárias e gestores.'
-  },
-  {
-    id: 'camp-3',
-    name: 'Cold Mail B2B Serviços & Consultorias',
-    channel: 'EMAIL',
-    status: 'PAUSADA',
-    targetLeads: 80,
-    leadsCaptured: 42,
-    conversionRate: 12.4,
-    budget: 500,
-    spent: 310,
-    startDate: '2026-08-20',
-    description: 'Sequência de nutrição e proposta comercial automatizada.'
-  },
-  {
-    id: 'camp-4',
-    name: 'Reativação de Leads Perdidos Q2',
-    channel: 'TELEFONE',
-    status: 'ATIVA',
-    targetLeads: 25,
-    leadsCaptured: 16,
-    conversionRate: 25.0,
-    budget: 400,
-    spent: 200,
-    startDate: '2026-09-10',
-    description: 'Ligação de reativação com condições especiais de fechamento.'
-  },
-  {
-    id: 'camp-5',
-    name: 'Campanha de Expansão Interior SP',
-    channel: 'SCANNER',
-    status: 'CONCLUIDA',
-    targetLeads: 60,
-    leadsCaptured: 60,
-    conversionRate: 19.8,
-    budget: 1500,
-    spent: 1500,
-    startDate: '2026-08-01',
-    endDate: '2026-08-31',
-    description: 'Mapeamento das regiões de Campinas, Sorocaba e Ribeirão Preto.'
-  }
-];
+const DEFAULT_CAMPAIGNS: Campaign[] = [];
 
 export const CampaignsView: React.FC = () => {
   const [campaigns, setCampaigns] = useState<Campaign[]>(() => {

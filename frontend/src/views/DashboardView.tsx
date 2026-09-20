@@ -1,11 +1,12 @@
-import React, { useEffect, useState } from 'react';
-import { api, Lead, Company } from '../services/api';
+import React, { useEffect, useState, useMemo } from 'react';
+import { api, Lead, Company, AuditLog } from '../services/api';
 import { ActiveTab } from '../components/Sidebar';
 import {
   Flag,
   Calendar as CalendarIcon,
   Crosshair,
   TrendingUp,
+  TrendingDown,
   MoreHorizontal,
   SlidersHorizontal,
   Clock,
@@ -13,10 +14,7 @@ import {
   Calendar,
   ChevronDown,
   ShoppingBag,
-  ExternalLink,
-  ChevronRight,
-  User,
-  Plus
+  ChevronRight
 } from 'lucide-react';
 
 interface DashboardViewProps {
@@ -26,11 +24,12 @@ interface DashboardViewProps {
 export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [hoveredBar, setHoveredBar] = useState<number | null>(null);
 
-  // Stats filter states
-  const [timeRange, setTimeRange] = useState('Last 7 days');
+  // Filter states
+  const [timeRange, setTimeRange] = useState<'Last 7 days' | 'Today' | 'Last 30 days' | 'All time'>('Last 7 days');
   const [activeStatTab, setActiveStatTab] = useState<'orders' | 'leads'>('orders');
 
   useEffect(() => {
@@ -40,46 +39,276 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
   const loadDashboardData = async () => {
     setLoading(true);
     try {
-      const [leadsRes, compRes] = await Promise.all([
+      const [leadsRes, compRes, auditRes] = await Promise.all([
         api.leads.list(),
-        api.companies.list()
+        api.companies.list(),
+        api.audit.list().catch(() => ({ content: [] }))
       ]);
       setLeads(leadsRes.content || []);
       setCompanies(compRes.content || []);
+      setAuditLogs(auditRes.content || []);
     } catch (e) {
-      console.error('Erro ao carregar dados:', e);
+      console.error('Erro ao carregar dados do dashboard:', e);
     } finally {
       setLoading(false);
     }
   };
 
-  // Real or dynamic metrics from CRM
-  const totalLeadsCount = leads.length;
-  const activeCampaignsCount = totalLeadsCount > 0 ? totalLeadsCount + 23 : 24;
-  const contactsCount = totalLeadsCount > 0 ? 147 : 147;
-  const totalReachStr = '412.8K';
-  const avgEngagementStr = '4.18%';
+  // ==================== REAL DATA CALCULATIONS ====================
+  const now = new Date();
+  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const yesterdayStart = new Date(todayStart);
+  yesterdayStart.setDate(yesterdayStart.getDate() - 1);
 
-  // Hourly data for the Gross Revenue chart matching screenshot
-  const hourlyData = [
-    { time: '19:00', today: 45, yesterday: 30, val: '$45.20' },
-    { time: '21:00', today: 65, yesterday: 40, val: '$65.00' },
-    { time: '23:00', today: 70, yesterday: 55, val: '$70.50' },
-    { time: '01:00', today: 80, yesterday: 60, val: '$80.00' },
-    { time: '03:00', today: 95, yesterday: 75, val: '$95.40' },
-    { time: '05:00', today: 110, yesterday: 85, val: '$110.20' },
-    { time: '07:00', today: 140, yesterday: 95, val: '$140.00' },
-    { time: '09:00', today: 165, yesterday: 110, val: '$165.80' },
-    { time: '11:00', today: 195, yesterday: 130, val: '$195.00' },
-    { time: '13:00', today: 130, yesterday: 90, val: '$130.50' },
-    { time: '15:00', today: 145, yesterday: 100, val: '$145.00' },
-    { time: '17:00', today: 120, yesterday: 80, val: '$120.00' },
-  ];
+  const firstDayThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
 
-  // Peak hours distribution curve
-  const peakHoursBars = [
-    12, 16, 20, 15, 25, 35, 48, 62, 78, 92, 100, 95, 88, 72, 58, 46, 38, 28, 20, 14
-  ];
+  // 1. KPI: Active Campaigns (Active leads in pipeline)
+  const activeLeads = useMemo(() => {
+    return leads.filter(l => {
+      const name = l.statusName?.toLowerCase() || '';
+      return !name.includes('perdido') && !name.includes('cancelado');
+    });
+  }, [leads]);
+  const activeCampaignsCount = activeLeads.length;
+
+  const leadsThisMonth = useMemo(() => {
+    return leads.filter(l => new Date(l.createdAt) >= firstDayThisMonth).length;
+  }, [leads, firstDayThisMonth]);
+
+  const leadsLastMonth = useMemo(() => {
+    return leads.filter(l => {
+      const d = new Date(l.createdAt);
+      return d >= firstDayLastMonth && d < firstDayThisMonth;
+    }).length;
+  }, [leads, firstDayLastMonth, firstDayThisMonth]);
+
+  const campaignsGrowth = leadsLastMonth > 0
+    ? (((leadsThisMonth - leadsLastMonth) / leadsLastMonth) * 100).toFixed(1)
+    : (leadsThisMonth > 0 ? '100.0' : '0.0');
+  const isCampaignsPositive = Number(campaignsGrowth) >= 0;
+
+  // 2. KPI: Posts Published (Total Registered Companies / Base Contacts)
+  const contactsCount = companies.length;
+  const compThisMonth = useMemo(() => {
+    return companies.filter(c => new Date(c.createdAt) >= firstDayThisMonth).length;
+  }, [companies, firstDayThisMonth]);
+
+  const compLastMonth = useMemo(() => {
+    return companies.filter(c => {
+      const d = new Date(c.createdAt);
+      return d >= firstDayLastMonth && d < firstDayThisMonth;
+    }).length;
+  }, [companies, firstDayLastMonth, firstDayThisMonth]);
+
+  const compGrowth = compLastMonth > 0
+    ? (((compThisMonth - compLastMonth) / compLastMonth) * 100).toFixed(1)
+    : (compThisMonth > 0 ? '100.0' : '0.0');
+  const isCompPositive = Number(compGrowth) >= 0;
+
+  // 3. KPI: Total Reach (Total Pipeline Value in R$)
+  const totalPipelineValue = useMemo(() => {
+    return leads.reduce((sum, l) => sum + (Number(l.value) || 0), 0);
+  }, [leads]);
+
+  const formatShortCurrency = (val: number) => {
+    if (val === 0) return 'R$ 0';
+    if (val >= 1_000_000) return `R$ ${(val / 1_000_000).toFixed(1)}M`;
+    if (val >= 1_000) return `R$ ${(val / 1_000).toFixed(1)}K`;
+    return new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', maximumFractionDigits: 0 }).format(val);
+  };
+  const totalReachStr = formatShortCurrency(totalPipelineValue);
+
+  const leadsWithValueCount = useMemo(() => {
+    return leads.filter(l => l.value && Number(l.value) > 0).length;
+  }, [leads]);
+
+  const reachPct = leads.length > 0
+    ? ((leadsWithValueCount / leads.length) * 100).toFixed(1)
+    : '0.0';
+
+  // 4. KPI: Avg. engagement (Conversion / Win Rate)
+  const wonLeadsCount = useMemo(() => {
+    return leads.filter(l => {
+      const name = l.statusName?.toLowerCase() || '';
+      return name.includes('ganho') || name.includes('fechado') || name.includes('aceito');
+    }).length;
+  }, [leads]);
+
+  const winRate = leads.length > 0 ? ((wonLeadsCount / leads.length) * 100).toFixed(1) : '0.0';
+
+  // ==================== TODAY SECTION: REVENUE ====================
+  const wonToday = useMemo(() => {
+    return leads.filter(l => {
+      const d = new Date(l.updatedAt || l.createdAt);
+      const isWon = (l.statusName?.toLowerCase() || '').includes('ganho') || (l.statusName?.toLowerCase() || '').includes('aceito');
+      return isWon && d >= todayStart;
+    });
+  }, [leads, todayStart]);
+  const revenueToday = wonToday.reduce((sum, l) => sum + (Number(l.value) || 0), 0);
+
+  const wonYesterday = useMemo(() => {
+    return leads.filter(l => {
+      const d = new Date(l.updatedAt || l.createdAt);
+      const isWon = (l.statusName?.toLowerCase() || '').includes('ganho') || (l.statusName?.toLowerCase() || '').includes('aceito');
+      return isWon && d >= yesterdayStart && d < todayStart;
+    });
+  }, [leads, yesterdayStart, todayStart]);
+  const revenueYesterday = wonYesterday.reduce((sum, l) => sum + (Number(l.value) || 0), 0);
+
+  const revenueGrowth = revenueYesterday > 0
+    ? (((revenueToday - revenueYesterday) / revenueYesterday) * 100).toFixed(1)
+    : (revenueToday > 0 ? '100.0' : '0.0');
+  const isRevPositive = Number(revenueGrowth) >= 0;
+
+  // Hourly distribution for the Gross Revenue chart based on real leads/actions
+  const hourlySlots = ['19:00', '21:00', '23:00', '01:00', '03:00', '05:00', '07:00', '09:00', '11:00', '13:00', '15:00', '17:00'];
+  
+  const hourlyData = useMemo(() => {
+    return hourlySlots.map((slot) => {
+      const slotHour = parseInt(slot.split(':')[0], 10);
+      
+      const countToday = leads.filter(l => {
+        const d = new Date(l.createdAt);
+        if (d < todayStart) return false;
+        const h = d.getHours();
+        return h >= slotHour && h < slotHour + 2;
+      }).length;
+
+      const countYesterday = leads.filter(l => {
+        const d = new Date(l.createdAt);
+        if (d < yesterdayStart || d >= todayStart) return false;
+        const h = d.getHours();
+        return h >= slotHour && h < slotHour + 2;
+      }).length;
+
+      return {
+        time: slot,
+        today: countToday,
+        yesterday: countYesterday,
+        val: `${countToday} lead${countToday === 1 ? '' : 's'}`
+      };
+    });
+  }, [leads, todayStart, yesterdayStart]);
+
+  const maxHourlyCount = Math.max(...hourlyData.map(d => Math.max(d.today, d.yesterday)), 1);
+
+  // ==================== TODAY'S BUDGET ====================
+  // Used today: total value of leads created or updated today
+  const usedTodayValue = useMemo(() => {
+    return leads
+      .filter(l => new Date(l.createdAt) >= todayStart)
+      .reduce((sum, l) => sum + (Number(l.value) || 0), 0);
+  }, [leads, todayStart]);
+
+  // Today's allowance: derived from commercial goals or 0 if not defined
+  const savedGoals = useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem('lumeo_crm_goals') || '[]');
+    } catch {
+      return [];
+    }
+  }, []);
+
+  const revenueGoal = savedGoals.find((g: any) => g.category === 'REVENUE')?.targetValue || 0;
+  const todayAllowance = revenueGoal > 0 ? Math.round(revenueGoal / 30) : 0;
+
+  const budgetUsedPercent = todayAllowance > 0
+    ? Math.min(100, Math.round((usedTodayValue / todayAllowance) * 100))
+    : (usedTodayValue > 0 ? 100 : 0);
+
+  // ==================== PEAK HOURS (REAL ACTIVITY DISTRIBUTION) ====================
+  const { peakLabel, peakPct, peakBars } = useMemo(() => {
+    const hourCounts = new Array(24).fill(0);
+    
+    // Count hourly occurrences across all leads and audit logs
+    leads.forEach(l => {
+      const h = new Date(l.createdAt).getHours();
+      hourCounts[h] += 1;
+    });
+    auditLogs.forEach(a => {
+      const h = new Date(a.createdAt).getHours();
+      hourCounts[h] += 1;
+    });
+
+    const totalActions = hourCounts.reduce((a, b) => a + b, 0);
+
+    let maxWindow = 0;
+    let peakStartHour = 11;
+
+    for (let h = 0; h < 23; h++) {
+      const sum = hourCounts[h] + hourCounts[h + 1];
+      if (sum > maxWindow) {
+        maxWindow = sum;
+        peakStartHour = h;
+      }
+    }
+
+    const formatHourAmPm = (h: number) => {
+      const period = h >= 12 ? 'PM' : 'AM';
+      const hour12 = h % 12 === 0 ? 12 : h % 12;
+      return `${hour12} ${period}`;
+    };
+
+    const label = totalActions > 0
+      ? `${formatHourAmPm(peakStartHour)} – ${formatHourAmPm(peakStartHour + 2)}`
+      : 'Sem dados';
+
+    const pct = totalActions > 0
+      ? Math.round((maxWindow / totalActions) * 100)
+      : 0;
+
+    // 20 bars representing hours 04:00 to 23:00
+    const maxVal = Math.max(...hourCounts, 1);
+    const bars = [];
+    for (let i = 4; i < 24; i++) {
+      const val = totalActions > 0 ? hourCounts[i] : 0;
+      bars.push({
+        hour: i,
+        height: totalActions > 0 ? (val / maxVal) * 44 : 2,
+        isPeak: i >= peakStartHour && i <= peakStartHour + 1 && val > 0
+      });
+    }
+
+    return { peakLabel: label, peakPct: pct, peakBars: bars };
+  }, [leads, auditLogs]);
+
+  // ==================== STATS SECTION FILTERING ====================
+  const filteredLeads = useMemo(() => {
+    if (timeRange === 'All time') return leads;
+    
+    const cutoff = new Date();
+    if (timeRange === 'Today') {
+      cutoff.setHours(0, 0, 0, 0);
+    } else if (timeRange === 'Last 7 days') {
+      cutoff.setDate(cutoff.getDate() - 7);
+      cutoff.setHours(0, 0, 0, 0);
+    } else if (timeRange === 'Last 30 days') {
+      cutoff.setDate(cutoff.getDate() - 30);
+      cutoff.setHours(0, 0, 0, 0);
+    }
+    
+    return leads.filter(l => new Date(l.createdAt) >= cutoff);
+  }, [leads, timeRange]);
+
+  // Date Range Display string
+  const dateRangeDisplay = useMemo(() => {
+    const end = new Date();
+    const start = new Date();
+    if (timeRange === 'Today') {
+      return start.toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+    if (timeRange === 'Last 7 days') {
+      start.setDate(start.getDate() - 7);
+    } else if (timeRange === 'Last 30 days') {
+      start.setDate(start.getDate() - 30);
+    } else {
+      return 'Todos os registros';
+    }
+    const startStr = start.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short' });
+    const endStr = end.toLocaleDateString('pt-BR', { day: 'numeric', month: 'short', year: 'numeric' });
+    return `${startStr} – ${endStr}`;
+  }, [timeRange]);
 
   return (
     <div style={{ animation: 'fadeIn 0.2s ease', color: '#ffffff', maxWidth: '1440px', margin: '0 auto' }}>
@@ -103,14 +332,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
             </button>
           </div>
           <div style={kpiValueStyle}>{activeCampaignsCount}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: '#10b981', fontWeight: '500' }}>
-            <span style={greenDotStyle} />
-            <span>12.4%</span>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '0.78rem',
+            color: isCampaignsPositive ? '#10b981' : '#ef4444',
+            fontWeight: '500'
+          }}>
+            <span style={isCampaignsPositive ? greenDotStyle : redDotStyle} />
+            <span>{campaignsGrowth}%</span>
             <span style={{ color: '#68707d', fontWeight: '400' }}>since last month</span>
           </div>
         </div>
 
-        {/* Card 2: Posts Published */}
+        {/* Card 2: Posts Published (Empresas / Contatos) */}
         <div style={cardStyle}>
           <div style={cardHeaderStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8c93a0', fontSize: '0.84rem' }}>
@@ -122,14 +358,21 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
             </button>
           </div>
           <div style={kpiValueStyle}>{contactsCount}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: '#10b981', fontWeight: '500' }}>
-            <span style={greenDotStyle} />
-            <span>7.8%</span>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '0.78rem',
+            color: isCompPositive ? '#10b981' : '#ef4444',
+            fontWeight: '500'
+          }}>
+            <span style={isCompPositive ? greenDotStyle : redDotStyle} />
+            <span>{compGrowth}%</span>
             <span style={{ color: '#68707d', fontWeight: '400' }}>since last month</span>
           </div>
         </div>
 
-        {/* Card 3: Total Reach */}
+        {/* Card 3: Total Reach (Valor Total do Funil) */}
         <div style={cardStyle}>
           <div style={cardHeaderStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8c93a0', fontSize: '0.84rem' }}>
@@ -143,12 +386,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
           <div style={kpiValueStyle}>{totalReachStr}</div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: '#10b981', fontWeight: '500' }}>
             <span style={greenDotStyle} />
-            <span>4.3%</span>
-            <span style={{ color: '#68707d', fontWeight: '400' }}>since last month</span>
+            <span>{reachPct}%</span>
+            <span style={{ color: '#68707d', fontWeight: '400' }}>com valor definido</span>
           </div>
         </div>
 
-        {/* Card 4: Avg. engagement */}
+        {/* Card 4: Avg. engagement (Taxa de Conversão Real) */}
         <div style={cardStyle}>
           <div style={cardHeaderStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8c93a0', fontSize: '0.84rem' }}>
@@ -159,11 +402,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
               <MoreHorizontal size={15} />
             </button>
           </div>
-          <div style={kpiValueStyle}>{avgEngagementStr}</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: '#ef4444', fontWeight: '500' }}>
-            <span style={redDotStyle} />
-            <span>0.6%</span>
-            <span style={{ color: '#68707d', fontWeight: '400' }}>since last month</span>
+          <div style={kpiValueStyle}>{winRate}%</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: wonLeadsCount > 0 ? '#10b981' : '#68707d', fontWeight: '500' }}>
+            <span style={wonLeadsCount > 0 ? greenDotStyle : grayDotStyle} />
+            <span>{wonLeadsCount}</span>
+            <span style={{ color: '#68707d', fontWeight: '400' }}>ganhos de {leads.length} leads</span>
           </div>
         </div>
       </div>
@@ -177,7 +420,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
           </h2>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <button type="button" style={pillButtonStyle}>
+            <button
+              type="button"
+              onClick={() => setActiveTab('goals')}
+              style={pillButtonStyle}
+            >
               <SlidersHorizontal size={13} />
               <span>Customize</span>
             </button>
@@ -212,13 +459,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#ffffff' }} />
                 <span style={{ color: '#8c93a0', fontSize: '0.82rem' }}>Today</span>
-                <span style={{ fontSize: '1.4rem', fontWeight: '700', color: '#ffffff', marginLeft: '2px' }}>$243.65</span>
+                <span style={{ fontSize: '1.4rem', fontWeight: '700', color: '#ffffff', marginLeft: '2px' }}>
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(revenueToday)}
+                </span>
               </div>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#5a616d' }} />
                 <span style={{ color: '#8c93a0', fontSize: '0.82rem' }}>Yesterday</span>
-                <span style={{ fontSize: '1.4rem', fontWeight: '700', color: '#8c93a0', marginLeft: '2px' }}>$208.19</span>
+                <span style={{ fontSize: '1.4rem', fontWeight: '700', color: '#8c93a0', marginLeft: '2px' }}>
+                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(revenueYesterday)}
+                </span>
               </div>
 
               <div style={{
@@ -226,12 +477,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '5px',
-                color: '#10b981',
+                color: isRevPositive ? '#10b981' : '#ef4444',
                 fontSize: '0.82rem',
                 fontWeight: '600'
               }}>
-                <span style={greenDotStyle} />
-                <span>17.0%</span>
+                <span style={isRevPositive ? greenDotStyle : redDotStyle} />
+                <span>{revenueGrowth}%</span>
               </div>
             </div>
 
@@ -248,9 +499,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
               }}>
                 {hourlyData.map((item, index) => {
                   const isHovered = hoveredBar === index;
-                  // Dual bar heights
-                  const heightPrimary = (item.today / 200) * 140;
-                  const heightSecondary = (item.yesterday / 200) * 140;
+                  // Dual bar heights based strictly on actual count of leads/actions
+                  const heightPrimary = item.today > 0
+                    ? Math.max(8, (item.today / maxHourlyCount) * 140)
+                    : 2;
+                  const heightSecondary = item.yesterday > 0
+                    ? Math.max(8, (item.yesterday / maxHourlyCount) * 140)
+                    : 2;
 
                   return (
                     <div
@@ -284,26 +539,26 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
                           zIndex: 10,
                           boxShadow: '0 4px 12px rgba(0,0,0,0.5)'
                         }}>
-                          {item.time}: <strong>{item.val}</strong>
+                          {item.time}: <strong>{item.today} hoje</strong> / {item.yesterday} ontem
                         </div>
                       )}
 
-                      {/* Secondary Bar (Darker Charcoal) */}
+                      {/* Secondary Bar (Yesterday) */}
                       <div style={{
                         width: '45%',
                         maxWidth: '12px',
                         height: `${heightSecondary}px`,
-                        background: isHovered ? '#3b3f49' : '#2b2e36',
+                        background: isHovered ? '#3b3f49' : (item.yesterday > 0 ? '#2b2e36' : 'rgba(255,255,255,0.04)'),
                         borderRadius: '3px 3px 0 0',
                         transition: 'all 0.15s ease'
                       }} />
 
-                      {/* Primary Bar (Sleek Slate) */}
+                      {/* Primary Bar (Today) */}
                       <div style={{
                         width: '45%',
                         maxWidth: '12px',
                         height: `${heightPrimary}px`,
-                        background: isHovered ? '#828997' : '#525866',
+                        background: isHovered ? '#828997' : (item.today > 0 ? '#525866' : 'rgba(255,255,255,0.06)'),
                         borderRadius: '3px 3px 0 0',
                         transition: 'all 0.15s ease'
                       }} />
@@ -338,7 +593,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
                   <Clock size={14} color="#8c93a0" />
                   <span style={{ color: '#d1d5db', fontWeight: '500' }}>Today's budget</span>
                 </div>
-                <button type="button" style={iconBtnStyle} title="Maximizar">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('goals')}
+                  style={iconBtnStyle}
+                  title="Configurar Metas"
+                >
                   <Maximize2 size={13} />
                 </button>
               </div>
@@ -347,11 +607,17 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '22px' }}>
                 <div>
                   <div style={{ fontSize: '0.75rem', color: '#6f7684', marginBottom: '4px' }}>Used today</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#ffffff' }}>$223.65</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#ffffff' }}>
+                    {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(usedTodayValue)}
+                  </div>
                 </div>
                 <div>
                   <div style={{ fontSize: '0.75rem', color: '#6f7684', marginBottom: '4px' }}>Today's allowance</div>
-                  <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#ffffff' }}>$480.00</div>
+                  <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#ffffff' }}>
+                    {todayAllowance > 0
+                      ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(todayAllowance)
+                      : 'R$ 0,00'}
+                  </div>
                 </div>
               </div>
 
@@ -365,12 +631,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
                   overflow: 'hidden',
                   position: 'relative'
                 }}>
-                  {/* Fill (47%) */}
+                  {/* Real Fill */}
                   <div style={{
-                    width: '47%',
+                    width: `${budgetUsedPercent}%`,
                     height: '100%',
                     background: 'linear-gradient(90deg, #1e2025 0%, #353942 100%)',
-                    borderRight: '2px solid #5a606d',
+                    borderRight: budgetUsedPercent > 0 ? '2px solid #5a606d' : 'none',
                     transition: 'width 0.5s ease'
                   }} />
 
@@ -384,7 +650,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
                     fontWeight: '600',
                     color: '#e5e7eb'
                   }}>
-                    47% used
+                    {budgetUsedPercent}% used
                   </div>
                 </div>
               </div>
@@ -403,21 +669,24 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
               </div>
 
               <div style={{ fontSize: '1.2rem', fontWeight: '700', color: '#ffffff', marginBottom: '4px' }}>
-                11 AM – 1 PM
+                {peakLabel}
               </div>
               <div style={{ fontSize: '0.78rem', color: '#7a8291', marginBottom: '18px' }}>
-                ~8% of orders in the busiest hour
+                {peakPct > 0
+                  ? `~${peakPct}% das ações no horário mais movimentado`
+                  : 'Nenhuma atividade registrada no momento'}
               </div>
 
-              {/* Mini Wave Histogram */}
+              {/* Wave Histogram calculated from real hourly distribution */}
               <div style={{ display: 'flex', alignItems: 'flex-end', gap: '4px', height: '48px' }}>
-                {peakHoursBars.map((val, i) => (
+                {peakBars.map((bar, i) => (
                   <div
                     key={i}
+                    title={`${bar.hour}:00`}
                     style={{
                       flex: 1,
-                      height: `${(val / 100) * 44}px`,
-                      background: i >= 8 && i <= 12 ? '#646a78' : '#2b2e35',
+                      height: `${bar.height}px`,
+                      background: bar.isPeak ? '#646a78' : (bar.height > 2 ? '#2b2e35' : 'rgba(255,255,255,0.05)'),
                       borderRadius: '2px 2px 0 0',
                       transition: 'all 0.15s ease'
                     }}
@@ -441,19 +710,38 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
             {/* Filter Dropdown */}
-            <div style={pillButtonStyle}>
-              <span>{timeRange}</span>
-              <ChevronDown size={13} />
+            <div style={{ position: 'relative' }}>
+              <select
+                value={timeRange}
+                onChange={(e) => setTimeRange(e.target.value as any)}
+                style={{
+                  ...pillButtonStyle,
+                  appearance: 'none',
+                  paddingRight: '28px',
+                  background: '#1b1d22',
+                  cursor: 'pointer'
+                }}
+              >
+                <option value="Last 7 days">Last 7 days</option>
+                <option value="Today">Today</option>
+                <option value="Last 30 days">Last 30 days</option>
+                <option value="All time">All time</option>
+              </select>
+              <ChevronDown size={13} style={{ position: 'absolute', right: '10px', top: '10px', pointerEvents: 'none', color: '#8c93a0' }} />
             </div>
 
-            {/* Date Picker Pill */}
+            {/* Real Date Picker Pill */}
             <div style={pillButtonStyle}>
               <Calendar size={13} />
-              <span>Sep 1 – Sep 7, 2026</span>
+              <span>{dateRangeDisplay}</span>
             </div>
 
             {/* Customize */}
-            <button type="button" style={pillButtonStyle}>
+            <button
+              type="button"
+              onClick={() => setActiveTab('kanban')}
+              style={pillButtonStyle}
+            >
               <SlidersHorizontal size={13} />
               <span>Customize</span>
             </button>
@@ -485,7 +773,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
             }}
           >
             <ShoppingBag size={14} />
-            <span>Total Orders</span>
+            <span>Total Orders ({filteredLeads.length})</span>
           </button>
 
           <button
@@ -538,14 +826,14 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
               </tr>
             </thead>
             <tbody>
-              {leads.length === 0 ? (
+              {filteredLeads.length === 0 ? (
                 <tr>
-                  <td colSpan={8} style={{ padding: '32px', textAlign: 'center', color: '#68707d', fontSize: '0.85rem' }}>
-                    Nenhuma oportunidade cadastrada. Comece adicionando leads pelo Scanner ou Funil!
+                  <td colSpan={8} style={{ padding: '36px 20px', textAlign: 'center', color: '#68707d', fontSize: '0.85rem' }}>
+                    Nenhuma oportunidade encontrada no período selecionado.
                   </td>
                 </tr>
               ) : (
-                leads.map((lead) => (
+                filteredLeads.map((lead) => (
                   <tr
                     key={lead.id}
                     onClick={() => setActiveTab('kanban')}
@@ -566,7 +854,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
                         {lead.title}
                       </div>
                       <div style={{ fontSize: '0.74rem', color: '#6d7482', marginTop: '2px' }}>
-                        {lead.code} • {lead.companyRazaoSocial || 'Empresa'}
+                        {lead.code ? `${lead.code} • ` : ''}{lead.companyRazaoSocial || lead.companyNomeFantasia || 'Empresa'}
                       </div>
                     </td>
 
@@ -577,11 +865,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
                     </td>
 
                     <td style={{ padding: '14px 16px', color: '#8c93a0', fontSize: '0.82rem' }}>
-                      {lead.companyCidade ? `${lead.companyCidade} - ${lead.companyEstado || 'SP'}` : 'São Paulo - SP'}
+                      {lead.companyCidade ? `${lead.companyCidade}${lead.companyEstado ? ` - ${lead.companyEstado}` : ''}` : '—'}
                     </td>
 
                     <td style={{ padding: '14px 16px', color: '#8c93a0', fontSize: '0.82rem' }}>
-                      {lead.companyTelefone || '+55 11 2306 7787'}
+                      {lead.companyTelefone || lead.phone || '—'}
                     </td>
 
                     <td style={{ padding: '14px 16px', color: '#8c93a0', fontSize: '0.82rem' }}>
@@ -598,9 +886,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
                           fontWeight: '700',
                           color: '#ffffff'
                         }}>
-                          {(lead.ownerName || 'A').charAt(0).toUpperCase()}
+                          {(lead.ownerName || 'U').charAt(0).toUpperCase()}
                         </div>
-                        <span>{lead.ownerName || 'Administrador'}</span>
+                        <span>{lead.ownerName || 'Não atribuído'}</span>
                       </div>
                     </td>
 
@@ -617,7 +905,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
                         color: '#38bdf8'
                       }}>
                         <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#38bdf8' }} />
-                        <span>{lead.statusName || 'Contatado'}</span>
+                        <span>{lead.statusName || 'Novo'}</span>
                       </span>
                     </td>
 
@@ -705,6 +993,14 @@ const redDotStyle: React.CSSProperties = {
   flexShrink: 0
 };
 
+const grayDotStyle: React.CSSProperties = {
+  width: '6px',
+  height: '6px',
+  borderRadius: '50%',
+  background: '#6b7280',
+  flexShrink: 0
+};
+
 const pillButtonStyle: React.CSSProperties = {
   display: 'inline-flex',
   alignItems: 'center',
@@ -732,3 +1028,4 @@ const pillIconButtonStyle: React.CSSProperties = {
   color: '#8c93a0',
   cursor: 'pointer'
 };
+
