@@ -1,9 +1,11 @@
 # Variáveis de ambiente e credenciais
 .env
 .env.*
+!.env.example
 *.local
 *.pem
 *.key
+install.cmd
 
 # Dependências (Node, Python, Java, Go, PHP, .NET)
 node_modules/
