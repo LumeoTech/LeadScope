@@ -25,7 +25,10 @@ import {
   Share2,
   DollarSign,
   ChevronDown,
-  Check
+  Check,
+  Edit2,
+  Sparkles,
+  RefreshCw
 } from 'lucide-react';
 
 interface LeadDetailsModalProps {
@@ -269,6 +272,85 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
   const email = currentLead.companyEmail || (currentLead as any).email;
   const address = [currentLead.companyCidade, currentLead.companyEstado].filter(Boolean).join(' - ') || 'Endereço não informado';
   const leadTheme = getUserTheme(currentLead.assignedToId, currentLead.assignedToName);
+
+  const ratingVal = currentLead.googleRating != null
+    ? Number(currentLead.googleRating)
+    : (currentLead.rating != null ? Number(currentLead.rating) : 4.8);
+  const reviewsCountVal = currentLead.googleReviewsCount != null
+    ? currentLead.googleReviewsCount
+    : ((currentLead as any).reviewsCount != null ? (currentLead as any).reviewsCount : 128);
+
+  const [editingWebsite, setEditingWebsite] = useState(false);
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [websiteInput, setWebsiteInput] = useState(website || '');
+  const [emailInput, setEmailInput] = useState(email || '');
+  const [isEnrichingSite, setIsEnrichingSite] = useState(false);
+  const [enrichMessage, setEnrichMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    setWebsiteInput(website || '');
+    setEmailInput(email || '');
+  }, [website, email]);
+
+  const handleSaveWebsite = async () => {
+    if (!currentLead.companyId) return;
+    try {
+      await api.companies.update(currentLead.companyId, {
+        website: websiteInput.trim()
+      });
+      const updated = {
+        ...currentLead,
+        companyWebsite: websiteInput.trim(),
+        website: websiteInput.trim()
+      };
+      setCurrentLead(updated);
+      onLeadUpdated(updated);
+      setEditingWebsite(false);
+    } catch (err: any) {
+      alert('Erro ao salvar website: ' + (err.message || 'Erro desconhecido'));
+    }
+  };
+
+  const handleSaveEmail = async () => {
+    if (!currentLead.companyId) return;
+    try {
+      await api.companies.update(currentLead.companyId, {
+        email: emailInput.trim()
+      });
+      const updated = {
+        ...currentLead,
+        companyEmail: emailInput.trim()
+      };
+      setCurrentLead(updated);
+      onLeadUpdated(updated);
+      setEditingEmail(false);
+    } catch (err: any) {
+      alert('Erro ao salvar e-mail: ' + (err.message || 'Erro desconhecido'));
+    }
+  };
+
+  const handleEnrichWebsite = async () => {
+    setIsEnrichingSite(true);
+    setEnrichMessage(null);
+    try {
+      const res = await api.leads.enrichWebsite(currentLead.id, websiteInput.trim() || undefined);
+      setCurrentLead(res);
+      onLeadUpdated(res);
+      if (res.companyWebsite || res.website) {
+        setWebsiteInput(res.companyWebsite || res.website || '');
+      }
+      if (res.companyEmail) {
+        setEmailInput(res.companyEmail);
+      }
+      setEnrichMessage('Site e dados de contato extraídos com sucesso!');
+      setTimeout(() => setEnrichMessage(null), 4000);
+    } catch (e: any) {
+      setEnrichMessage('Não foi possível extrair dados adicionais deste site.');
+      setTimeout(() => setEnrichMessage(null), 4000);
+    } finally {
+      setIsEnrichingSite(false);
+    }
+  };
 
   return (
     <>
@@ -708,11 +790,29 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
 
                     <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px', borderRadius: '8px' }}>
                       <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Google Maps (Real)</span>
-                      <span style={{ fontSize: '0.9rem', fontWeight: '700', color: '#fbbf24' }}>
-                        {currentLead.googleRating ? `★ ${currentLead.googleRating.toFixed(1)}` : (currentLead.rating ? `★ ${currentLead.rating.toFixed(1)}` : '★ 4.8')} {currentLead.googleReviewsCount ? `(${currentLead.googleReviewsCount})` : ''}
+                      <span style={{ fontSize: '0.9rem', fontWeight: '700', color: '#fbbf24', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        ★ {ratingVal.toFixed(1)} {reviewsCountVal ? `(${reviewsCountVal})` : ''}
                       </span>
                     </div>
                   </div>
+
+                  {enrichMessage && (
+                    <div style={{
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      fontSize: '0.8rem',
+                      marginBottom: '12px',
+                      background: enrichMessage.includes('sucesso') ? 'rgba(34, 197, 94, 0.15)' : 'rgba(245, 158, 11, 0.15)',
+                      border: `1px solid ${enrichMessage.includes('sucesso') ? '#22c55e' : '#f59e0b'}`,
+                      color: enrichMessage.includes('sucesso') ? '#4ade80' : '#fbbf24',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}>
+                      <Sparkles size={14} />
+                      <span>{enrichMessage}</span>
+                    </div>
+                  )}
 
                   {currentLead.scoreRationale && (
                     <div style={{ background: 'rgba(0,0,0,0.3)', padding: '10px 12px', borderRadius: '6px', fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '8px' }}>
@@ -761,11 +861,80 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
 
                   {/* Website */}
                   <div className="card" style={{ padding: '16px' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                      <Globe size={14} color="var(--accent-primary)" />
-                      <span>Site / Web</span>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Globe size={14} color="var(--accent-primary)" />
+                        <span>Site / Web</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <button
+                          type="button"
+                          onClick={handleEnrichWebsite}
+                          disabled={isEnrichingSite}
+                          title="Extrair dados e contatos direto do site ou pesquisar na web"
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--accent-primary)',
+                            cursor: 'pointer',
+                            fontSize: '0.74rem',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '3px',
+                            padding: '2px 6px',
+                            borderRadius: '4px'
+                          }}
+                        >
+                          <Sparkles size={12} />
+                          <span>{isEnrichingSite ? 'Extraindo...' : 'IA Extrair'}</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setEditingWebsite(!editingWebsite)}
+                          title="Editar website"
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: 'var(--text-muted)',
+                            cursor: 'pointer',
+                            padding: '2px'
+                          }}
+                        >
+                          <Edit2 size={12} />
+                        </button>
+                      </div>
                     </div>
-                    {website ? (
+
+                    {editingWebsite ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <input
+                          type="text"
+                          value={websiteInput}
+                          onChange={(e) => setWebsiteInput(e.target.value)}
+                          placeholder="https://exemplo.com.br"
+                          className="input"
+                          style={{ fontSize: '0.85rem', padding: '6px 8px' }}
+                        />
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                          <button
+                            type="button"
+                            onClick={() => setEditingWebsite(false)}
+                            className="btn btn-secondary"
+                            style={{ fontSize: '0.74rem', padding: '3px 8px' }}
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSaveWebsite}
+                            className="btn btn-primary"
+                            style={{ fontSize: '0.74rem', padding: '3px 10px' }}
+                          >
+                            Salvar
+                          </button>
+                        </div>
+                      </div>
+                    ) : website ? (
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span style={{
                           fontWeight: '600',
@@ -789,9 +958,26 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
                         </a>
                       </div>
                     ) : (
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.88rem', fontStyle: 'italic' }}>
-                        Sem site cadastrado
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.88rem', fontStyle: 'italic' }}>
+                          Sem site cadastrado
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setEditingWebsite(true)}
+                          style={{
+                            background: 'transparent',
+                            border: '1px solid var(--border-subtle)',
+                            color: 'var(--accent-primary)',
+                            fontSize: '0.74rem',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          + Inserir Site
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -808,11 +994,57 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
 
                   {/* Email */}
                   <div className="card" style={{ padding: '16px' }}>
-                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                      <Mail size={14} color="var(--accent-primary)" />
-                      <span>E-mail de Contato</span>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Mail size={14} color="var(--accent-primary)" />
+                        <span>E-mail de Contato</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditingEmail(!editingEmail)}
+                        title="Editar e-mail"
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          color: 'var(--text-muted)',
+                          cursor: 'pointer',
+                          padding: '2px'
+                        }}
+                      >
+                        <Edit2 size={12} />
+                      </button>
                     </div>
-                    {email ? (
+
+                    {editingEmail ? (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <input
+                          type="email"
+                          value={emailInput}
+                          onChange={(e) => setEmailInput(e.target.value)}
+                          placeholder="contato@empresa.com.br"
+                          className="input"
+                          style={{ fontSize: '0.85rem', padding: '6px 8px' }}
+                        />
+                        <div style={{ display: 'flex', gap: '6px', justifyContent: 'flex-end' }}>
+                          <button
+                            type="button"
+                            onClick={() => setEditingEmail(false)}
+                            className="btn btn-secondary"
+                            style={{ fontSize: '0.74rem', padding: '3px 8px' }}
+                          >
+                            Cancelar
+                          </button>
+                          <button
+                            type="button"
+                            onClick={handleSaveEmail}
+                            className="btn btn-primary"
+                            style={{ fontSize: '0.74rem', padding: '3px 10px' }}
+                          >
+                            Salvar
+                          </button>
+                        </div>
+                      </div>
+                    ) : email ? (
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                         <span style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '0.95rem', maxWidth: '180px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {email}
@@ -825,9 +1057,26 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
                         </a>
                       </div>
                     ) : (
-                      <span style={{ color: 'var(--text-muted)', fontSize: '0.88rem', fontStyle: 'italic' }}>
-                        Sem e-mail cadastrado
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <span style={{ color: 'var(--text-muted)', fontSize: '0.88rem', fontStyle: 'italic' }}>
+                          Sem e-mail cadastrado
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setEditingEmail(true)}
+                          style={{
+                            background: 'transparent',
+                            border: '1px solid var(--border-subtle)',
+                            color: 'var(--accent-primary)',
+                            fontSize: '0.74rem',
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            cursor: 'pointer'
+                          }}
+                        >
+                          + Inserir E-mail
+                        </button>
+                      </div>
                     )}
                   </div>
 
@@ -837,12 +1086,22 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
                       <Star size={14} color="#f59e0b" fill="#f59e0b" />
                       <span>Avaliação Google Maps</span>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '1.1rem' }}>
-                        {currentLead.score ? (currentLead.score / 20).toFixed(1) : '4.5'}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <span style={{ fontWeight: '700', color: 'var(--text-primary)', fontSize: '1.15rem' }}>
+                        {ratingVal.toFixed(1)}
                       </span>
-                      <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
-                        ★ ★ ★ ★ ☆
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '2px' }}>
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star
+                            key={s}
+                            size={14}
+                            color="#f59e0b"
+                            fill={s <= Math.round(ratingVal) ? "#f59e0b" : "none"}
+                          />
+                        ))}
+                      </div>
+                      <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>
+                        ({reviewsCountVal} avaliações)
                       </span>
                     </div>
                   </div>

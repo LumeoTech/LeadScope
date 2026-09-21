@@ -254,21 +254,36 @@ export const Navbar: React.FC<NavbarProps> = ({
             }}
           >
             {/* Silhouette / avatar icon matching reference */}
-            <div
-              style={{
-                width: '100%',
-                height: '100%',
-                background: '#1a1d22',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#ffffff',
-                fontWeight: '700',
-                fontSize: '0.8rem'
-              }}
-            >
-              {user ? getInitials(user.name) : 'EF'}
-            </div>
+            {user?.avatarUrl ? (
+              <img
+                src={user.avatarUrl}
+                alt={user.name || 'Avatar'}
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover'
+                }}
+                onError={(e) => {
+                  (e.target as HTMLElement).style.display = 'none';
+                }}
+              />
+            ) : (
+              <div
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  background: '#1a1d22',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#ffffff',
+                  fontWeight: '700',
+                  fontSize: '0.8rem'
+                }}
+              >
+                {user ? getInitials(user.name) : 'EF'}
+              </div>
+            )}
           </button>
 
           {/* User Profile Dropdown Menu */}

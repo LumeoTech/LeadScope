@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { api, AuditLog, UserSettingsDto } from '../services/api';
 import {
   Settings,
@@ -16,6 +16,8 @@ import {
   Sun,
   Globe,
   Camera,
+  Upload,
+  Trash2,
   Key,
   Shield,
   Clock
@@ -34,6 +36,57 @@ export const AuditView: React.FC = () => {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState('ADMIN');
   const [avatarUrl, setAvatarUrl] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setFeedbackMsg({ type: 'error', text: 'Por favor, selecione um arquivo de imagem válido (JPG, PNG, WebP).' });
+      return;
+    }
+
+    if (file.size > 8 * 1024 * 1024) {
+      setFeedbackMsg({ type: 'error', text: 'A imagem selecionada é muito grande. Escolha uma imagem de até 8MB.' });
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = (readerEvent) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const maxDim = 400;
+        let width = img.width;
+        let height = img.height;
+
+        if (width > height) {
+          if (width > maxDim) {
+            height = Math.round((height * maxDim) / width);
+            width = maxDim;
+          }
+        } else {
+          if (height > maxDim) {
+            width = Math.round((width * maxDim) / height);
+            height = maxDim;
+          }
+        }
+
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          const compressedDataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          setAvatarUrl(compressedDataUrl);
+          setFeedbackMsg({ type: 'success', text: 'Foto carregada! Clique em "Salvar Alterações" para aplicar no seu perfil.' });
+        }
+      };
+      img.src = readerEvent.target?.result as string;
+    };
+    reader.readAsDataURL(file);
+  };
 
   // Aparência
   const [theme, setTheme] = useState<'dark' | 'light'>('dark');
@@ -115,7 +168,9 @@ export const AuditView: React.FC = () => {
           const parsed = JSON.parse(u);
           parsed.name = name.trim();
           parsed.email = email.trim();
+          parsed.avatarUrl = avatarUrl.trim();
           localStorage.setItem('user', JSON.stringify(parsed));
+          window.dispatchEvent(new Event('storage'));
         }
       } catch (e) {}
 
@@ -357,19 +412,32 @@ export const AuditView: React.FC = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', alignItems: 'center' }}>
               {/* Foto / Avatar Preview */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '18px' }}>
-                <div style={{ position: 'relative' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  style={{ display: 'none' }}
+                  onChange={handlePhotoUpload}
+                />
+
+                <div
+                  onClick={() => fileInputRef.current?.click()}
+                  title="Clique para escolher uma foto do seu computador ou celular"
+                  style={{ position: 'relative', cursor: 'pointer' }}
+                >
                   {avatarUrl ? (
                     <img
                       src={avatarUrl}
                       alt={name}
                       style={{
-                        width: '74px',
-                        height: '74px',
+                        width: '80px',
+                        height: '80px',
                         borderRadius: '50%',
                         objectFit: 'cover',
-                        border: '2px solid #1e3a5f',
-                        boxShadow: '0 4px 12px rgba(0,0,0,0.4)'
+                        border: '3px solid #1e3a5f',
+                        boxShadow: '0 4px 14px rgba(0,0,0,0.5)',
+                        transition: 'transform 0.15s ease'
                       }}
                       onError={(e) => {
                         (e.target as HTMLElement).style.display = 'none';
@@ -377,17 +445,18 @@ export const AuditView: React.FC = () => {
                     />
                   ) : (
                     <div style={{
-                      width: '74px',
-                      height: '74px',
+                      width: '80px',
+                      height: '80px',
                       borderRadius: '50%',
-                      background: 'rgba(30, 58, 95, 0.5)',
-                      border: '2px solid #1e3a5f',
+                      background: 'rgba(30, 58, 95, 0.6)',
+                      border: '3px solid #1e3a5f',
                       color: '#93c5fd',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontSize: '1.8rem',
-                      fontWeight: '800'
+                      fontSize: '2rem',
+                      fontWeight: '800',
+                      boxShadow: '0 4px 14px rgba(0,0,0,0.5)'
                     }}>
                       {(name || 'G').charAt(0).toUpperCase()}
                     </div>
@@ -396,33 +465,74 @@ export const AuditView: React.FC = () => {
                     position: 'absolute',
                     bottom: 0,
                     right: 0,
-                    background: '#1e3a5f',
+                    background: '#2563eb',
                     borderRadius: '50%',
-                    padding: '5px',
-                    border: '1.5px solid #ffffff',
+                    padding: '6px',
+                    border: '2px solid #ffffff',
                     color: '#ffffff',
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center'
+                    justifyContent: 'center',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.4)'
                   }}>
-                    <Camera size={12} />
+                    <Camera size={13} />
                   </div>
                 </div>
 
-                <div style={{ flex: 1 }}>
-                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                    URL da Foto de Perfil
-                  </label>
+                <div style={{ flex: 1, minWidth: '220px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <button
+                      type="button"
+                      onClick={() => fileInputRef.current?.click()}
+                      className="btn btn-primary"
+                      style={{
+                        fontSize: '0.8rem',
+                        padding: '6px 14px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <Upload size={14} />
+                      <span>Upload de Foto</span>
+                    </button>
+                    {avatarUrl && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setAvatarUrl('');
+                          setFeedbackMsg({ type: 'success', text: 'Foto removida. Salve as alterações para confirmar.' });
+                        }}
+                        className="btn btn-secondary"
+                        style={{
+                          fontSize: '0.8rem',
+                          padding: '6px 12px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          color: '#f87171'
+                        }}
+                      >
+                        <Trash2 size={13} />
+                        <span>Remover</span>
+                      </button>
+                    )}
+                  </div>
+
                   <input
                     type="text"
-                    value={avatarUrl}
-                    onChange={(e) => setAvatarUrl(e.target.value)}
-                    placeholder="https://exemplo.com/minha-foto.jpg"
+                    value={avatarUrl.startsWith('data:') ? '(Foto carregada via arquivo local)' : avatarUrl}
+                    onChange={(e) => {
+                      if (!e.target.value.startsWith('(Foto')) {
+                        setAvatarUrl(e.target.value);
+                      }
+                    }}
+                    placeholder="Ou cole a URL direta de uma imagem"
                     className="input"
-                    style={{ width: '100%', fontSize: '0.82rem' }}
+                    style={{ width: '100%', fontSize: '0.8rem' }}
                   />
                   <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '4px', display: 'block' }}>
-                    Cole o link direto de sua imagem ou deixe em branco para usar o monograma.
+                    Suporta imagens JPG, PNG e WebP com compressão automática.
                   </span>
                 </div>
               </div>

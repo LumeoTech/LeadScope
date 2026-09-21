@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Map;
 import com.crmscanner.crm.entity.LeadNote;
+import com.crmscanner.crm.repository.CompanyRepository;
 import com.crmscanner.crm.repository.LeadNoteRepository;
 import com.crmscanner.crm.dto.TransferLeadRequest;
 import com.crmscanner.crm.dto.SendLeadRequest;
@@ -31,6 +32,7 @@ public class LeadService {
 
     private final LeadRepository leadRepository;
     private final LeadNoteRepository leadNoteRepository;
+    private final CompanyRepository companyRepository;
     private final CompanyService companyService;
     private final LeadStatusService leadStatusService;
     private final UserRepository userRepository;
@@ -478,5 +480,163 @@ public class LeadService {
             processed++;
         }
         return processed;
+    }
+
+    public record ExtractedWebData(String title, String description, String email, String phone) {}
+
+    @Transactional
+    public LeadResponse enrichLeadWebsite(Long leadId, String optionalUrl) {
+        Lead lead = leadRepository.findById(leadId)
+                .orElseThrow(() -> new ResourceNotFoundException("Lead não encontrado com ID: " + leadId));
+
+        Company company = lead.getCompany();
+        if (company == null) {
+            throw new BusinessException("Lead não possui empresa vinculada");
+        }
+
+        String targetUrl = (optionalUrl != null && !optionalUrl.isBlank()) ? optionalUrl.trim() : company.getWebsite();
+
+        if (targetUrl == null || targetUrl.isBlank()) {
+            targetUrl = discoverWebsiteUrl(company.getNomeFantasia() != null ? company.getNomeFantasia() : company.getRazaoSocial(), company.getCidade());
+        }
+
+        if (targetUrl != null && !targetUrl.isBlank()) {
+            if (!targetUrl.startsWith("http://") && !targetUrl.startsWith("https://")) {
+                targetUrl = "https://" + targetUrl;
+            }
+            company.setWebsite(targetUrl);
+
+            ExtractedWebData webData = scrapeWebsiteData(targetUrl);
+            if (webData != null) {
+                if ((company.getEmail() == null || company.getEmail().isBlank()) && webData.email() != null) {
+                    company.setEmail(webData.email());
+                }
+                if ((company.getTelefone() == null || company.getTelefone().isBlank()) && webData.phone() != null) {
+                    company.setTelefone(webData.phone());
+                }
+                String title = webData.title() != null ? webData.title() : company.getNomeFantasia();
+                String desc = webData.description() != null ? webData.description() : "Portal institucional ativo.";
+                lead.setWebsiteContentSummary("Site Oficial: " + title + " — " + desc);
+                lead.setDigitalPresenceTier("Boa (Site Próprio)");
+            } else {
+                lead.setWebsiteContentSummary("Portal corporativo ativo identificado em " + targetUrl);
+                lead.setDigitalPresenceTier("Boa (Site Próprio)");
+            }
+            companyRepository.save(company);
+            leadRepository.save(lead);
+        } else {
+            lead.setWebsiteContentSummary("Não foi localizado website oficial nos registros públicos.");
+            leadRepository.save(lead);
+        }
+
+        return LeadResponse.fromEntity(lead);
+    }
+
+    private String discoverWebsiteUrl(String companyName, String city) {
+        if (companyName == null || companyName.isBlank()) return null;
+        try {
+            String query = (companyName + " " + (city != null ? city : "")).trim();
+            String encoded = java.net.URLEncoder.encode(query, java.nio.charset.StandardCharsets.UTF_8);
+            java.net.URI uri = java.net.URI.create("https://html.duckduckgo.com/html/?q=" + encoded);
+
+            java.net.http.HttpClient client = java.net.http.HttpClient.newBuilder()
+                    .connectTimeout(java.time.Duration.ofMillis(2000))
+                    .followRedirects(java.net.http.HttpClient.Redirect.NORMAL)
+                    .build();
+
+            java.net.http.HttpRequest req = java.net.http.HttpRequest.newBuilder()
+                    .uri(uri)
+                    .timeout(java.time.Duration.ofMillis(3000))
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) LeadScope/2.0")
+                    .GET()
+                    .build();
+
+            java.net.http.HttpResponse<String> res = client.send(req, java.net.http.HttpResponse.BodyHandlers.ofString());
+            if (res.statusCode() == 200 && res.body() != null) {
+                java.util.regex.Pattern p = java.util.regex.Pattern.compile("uddg=([^&\"'>]+)");
+                java.util.regex.Matcher m = p.matcher(res.body());
+                while (m.find()) {
+                    String decoded = java.net.URLDecoder.decode(m.group(1), java.nio.charset.StandardCharsets.UTF_8);
+                    if (isValidCompanyUrl(decoded)) {
+                        return decoded;
+                    }
+                }
+            }
+        } catch (Exception ignored) {}
+        return null;
+    }
+
+    private boolean isValidCompanyUrl(String url) {
+        if (url == null || !url.startsWith("http")) return false;
+        String lower = url.toLowerCase();
+        if (lower.contains("duckduckgo.com") || lower.contains("google.com") || lower.contains("facebook.com")
+                || lower.contains("instagram.com") || lower.contains("linkedin.com") || lower.contains("youtube.com")
+                || lower.contains("jusbrasil.com.br") || lower.contains("cnpj.biz") || lower.contains("consultas.biz")) {
+            return false;
+        }
+        return true;
+    }
+
+    private ExtractedWebData scrapeWebsiteData(String websiteUrl) {
+        try {
+            java.net.URI uri = java.net.URI.create(websiteUrl);
+            java.net.http.HttpClient client = java.net.http.HttpClient.newBuilder()
+                    .connectTimeout(java.time.Duration.ofMillis(2500))
+                    .followRedirects(java.net.http.HttpClient.Redirect.NORMAL)
+                    .build();
+
+            java.net.http.HttpRequest req = java.net.http.HttpRequest.newBuilder()
+                    .uri(uri)
+                    .timeout(java.time.Duration.ofMillis(3500))
+                    .header("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) LeadScope/2.0")
+                    .GET()
+                    .build();
+
+            java.net.http.HttpResponse<String> res = client.send(req, java.net.http.HttpResponse.BodyHandlers.ofString());
+            if (res.statusCode() >= 200 && res.statusCode() < 400 && res.body() != null) {
+                String html = res.body();
+
+                String title = null;
+                java.util.regex.Pattern titlePattern = java.util.regex.Pattern.compile("<title[^>]*>(.*?)</title>", java.util.regex.Pattern.CASE_INSENSITIVE | java.util.regex.Pattern.DOTALL);
+                java.util.regex.Matcher titleMatcher = titlePattern.matcher(html);
+                if (titleMatcher.find()) {
+                    title = titleMatcher.group(1).replaceAll("<[^>]*>", "").trim();
+                }
+
+                String description = null;
+                java.util.regex.Pattern descPattern = java.util.regex.Pattern.compile("<meta\\s+name=[\"']description[\"']\\s+content=[\"'](.*?)[\"']", java.util.regex.Pattern.CASE_INSENSITIVE);
+                java.util.regex.Matcher descMatcher = descPattern.matcher(html);
+                if (descMatcher.find()) {
+                    description = descMatcher.group(1).trim();
+                }
+
+                String email = null;
+                java.util.regex.Pattern mailtoPattern = java.util.regex.Pattern.compile("mailto:([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,})", java.util.regex.Pattern.CASE_INSENSITIVE);
+                java.util.regex.Matcher mailtoMatcher = mailtoPattern.matcher(html);
+                if (mailtoMatcher.find()) {
+                    String candidate = mailtoMatcher.group(1).toLowerCase().trim();
+                    if (!candidate.contains("wix") && !candidate.contains("sentry") && !candidate.contains("example")) {
+                        email = candidate;
+                    }
+                }
+                if (email == null) {
+                    java.util.regex.Pattern emailPattern = java.util.regex.Pattern.compile("\\b(contato|comercial|atendimento|vendas|sac|info)@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}\\b", java.util.regex.Pattern.CASE_INSENSITIVE);
+                    java.util.regex.Matcher emailMatcher = emailPattern.matcher(html);
+                    if (emailMatcher.find()) {
+                        email = emailMatcher.group(0).toLowerCase().trim();
+                    }
+                }
+
+                String phone = null;
+                java.util.regex.Pattern phonePattern = java.util.regex.Pattern.compile("(?:\\+55\\s?)?(?:\\(?\\d{2}\\)?\\s?)?(?:9\\d{4}[-\\s]?\\d{4}|[2-5]\\d{3}[-\\s]?\\d{4})");
+                java.util.regex.Matcher phoneMatcher = phonePattern.matcher(html);
+                if (phoneMatcher.find()) {
+                    phone = phoneMatcher.group(0).trim();
+                }
+
+                return new ExtractedWebData(title, description, email, phone);
+            }
+        } catch (Exception ignored) {}
+        return null;
     }
 }

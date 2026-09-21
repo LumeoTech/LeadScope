@@ -10,6 +10,7 @@ export interface UserInfo {
   status?: string;
   active?: boolean;
   createdAt?: string;
+  avatarUrl?: string;
 }
 
 export interface AuthResponse {
@@ -555,7 +556,7 @@ export const api = {
         });
       } catch (err: any) {
         const msg = String(err?.message || '');
-        if (msg.includes('POST') || msg.includes('405')) {
+        if (msg.includes('POST') || msg.includes('405') || msg.includes('Method parameter') || msg.includes('Failed to convert')) {
           return await request<Lead[]>('/leads/auto-scan-daily', {
             method: 'GET',
           });
@@ -567,10 +568,27 @@ export const api = {
       request<DailyScanStatus>('/leads/auto-scan-status'),
     getAutoScanSettings: () =>
       request<AutoScanSettings>('/leads/auto-scan-settings'),
-    updateAutoScanSettings: (data: Partial<AutoScanSettings>) =>
-      request<AutoScanSettings>('/leads/auto-scan-settings', {
+    updateAutoScanSettings: async (data: Partial<AutoScanSettings>) => {
+      try {
+        return await request<AutoScanSettings>('/leads/auto-scan-settings', {
+          method: 'POST',
+          body: JSON.stringify(data),
+        });
+      } catch (err: any) {
+        const msg = String(err?.message || '');
+        if (msg.includes('POST') || msg.includes('405') || msg.includes('not supported')) {
+          return await request<AutoScanSettings>('/leads/auto-scan-settings', {
+            method: 'PUT',
+            body: JSON.stringify(data),
+          });
+        }
+        throw err;
+      }
+    },
+    enrichWebsite: (id: number, website?: string) =>
+      request<Lead>(`/leads/${id}/enrich-website`, {
         method: 'POST',
-        body: JSON.stringify(data),
+        body: JSON.stringify({ website }),
       }),
     getAutoScanAnalytics: () =>
       request<AutoScanAnalytics>('/leads/auto-scan-analytics'),
@@ -705,7 +723,17 @@ export const api = {
   },
 
   sites: {
-    list: () => request<Site[]>('/sites'),
+    list: async () => {
+      try {
+        return await request<Site[]>('/sites');
+      } catch (err: any) {
+        const msg = String(err?.message || '');
+        if (msg.includes('static resource') || msg.includes('404')) {
+          return [];
+        }
+        throw err;
+      }
+    },
     get: (id: number) => request<Site>(`/sites/${id}`),
     create: (data: Partial<Site>) =>
       request<Site>('/sites', {

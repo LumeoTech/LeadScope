@@ -16,7 +16,8 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/sites")
+@RequestMapping({"/api/sites", "/sites"})
+@CrossOrigin(origins = "*")
 @RequiredArgsConstructor
 @Tag(name = "Sites e Templates", description = "Gerenciamento de sites, landing pages e templates de e-mail por site")
 public class SiteController {
@@ -29,7 +30,7 @@ public class SiteController {
         return ResponseEntity.ok(siteService.listAll());
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     @Operation(summary = "Obter site por ID")
     public ResponseEntity<SiteResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(siteService.getById(id));
@@ -42,14 +43,14 @@ public class SiteController {
         return ResponseEntity.status(HttpStatus.CREATED).body(siteService.create(request));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Atualizar site")
     public ResponseEntity<SiteResponse> update(@PathVariable Long id, @Valid @RequestBody SiteUpdateRequest request) {
         return ResponseEntity.ok(siteService.update(id, request));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Excluir site")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
@@ -65,13 +66,13 @@ public class SiteController {
         return ResponseEntity.ok(siteService.listAllTemplates());
     }
 
-    @GetMapping("/{id}/templates")
+    @GetMapping("/{id:\\d+}/templates")
     @Operation(summary = "Listar templates de e-mail do site")
     public ResponseEntity<List<TemplateResponse>> listTemplates(@PathVariable Long id) {
         return ResponseEntity.ok(siteService.listTemplates(id));
     }
 
-    @PostMapping("/{id}/templates")
+    @PostMapping("/{id:\\d+}/templates")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Criar template de e-mail para o site")
     public ResponseEntity<TemplateResponse> createTemplate(
@@ -81,7 +82,7 @@ public class SiteController {
         return ResponseEntity.status(HttpStatus.CREATED).body(siteService.createTemplate(id, request));
     }
 
-    @PutMapping("/{id}/templates/{templateId}")
+    @PutMapping("/{id:\\d+}/templates/{templateId:\\d+}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Atualizar template de e-mail")
     public ResponseEntity<TemplateResponse> updateTemplate(
@@ -92,7 +93,7 @@ public class SiteController {
         return ResponseEntity.ok(siteService.updateTemplate(id, templateId, request));
     }
 
-    @DeleteMapping("/{id}/templates/{templateId}")
+    @DeleteMapping("/{id:\\d+}/templates/{templateId:\\d+}")
     @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Excluir template de e-mail")
     public ResponseEntity<Void> deleteTemplate(@PathVariable Long id, @PathVariable Long templateId) {

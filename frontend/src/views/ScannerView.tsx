@@ -131,7 +131,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
   // ——————————————————————————————————————————————————————————
   // 2. Estado dos Segmentos / Nichos
   // ——————————————————————————————————————————————————————————
-  const [selectedNiches, setSelectedNiches] = useState<string[]>(['Clínica odontológica', 'Psicólogo']);
+  const [selectedNiches, setSelectedNiches] = useState<string[]>([]);
   const [nicheSearch, setNicheSearch] = useState<string>('');
 
   // ——————————————————————————————————————————————————————————
@@ -459,6 +459,10 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
         priority: 'MEDIA',
         source: 'PROSPECCAO'
       });
+
+      if (!lead.website) {
+        api.leads.enrichWebsite(createdLead.id).catch(() => {});
+      }
 
       setLeads(prev => prev.map(item =>
         item.id === lead.id ? { ...item, addedToCrm: true, companyId: company.id, leadId: createdLead.id } : item
