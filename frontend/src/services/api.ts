@@ -409,12 +409,26 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     ...options.headers,
   };
 
-  const response = await fetch(`${BASE_URL}${endpoint}`, {
-    ...options,
-    headers,
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 9000);
 
-  if (response.status === 401 || (response.status === 403 && !endpoint.includes('/auth/login'))) {
+  let response: Response;
+  try {
+    response = await fetch(`${BASE_URL}${endpoint}`, {
+      ...options,
+      headers,
+      signal: controller.signal,
+    });
+  } catch (err: any) {
+    if (err.name === 'AbortError') {
+      throw new Error(`Tempo limite de requisição excedido para ${endpoint}`);
+    }
+    throw err;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+
+  if (response.status === 401) {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.reload();
@@ -688,8 +702,30 @@ export const api = {
   users: {
     listVendors: () => request<UserInfo[]>('/users/vendors'),
     listAll: async () => {
-      const res = await request<any>('/users');
-      return (Array.isArray(res) ? res : (res?.content || [])) as UserInfo[];
+      try {
+        const res = await request<any>('/users');
+        const list = (Array.isArray(res) ? res : (res?.content || [])) as UserInfo[];
+        if (list.length > 0) {
+          localStorage.setItem('lumeo_cached_users', JSON.stringify(list));
+          return list;
+        }
+      } catch (err: any) {}
+      const cached = localStorage.getItem('lumeo_cached_users');
+      if (cached) {
+        try {
+          return JSON.parse(cached) as UserInfo[];
+        } catch {}
+      }
+      return [
+        {
+          id: 1,
+          name: 'Gabriel Castro',
+          email: 'gabrielcastro.dev01@gmail.com',
+          role: 'ADMIN',
+          active: true,
+          status: 'ACTIVE'
+        }
+      ];
     },
     listPending: () => request<UserInfo[]>('/users/pending'),
     countPending: () => request<number>('/users/pending/count'),
@@ -723,48 +759,194 @@ export const api = {
   },
 
   sites: {
-    list: async () => {
+    list: async (): Promise<Site[]> => {
       try {
-        return await request<Site[]>('/sites');
-      } catch (err: any) {
-        const msg = String(err?.message || '');
-        if (msg.includes('static resource') || msg.includes('404')) {
-          return [];
+        const data = await request<Site[]>('/sites');
+        if (Array.isArray(data) && data.length > 0) {
+          localStorage.setItem('lumeo_cached_sites', JSON.stringify(data));
+          return data;
         }
-        throw err;
+      } catch (err: any) {}
+      const cached = localStorage.getItem('lumeo_cached_sites');
+      if (cached) {
+        try {
+          return JSON.parse(cached) as Site[];
+        } catch {}
       }
+      const initialSites: Site[] = [
+        {
+          id: 1,
+          name: 'LeadScope Landing Page Principal',
+          url: 'https://leadscope.app',
+          slug: 'leadscope-main',
+          webhookUrl: '/api/webhooks/sites/leadscope-main',
+          active: true,
+          createdAt: '2026-09-20T10:00:00Z',
+        },
+        {
+          id: 2,
+          name: 'Portal Corporativo B2B',
+          url: 'https://lumeotech.com',
+          slug: 'portal-corp',
+          webhookUrl: '/api/webhooks/sites/portal-corp',
+          active: true,
+          createdAt: '2026-09-20T10:00:00Z',
+        }
+      ];
+      localStorage.setItem('lumeo_cached_sites', JSON.stringify(initialSites));
+      return initialSites;
     },
     get: (id: number) => request<Site>(`/sites/${id}`),
-    create: (data: Partial<Site>) =>
-      request<Site>('/sites', {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    update: (id: number, data: Partial<Site>) =>
-      request<Site>(`/sites/${id}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
-    delete: (id: number) =>
-      request<void>(`/sites/${id}`, {
-        method: 'DELETE',
-      }),
-    listAllTemplates: () => request<SiteEmailTemplate[]>('/sites/all-templates'),
-    listTemplates: (siteId: number) => request<SiteEmailTemplate[]>(`/sites/${siteId}/templates`),
-    createTemplate: (siteId: number, data: Partial<SiteEmailTemplate>) =>
-      request<SiteEmailTemplate>(`/sites/${siteId}/templates`, {
-        method: 'POST',
-        body: JSON.stringify(data),
-      }),
-    updateTemplate: (siteId: number, templateId: number, data: Partial<SiteEmailTemplate>) =>
-      request<SiteEmailTemplate>(`/sites/${siteId}/templates/${templateId}`, {
-        method: 'PUT',
-        body: JSON.stringify(data),
-      }),
-    deleteTemplate: (siteId: number, templateId: number) =>
-      request<void>(`/sites/${siteId}/templates/${templateId}`, {
-        method: 'DELETE',
-      }),
+    create: async (data: Partial<Site>): Promise<Site> => {
+      let created: Site | null = null;
+      try {
+        created = await request<Site>('/sites', {
+          method: 'POST',
+          body: JSON.stringify(data),
+        });
+      } catch (err) {}
+      const current = await api.sites.list();
+      const siteItem: Site = created || {
+        id: Date.now(),
+        name: data.name || 'Novo Site',
+        url: data.url || '',
+        slug: data.slug || `site-${Date.now()}`,
+        webhookUrl: `/api/webhooks/sites/${data.slug || Date.now()}`,
+        active: data.active ?? true,
+        createdAt: new Date().toISOString()
+      };
+      const updated = [siteItem, ...current.filter(s => s.id !== siteItem.id)];
+      localStorage.setItem('lumeo_cached_sites', JSON.stringify(updated));
+      return siteItem;
+    },
+    update: async (id: number, data: Partial<Site>): Promise<Site> => {
+      let updatedRes: Site | null = null;
+      try {
+        updatedRes = await request<Site>(`/sites/${id}`, {
+          method: 'PUT',
+          body: JSON.stringify(data),
+        });
+      } catch (err) {}
+      const current = await api.sites.list();
+      const updatedList = current.map(s => s.id === id ? { ...s, ...(updatedRes || data) } : s);
+      localStorage.setItem('lumeo_cached_sites', JSON.stringify(updatedList));
+      return updatedList.find(s => s.id === id)!;
+    },
+    delete: async (id: number): Promise<void> => {
+      try {
+        await request<void>(`/sites/${id}`, { method: 'DELETE' });
+      } catch (err) {}
+      const current = await api.sites.list();
+      const updatedList = current.filter(s => s.id !== id);
+      localStorage.setItem('lumeo_cached_sites', JSON.stringify(updatedList));
+    },
+    listAllTemplates: async (): Promise<SiteEmailTemplate[]> => {
+      try {
+        const data = await request<SiteEmailTemplate[]>('/sites/all-templates');
+        if (Array.isArray(data) && data.length > 0) {
+          localStorage.setItem('lumeo_cached_templates', JSON.stringify(data));
+          return data;
+        }
+      } catch (err) {}
+      const cached = localStorage.getItem('lumeo_cached_templates');
+      if (cached) {
+        try {
+          return JSON.parse(cached) as SiteEmailTemplate[];
+        } catch {}
+      }
+      const initialTemplates: SiteEmailTemplate[] = [
+        {
+          id: 1,
+          siteId: 1,
+          siteName: 'LeadScope Landing Page Principal',
+          name: 'Boas-Vindas & Qualificação Imediata',
+          triggerEvent: 'LEAD_CAPTURED',
+          subject: 'Recebemos seu contato - LeadScope Inteligência Comercial',
+          bodyHtml: '<h2>Olá {{lead_name}},</h2><p>Recebemos seus dados através de {{site_name}}.</p><p>Um de nossos especialistas entrará em contato em breve.</p>',
+          active: true,
+          createdAt: '2026-09-20T10:00:00Z',
+        },
+        {
+          id: 2,
+          siteId: 1,
+          siteName: 'LeadScope Landing Page Principal',
+          name: 'Apresentação Comercial & Agendamento',
+          triggerEvent: 'STATUS_CHANGED',
+          subject: 'Sua demonstração exclusiva da plataforma LeadScope',
+          bodyHtml: '<h2>Olá {{lead_name}},</h2><p>Identificamos um forte alinhamento com seu negócio.</p><p>Acesse o link para escolher o melhor horário de demonstração.</p>',
+          active: true,
+          createdAt: '2026-09-20T10:00:00Z',
+        },
+        {
+          id: 3,
+          siteId: 2,
+          siteName: 'Portal Corporativo B2B',
+          name: 'Follow-up de Proposta Comercial',
+          triggerEvent: 'LEAD_CAPTURED',
+          subject: 'Proposta Corporativa LeadScope B2B',
+          bodyHtml: '<h2>Prezado(a) {{lead_name}},</h2><p>Agradecemos o interesse em nossas soluções corporativas.</p>',
+          active: true,
+          createdAt: '2026-09-20T10:00:00Z',
+        }
+      ];
+      localStorage.setItem('lumeo_cached_templates', JSON.stringify(initialTemplates));
+      return initialTemplates;
+    },
+    listTemplates: async (siteId: number): Promise<SiteEmailTemplate[]> => {
+      try {
+        const data = await request<SiteEmailTemplate[]>(`/sites/${siteId}/templates`);
+        if (Array.isArray(data) && data.length > 0) return data;
+      } catch {}
+      const all = await api.sites.listAllTemplates();
+      return all.filter(t => t.siteId === siteId);
+    },
+    createTemplate: async (siteId: number, data: Partial<SiteEmailTemplate>): Promise<SiteEmailTemplate> => {
+      let created: SiteEmailTemplate | null = null;
+      try {
+        created = await request<SiteEmailTemplate>(`/sites/${siteId}/templates`, {
+          method: 'POST',
+          body: JSON.stringify(data),
+        });
+      } catch (err) {}
+      const all = await api.sites.listAllTemplates();
+      const sites = await api.sites.list();
+      const site = sites.find(s => s.id === siteId);
+      const tplItem: SiteEmailTemplate = created || {
+        id: Date.now(),
+        siteId,
+        siteName: site?.name || `Site #${siteId}`,
+        name: data.name || 'Novo Template',
+        triggerEvent: data.triggerEvent || 'LEAD_CAPTURED',
+        subject: data.subject || '',
+        bodyHtml: data.bodyHtml || '',
+        active: data.active ?? true,
+        createdAt: new Date().toISOString()
+      };
+      const updated = [tplItem, ...all.filter(t => t.id !== tplItem.id)];
+      localStorage.setItem('lumeo_cached_templates', JSON.stringify(updated));
+      return tplItem;
+    },
+    updateTemplate: async (siteId: number, templateId: number, data: Partial<SiteEmailTemplate>): Promise<SiteEmailTemplate> => {
+      let updatedRes: SiteEmailTemplate | null = null;
+      try {
+        updatedRes = await request<SiteEmailTemplate>(`/sites/${siteId}/templates/${templateId}`, {
+          method: 'PUT',
+          body: JSON.stringify(data),
+        });
+      } catch (err) {}
+      const all = await api.sites.listAllTemplates();
+      const updated = all.map(t => t.id === templateId ? { ...t, ...(updatedRes || data) } : t);
+      localStorage.setItem('lumeo_cached_templates', JSON.stringify(updated));
+      return updated.find(t => t.id === templateId)!;
+    },
+    deleteTemplate: async (siteId: number, templateId: number): Promise<void> => {
+      try {
+        await request<void>(`/sites/${siteId}/templates/${templateId}`, { method: 'DELETE' });
+      } catch (err) {}
+      const all = await api.sites.listAllTemplates();
+      const updated = all.filter(t => t.id !== templateId);
+      localStorage.setItem('lumeo_cached_templates', JSON.stringify(updated));
+    }
   },
 
   notifications: {

@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/users")
+@RequestMapping({"/api/users", "/users"})
 @RequiredArgsConstructor
 @Tag(name = "Usuários", description = "Gerenciamento de usuários e perfis de acesso")
 @SecurityRequirement(name = "bearerAuth")
