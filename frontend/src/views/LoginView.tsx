@@ -13,15 +13,15 @@ import {
   ChevronDown,
   Layers,
   Loader2,
-  FolderKanban,
-  FileBarChart,
   TrendingUp,
   ShieldCheck,
   CheckCircle2,
   AlertCircle,
   X,
   Copy,
-  HelpCircle
+  HelpCircle,
+  BarChart3,
+  Settings
 } from 'lucide-react';
 
 interface LoginViewProps {
@@ -58,21 +58,6 @@ const TRANSLATIONS = {
     testimonialRole: 'Gerente de Experiência e Vendas — TechWave Inc.',
     // Mockup
     searchPlaceholder: 'Buscar no LeadScope...',
-    mainNav: 'NAVEGAÇÃO PRINCIPAL',
-    overview: 'Visão Geral',
-    pipeline: 'Pipeline de Leads',
-    allQueue: '• Fila Ativa',
-    highPriority: '• Alta Prioridade',
-    escalations: '• Escalações',
-    clients: 'Clientes',
-    agentsTeams: 'Equipe Comercial',
-    knowledgeBase: 'Base de Conhecimento',
-    integrations: 'Integrações',
-    analyticsInsights: 'ANÁLISES & INSIGHTS',
-    slaCompliance: 'Métricas de SLA',
-    csatNps: 'Assertividade & CSAT',
-    workload: 'Volume de Atendimento',
-    reports: 'Relatórios',
     breadcrumb: 'Visão Geral / Dashboard',
     greeting: 'Olá, Gabriel Castro 👋',
     greetingSub: 'Aqui estão os insights mais recentes das suas interações comerciais.',
@@ -101,7 +86,7 @@ const TRANSLATIONS = {
   },
   en: {
     localeName: 'English',
-    localeCode: 'EN',
+    localeCode: 'ENG',
     title: 'Sign In to Continue',
     subtitle: 'Access all your tools in one place.',
     emailLabel: 'Email Address',
@@ -117,7 +102,7 @@ const TRANSLATIONS = {
     googleButton: 'Sign in with Google',
     appleButton: 'Sign in with Apple',
     noAccount: "Don't have an account?",
-    contactAdmin: 'Contact administrator.',
+    contactAdmin: 'Sign Up',
     copyright: `© ${new Date().getFullYear()} LeadScope`,
     needHelp: 'Need help?',
     contactSupport: 'Contact Support',
@@ -126,21 +111,6 @@ const TRANSLATIONS = {
     testimonialRole: 'Customer Experience Manager — TechWave Inc.',
     // Mockup
     searchPlaceholder: 'Search anything',
-    mainNav: 'MAIN NAVIGATION',
-    overview: 'Overview',
-    pipeline: 'Tickets',
-    allQueue: '• All / My Queue',
-    highPriority: '• SLA Breach Risk',
-    escalations: '• Escalations',
-    clients: 'Clients',
-    agentsTeams: 'Agents & Teams',
-    knowledgeBase: 'Knowledge Base',
-    integrations: 'Integrations',
-    analyticsInsights: 'ANALYTICS & INSIGHTS',
-    slaCompliance: 'SLA Compliance',
-    csatNps: 'CSAT & NPS',
-    workload: 'Workload Analytics',
-    reports: 'Reports',
     breadcrumb: 'Overview / Dashboard',
     greeting: 'Hello, Achmad Hakim 👋',
     greetingSub: 'Here are the latest insights from your customer interactions.',
@@ -301,62 +271,65 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
 
   return (
     <div style={{
-      height: '100vh',
       minHeight: '100vh',
       width: '100vw',
-      display: 'grid',
-      gridTemplateColumns: '1fr 1fr', // 50% / 50% ocupando a tela inteira de ponta a ponta
-      margin: 0,
-      padding: 0,
-      background: '#ffffff',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '24px 28px',
+      background: '#ebe9e1', // Fundo cinza suave idêntico à imagem de referência
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
-      overflow: 'hidden',
       boxSizing: 'border-box'
     }}>
-      {/* ==================== COLUNA ESQUERDA: FORMULÁRIO (50% DA TELA) ==================== */}
+      {/* CARD FLUTUANTE ("BOLHA FLUTUANDO" IDÊNTICO À IMAGEM KRAVIO) */}
       <div style={{
-        height: '100vh',
-        padding: '44px 72px 32px 72px',
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
+        width: '100%',
+        maxWidth: '1280px',
+        minHeight: '660px',
+        height: 'min(88vh, 790px)',
         background: '#ffffff',
-        boxSizing: 'border-box',
-        overflowY: 'auto'
+        borderRadius: '28px',
+        boxShadow: '0 25px 65px rgba(0, 0, 0, 0.07)',
+        border: '1px solid rgba(0, 0, 0, 0.04)',
+        display: 'grid',
+        gridTemplateColumns: '1fr 1.08fr',
+        alignItems: 'stretch',
+        overflow: 'hidden'
       }}>
-          {/* TOPO: LOGO LEADSCOPE À ESQUERDA E SELETOR DE IDIOMA À DIREITA */}
+
+        {/* ==================== COLUNA ESQUERDA: FORMULÁRIO ==================== */}
+        <div style={{
+          height: '100%',
+          padding: '36px 48px 28px 48px',
+          display: 'flex',
+          flexDirection: 'column',
+          justifyContent: 'space-between',
+          background: '#ffffff',
+          boxSizing: 'border-box',
+          overflowY: 'auto'
+        }}>
+          {/* TOPO: LOGO [L] À ESQUERDA E SELETOR DE IDIOMA À DIREITA */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            marginBottom: '16px',
             position: 'relative'
           }}>
-            {/* Logo do LeadScope */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{
-                width: '40px',
-                height: '40px',
-                borderRadius: '10px',
-                background: '#0f172a',
-                color: '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '800',
-                fontSize: '1.25rem',
-                letterSpacing: '-0.04em'
-              }}>
-                L
-              </div>
-              <span style={{
-                fontWeight: '700',
-                fontSize: '1.25rem',
-                letterSpacing: '-0.03em',
-                color: '#0f172a'
-              }}>
-                LeadScope
-              </span>
+            {/* Logo estilo Kravio */}
+            <div style={{
+              width: '38px',
+              height: '38px',
+              borderRadius: '9px',
+              background: '#0f172a',
+              color: '#ffffff',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontWeight: '800',
+              fontSize: '1.2rem',
+              letterSpacing: '-0.04em'
+            }}>
+              L
             </div>
 
             {/* Seletor de Idioma */}
@@ -367,13 +340,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '7px',
-                  padding: '7px 14px',
-                  borderRadius: '8px',
-                  border: '1px solid #e2e8f0',
-                  background: '#ffffff',
+                  gap: '6px',
+                  padding: '6px 12px',
+                  borderRadius: '7px',
+                  border: '1px solid transparent',
+                  background: 'transparent',
                   color: '#475569',
-                  fontSize: '0.85rem',
+                  fontSize: '0.84rem',
                   fontWeight: '600',
                   cursor: 'pointer',
                   transition: 'all 0.15s ease'
@@ -381,7 +354,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               >
                 <Globe size={15} color="#64748b" />
                 <span>{t.localeCode}</span>
-                <ChevronDown size={14} color="#64748b" />
+                <ChevronDown size={13} color="#64748b" />
               </button>
 
               {/* Dropdown de Idiomas */}
@@ -389,13 +362,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 <div style={{
                   position: 'absolute',
                   right: 0,
-                  top: '44px',
+                  top: '38px',
                   background: '#ffffff',
                   borderRadius: '10px',
-                  boxShadow: '0 12px 30px rgba(0,0,0,0.12)',
+                  boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
                   border: '1px solid #e2e8f0',
-                  padding: '6px',
-                  minWidth: '150px',
+                  padding: '5px',
+                  minWidth: '140px',
                   zIndex: 50
                 }}>
                   <button
@@ -404,13 +377,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     style={{
                       width: '100%',
                       textAlign: 'left',
-                      padding: '8px 12px',
+                      padding: '7px 10px',
                       borderRadius: '6px',
                       border: 'none',
                       background: lang === 'pt' ? '#f1f5f9' : 'transparent',
                       color: lang === 'pt' ? '#0f172a' : '#475569',
                       fontWeight: lang === 'pt' ? '700' : '500',
-                      fontSize: '0.84rem',
+                      fontSize: '0.82rem',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -426,13 +399,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     style={{
                       width: '100%',
                       textAlign: 'left',
-                      padding: '8px 12px',
+                      padding: '7px 10px',
                       borderRadius: '6px',
                       border: 'none',
                       background: lang === 'en' ? '#f1f5f9' : 'transparent',
                       color: lang === 'en' ? '#0f172a' : '#475569',
                       fontWeight: lang === 'en' ? '700' : '500',
-                      fontSize: '0.84rem',
+                      fontSize: '0.82rem',
                       cursor: 'pointer',
                       display: 'flex',
                       alignItems: 'center',
@@ -447,28 +420,29 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          {/* CENTRO: FORMULÁRIO COM RESPIRO VERTICAL GENEROSO */}
+          {/* CENTRO: FORMULÁRIO BEM DISTRIBUÍDO E ELEGANTE */}
           <div style={{
             margin: 'auto 0',
-            padding: '16px 0',
+            maxWidth: '380px',
+            width: '100%',
+            alignSelf: 'center',
             display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'center'
+            flexDirection: 'column'
           }}>
             {/* Título & Subtítulo */}
-            <div style={{ marginBottom: '28px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <h1 style={{
-                fontSize: '2.05rem',
+                fontSize: '1.75rem',
                 fontWeight: '700',
-                letterSpacing: '-0.035em',
-                color: '#0f172a',
-                margin: '0 0 8px 0'
+                letterSpacing: '-0.03em',
+                color: '#111827',
+                margin: '0 0 6px 0'
               }}>
                 {t.title}
               </h1>
               <p style={{
-                fontSize: '0.96rem',
-                color: '#64748b',
+                fontSize: '0.88rem',
+                color: '#6b7280',
                 margin: 0
               }}>
                 {t.subtitle}
@@ -478,18 +452,18 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             {/* Aviso de Render Cold Start */}
             {coldStartNotice && (
               <div style={{
-                padding: '11px 14px',
+                padding: '10px 12px',
                 background: '#eff6ff',
                 border: '1px solid #bfdbfe',
                 borderRadius: '8px',
                 color: '#1d4ed8',
-                fontSize: '0.84rem',
-                marginBottom: '16px',
+                fontSize: '0.82rem',
+                marginBottom: '14px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px'
+                gap: '8px'
               }}>
-                <Loader2 size={16} className="spinner" />
+                <Loader2 size={15} className="spinner" />
                 <span>{t.serverWaking}</span>
               </div>
             )}
@@ -497,37 +471,37 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             {/* Banner de Erro */}
             {error && (
               <div style={{
-                padding: '12px 14px',
+                padding: '10px 12px',
                 background: '#fef2f2',
                 border: '1px solid #fecaca',
                 borderRadius: '8px',
                 color: '#dc2626',
-                fontSize: '0.85rem',
-                marginBottom: '18px',
+                fontSize: '0.82rem',
+                marginBottom: '14px',
                 display: 'flex',
                 alignItems: 'center',
-                gap: '10px'
+                gap: '8px'
               }}>
-                <AlertCircle size={18} />
+                <AlertCircle size={16} />
                 <span>{error}</span>
               </div>
             )}
 
-            {/* Formulário com Espaçamento Generoso */}
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            {/* Formulário */}
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
               {/* Campo de E-mail */}
               <div>
                 <label style={{
                   display: 'block',
-                  fontSize: '0.85rem',
+                  fontSize: '0.82rem',
                   fontWeight: '600',
-                  color: '#334155',
-                  marginBottom: '7px'
+                  color: '#374151',
+                  marginBottom: '6px'
                 }}>
                   {t.emailLabel} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <Mail size={17} color="#94a3b8" style={{ position: 'absolute', left: '15px', top: '14px' }} />
+                  <Mail size={16} color="#9ca3af" style={{ position: 'absolute', left: '13px', top: '13px' }} />
                   <input
                     type="email"
                     required
@@ -536,16 +510,15 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     placeholder={t.emailPlaceholder}
                     style={{
                       width: '100%',
-                      height: '46px',
-                      padding: '0 14px 0 44px',
+                      height: '42px',
+                      padding: '0 12px 0 40px',
                       background: '#ffffff',
-                      border: '1px solid #cbd5e1',
+                      border: '1px solid #d1d5db',
                       borderRadius: '8px',
-                      color: '#0f172a',
-                      fontSize: '0.9rem',
+                      color: '#111827',
+                      fontSize: '0.88rem',
                       outline: 'none',
-                      boxSizing: 'border-box',
-                      transition: 'border-color 0.15s ease'
+                      boxSizing: 'border-box'
                     }}
                   />
                 </div>
@@ -555,15 +528,15 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               <div>
                 <label style={{
                   display: 'block',
-                  fontSize: '0.85rem',
+                  fontSize: '0.82rem',
                   fontWeight: '600',
-                  color: '#334155',
-                  marginBottom: '7px'
+                  color: '#374151',
+                  marginBottom: '6px'
                 }}>
                   {t.passwordLabel} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <Lock size={17} color="#94a3b8" style={{ position: 'absolute', left: '15px', top: '14px' }} />
+                  <Lock size={16} color="#9ca3af" style={{ position: 'absolute', left: '13px', top: '13px' }} />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
@@ -572,16 +545,15 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     placeholder={t.passwordPlaceholder}
                     style={{
                       width: '100%',
-                      height: '46px',
-                      padding: '0 44px 0 44px',
+                      height: '42px',
+                      padding: '0 40px 0 40px',
                       background: '#ffffff',
-                      border: '1px solid #cbd5e1',
+                      border: '1px solid #d1d5db',
                       borderRadius: '8px',
-                      color: '#0f172a',
-                      fontSize: '0.9rem',
+                      color: '#111827',
+                      fontSize: '0.88rem',
                       outline: 'none',
-                      boxSizing: 'border-box',
-                      transition: 'border-color 0.15s ease'
+                      boxSizing: 'border-box'
                     }}
                   />
                   <button
@@ -589,34 +561,34 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     onClick={() => setShowPassword(!showPassword)}
                     style={{
                       position: 'absolute',
-                      right: '14px',
-                      top: '14px',
+                      right: '12px',
+                      top: '12px',
                       background: 'none',
                       border: 'none',
-                      color: '#94a3b8',
+                      color: '#9ca3af',
                       cursor: 'pointer',
                       padding: 0
                     }}
                   >
-                    {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
+                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
                   </button>
                 </div>
               </div>
 
-              {/* Checkbox Manter-me conectado & Link Esqueceu a Senha */}
+              {/* Checkbox Manter-me conectado & Esqueceu a Senha */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                fontSize: '0.84rem',
-                marginTop: '2px',
-                marginBottom: '4px'
+                fontSize: '0.8rem',
+                marginTop: '1px',
+                marginBottom: '2px'
               }}>
                 <label style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  color: '#475569',
+                  gap: '7px',
+                  color: '#4b5563',
                   cursor: 'pointer',
                   userSelect: 'none'
                 }}>
@@ -624,7 +596,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    style={{ accentColor: '#0f172a', width: '16px', height: '16px', cursor: 'pointer' }}
+                    style={{ accentColor: '#0f172a', width: '15px', height: '15px', cursor: 'pointer' }}
                   />
                   <span>{t.rememberMe}</span>
                 </label>
@@ -635,9 +607,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     setShowForgotModal(true);
                   }}
                   style={{
-                    color: '#0f172a',
+                    color: '#111827',
                     cursor: 'pointer',
-                    fontWeight: '600'
+                    fontWeight: '600',
+                    fontSize: '0.8rem'
                   }}
                 >
                   {t.forgotPassword}
@@ -650,12 +623,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 disabled={loading}
                 style={{
                   width: '100%',
-                  height: '46px',
+                  height: '42px',
                   background: '#0f172a',
                   color: '#ffffff',
                   border: 'none',
                   borderRadius: '8px',
-                  fontSize: '0.95rem',
+                  fontSize: '0.92rem',
                   fontWeight: '600',
                   cursor: loading ? 'not-allowed' : 'pointer',
                   opacity: loading ? 0.8 : 1,
@@ -663,30 +636,29 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  boxShadow: '0 4px 10px rgba(15, 23, 42, 0.15)',
-                  transition: 'background 0.15s ease'
+                  boxShadow: '0 2px 6px rgba(15, 23, 42, 0.12)'
                 }}
               >
-                {loading && <Loader2 size={17} className="spinner" />}
+                {loading && <Loader2 size={16} className="spinner" />}
                 <span>{loading ? t.signingIn : t.signInButton}</span>
               </button>
 
-              {/* Separador "Ou" Centralizado */}
+              {/* Separador "Ou" */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '14px',
-                margin: '4px 0',
-                color: '#94a3b8',
-                fontSize: '0.84rem'
+                gap: '12px',
+                margin: '2px 0',
+                color: '#9ca3af',
+                fontSize: '0.78rem'
               }}>
-                <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
+                <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }} />
                 <span>{t.orDivider}</span>
-                <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
+                <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }} />
               </div>
 
-              {/* Dois Botões Lado a Lado: Google & Apple */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              {/* Botões Google & Apple */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <button
                   type="button"
                   onClick={() => handleOAuthLogin('google')}
@@ -694,19 +666,18 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '8px',
-                    height: '44px',
+                    gap: '7px',
+                    height: '40px',
                     borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
+                    border: '1px solid #d1d5db',
                     background: '#ffffff',
-                    color: '#334155',
-                    fontSize: '0.84rem',
+                    color: '#374151',
+                    fontSize: '0.8rem',
                     fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
+                    cursor: 'pointer'
                   }}
                 >
-                  <svg width="17" height="17" viewBox="0 0 24 24">
+                  <svg width="15" height="15" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
                     <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.27 21.36 7.35 24 12 24z"/>
                     <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.97 0 12s.46 3.84 1.26 5.42l4.02-3.15z"/>
@@ -722,19 +693,18 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    gap: '8px',
-                    height: '44px',
+                    gap: '7px',
+                    height: '40px',
                     borderRadius: '8px',
-                    border: '1px solid #cbd5e1',
+                    border: '1px solid #d1d5db',
                     background: '#ffffff',
-                    color: '#334155',
-                    fontSize: '0.84rem',
+                    color: '#374151',
+                    fontSize: '0.8rem',
                     fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
+                    cursor: 'pointer'
                   }}
                 >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#000000">
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="#000000">
                     <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.76 1.06-1.82.94-2.88-.91.04-2.02.6-2.66 1.36-.57.65-.98 1.73-.85 2.76 1.02.08 2.05-.53 2.57-1.24z"/>
                   </svg>
                   <span>{t.appleButton}</span>
@@ -742,16 +712,15 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               </div>
             </form>
 
-            {/* Aviso de Sistema Fechado */}
-            <div style={{ textAlign: 'center', marginTop: '26px', fontSize: '0.86rem', color: '#64748b' }}>
+            {/* Link de Cadastro / Contato com Admin */}
+            <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '0.82rem', color: '#6b7280' }}>
               <span>{t.noAccount} </span>
               <span
                 onClick={() => setShowAdminModal(true)}
                 style={{
-                  color: '#0f172a',
+                  color: '#111827',
                   cursor: 'pointer',
-                  fontWeight: '700',
-                  textDecoration: 'underline'
+                  fontWeight: '600'
                 }}
               >
                 {t.contactAdmin}
@@ -759,305 +728,214 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          {/* BASE: COPYRIGHT À ESQUERDA E SUPORTE À DIREITA */}
+          {/* RODAPÉ: COPYRIGHT & SUPORTE */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            fontSize: '0.8rem',
-            color: '#94a3b8',
-            paddingTop: '20px',
-            borderTop: '1px solid #f1f5f9'
+            fontSize: '0.76rem',
+            color: '#9ca3af'
           }}>
             <span>{t.copyright}</span>
             <span
               onClick={() => setShowAdminModal(true)}
               style={{
                 cursor: 'pointer',
-                color: '#64748b',
-                fontWeight: '500',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '4px'
+                color: '#4b5563',
+                fontWeight: '500'
               }}
             >
-              <span>{t.needHelp}</span>
-              <strong style={{ color: '#0f172a' }}>{t.contactSupport}</strong>
+              {t.needHelp} <strong style={{ color: '#111827' }}>{t.contactSupport}</strong>
             </span>
           </div>
         </div>
 
-        {/* ==================== COLUNA DIREITA: PRÉVIA DO SISTEMA (50% DA TELA) ==================== */}
+        {/* ==================== COLUNA DIREITA: PRÉVIA DO SISTEMA ==================== */}
         <div style={{
-          height: '100vh',
-          background: '#f7f8fa',
-          borderLeft: '1px solid #eef0f3',
-          padding: '40px 52px 32px 52px',
+          height: '100%',
+          background: '#f6f7f9',
+          borderLeft: '1px solid #f1f2f4',
+          padding: '28px 34px 24px 34px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          boxSizing: 'border-box',
-          overflowY: 'auto'
+          boxSizing: 'border-box'
         }}>
-          {/* PRÉVIA DO DASHBOARD DO LEADSCOPE (PREENCHE A MAIOR PARTE DA COLUNA) */}
+          {/* PRÉVIA DO DASHBOARD COM VISUAL ELEGANTE E EXPANSIVO */}
           <div style={{
             flex: 1,
-            minHeight: '440px',
+            maxHeight: '460px',
             background: '#ffffff',
-            borderRadius: '18px',
+            borderRadius: '16px',
             border: '1px solid rgba(0, 0, 0, 0.08)',
-            boxShadow: '0 18px 45px rgba(0, 0, 0, 0.05)',
+            boxShadow: '0 15px 35px rgba(0, 0, 0, 0.04)',
             display: 'flex',
             overflow: 'hidden'
           }}>
-            {/* Mini-Sidebar Interna da Prévia */}
+            {/* MINI DOCK LATERAL MODERNO (SUBSTITUI O PAINEL DE TEXTO CRAMPED) */}
             <div style={{
-              width: '190px',
-              borderRight: '1px solid #f1f5f9',
-              padding: '18px 14px',
+              width: '46px',
+              borderRight: '1px solid #f1f2f4',
+              padding: '14px 0',
               display: 'flex',
               flexDirection: 'column',
+              alignItems: 'center',
               justifyContent: 'space-between',
-              gap: '12px',
               background: '#fafafa'
             }}>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                {/* Logo do LeadScope no Canto Superior Esquerdo da Janela */}
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <div style={{
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '6px',
-                      background: '#0f172a',
-                      color: '#ffffff',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontWeight: '800',
-                      fontSize: '0.74rem'
-                    }}>
-                      L
-                    </div>
-                    <span style={{ fontSize: '0.84rem', fontWeight: '700', color: '#0f172a' }}>
-                      LeadScope
-                    </span>
-                  </div>
-                  <Layers size={13} color="#94a3b8" />
-                </div>
-
-                {/* Barra de Busca Interna */}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
                 <div style={{
+                  width: '24px',
+                  height: '24px',
+                  borderRadius: '6px',
+                  background: '#0f172a',
+                  color: '#ffffff',
                   display: 'flex',
                   alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '6px 9px',
-                  background: '#ffffff',
-                  borderRadius: '6px',
-                  border: '1px solid #e2e8f0',
-                  fontSize: '0.7rem',
-                  color: '#94a3b8'
+                  justifyContent: 'center',
+                  fontWeight: '800',
+                  fontSize: '0.72rem'
                 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                    <Search size={12} />
-                    <span>{t.searchPlaceholder}</span>
-                  </div>
-                  <span style={{ fontSize: '0.62rem', border: '1px solid #cbd5e1', borderRadius: '3px', padding: '1px 3px' }}>⌘K</span>
+                  L
                 </div>
 
-                {/* Navegação Principal */}
-                <div>
-                  <span style={{ fontSize: '0.62rem', fontWeight: '700', color: '#94a3b8', letterSpacing: '0.04em', display: 'block', marginBottom: '6px' }}>
-                    {t.mainNav}
-                  </span>
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                    {/* Visão Geral Ativa */}
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '7px',
-                      padding: '6px 9px',
-                      borderRadius: '5px',
-                      background: '#f1f5f9',
-                      color: '#0f172a',
-                      fontWeight: '600',
-                      fontSize: '0.74rem'
-                    }}>
-                      <LayoutDashboard size={13} color="#0f172a" />
-                      <span>{t.overview}</span>
-                    </div>
-
-                    {/* Pipeline */}
-                    <div style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                      padding: '5px 9px',
-                      color: '#334155',
-                      fontSize: '0.74rem',
-                      fontWeight: '500'
-                    }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                        <FolderKanban size={13} />
-                        <span>{t.pipeline}</span>
-                      </div>
-                      <ChevronDown size={12} />
-                    </div>
-
-                    {/* Submenu */}
-                    <div style={{ paddingLeft: '24px', display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.68rem', color: '#64748b' }}>
-                      <span>{t.allQueue}</span>
-                      <span>{t.highPriority}</span>
-                      <span>{t.escalations}</span>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '5px 9px', color: '#64748b', fontSize: '0.74rem' }}>
-                      <Building2 size={13} />
-                      <span>{t.clients}</span>
-                    </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '5px 9px', color: '#64748b', fontSize: '0.74rem' }}>
-                      <Users size={13} />
-                      <span>{t.agentsTeams}</span>
-                    </div>
-                  </div>
+                <div style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '6px',
+                  background: '#0f172a',
+                  color: '#ffffff',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <LayoutDashboard size={13} />
+                </div>
+                <div style={{ color: '#9ca3af', padding: '4px' }}>
+                  <Users size={13} />
+                </div>
+                <div style={{ color: '#9ca3af', padding: '4px' }}>
+                  <Building2 size={13} />
+                </div>
+                <div style={{ color: '#9ca3af', padding: '4px' }}>
+                  <TrendingUp size={13} />
                 </div>
               </div>
 
-              {/* Análises & Insights */}
-              <div>
-                <span style={{ fontSize: '0.62rem', fontWeight: '700', color: '#94a3b8', letterSpacing: '0.04em', display: 'block', marginBottom: '6px' }}>
-                  {t.analyticsInsights}
-                </span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '5px 9px', color: '#64748b', fontSize: '0.74rem' }}>
-                    <ShieldCheck size={13} />
-                    <span>{t.slaCompliance}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '5px 9px', color: '#64748b', fontSize: '0.74rem' }}>
-                    <TrendingUp size={13} />
-                    <span>{t.csatNps}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '5px 9px', color: '#64748b', fontSize: '0.74rem' }}>
-                    <FileBarChart size={13} />
-                    <span>{t.reports}</span>
-                  </div>
-                </div>
+              <div style={{ color: '#9ca3af', padding: '4px' }}>
+                <Settings size={13} />
               </div>
             </div>
 
-            {/* Painel Interno da Dashboard (Preenchendo Toda a Altura) */}
+            {/* PAINEL PRINCIPAL DO DASHBOARD (OCUPA TODO O RESTANTE COM CHARTS E CARDS) */}
             <div style={{
               flex: 1,
-              padding: '22px 24px',
+              padding: '16px 20px',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
-              gap: '16px'
+              gap: '12px'
             }}>
-              {/* Breadcrumb & Saudação */}
+              {/* Top bar do Mockup */}
               <div>
-                <div style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: '3px' }}>
+                <div style={{ fontSize: '0.68rem', color: '#9ca3af', marginBottom: '2px' }}>
                   {t.breadcrumb}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+                  <h3 style={{ fontSize: '1rem', fontWeight: '700', color: '#111827', margin: 0 }}>
                     {t.greeting}
                   </h3>
                   <span style={{
-                    fontSize: '0.66rem',
+                    fontSize: '0.62rem',
                     fontWeight: '700',
-                    padding: '3px 8px',
+                    padding: '2px 6px',
                     borderRadius: '4px',
-                    background: 'rgba(16, 185, 129, 0.15)',
+                    background: 'rgba(16, 185, 129, 0.12)',
                     color: '#10b981'
                   }}>
                     PROD ACTIVE
                   </span>
                 </div>
-                <p style={{ fontSize: '0.76rem', color: '#64748b', margin: '2px 0 0 0' }}>
+                <p style={{ fontSize: '0.72rem', color: '#6b7280', margin: '2px 0 0 0' }}>
                   {t.greetingSub}
                 </p>
               </div>
 
-              {/* 2 Métricas Principais com Sparklines em SVG */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+              {/* 2 Métricas com Sparklines Fluidas */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div style={{
-                  padding: '14px 16px',
-                  background: '#f8fafc',
-                  borderRadius: '10px',
-                  border: '1px solid #e2e8f0'
+                  padding: '10px 12px',
+                  background: '#f9fafb',
+                  borderRadius: '9px',
+                  border: '1px solid #f3f4f6'
                 }}>
-                  <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '500' }}>
+                  <div style={{ fontSize: '0.68rem', color: '#6b7280', fontWeight: '500' }}>
                     {t.currentLeads}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
-                    <span style={{ fontSize: '1.35rem', fontWeight: '800', color: '#0f172a' }}>
-                      3.484
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '3px' }}>
+                    <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#111827' }}>
+                      3,484
                     </span>
                     {/* Sparkline Verde */}
-                    <svg width="50" height="20" viewBox="0 0 50 20">
-                      <path d="M2,16 C12,16 16,7 26,10 C34,13 38,4 48,2" fill="none" stroke="#10b981" strokeWidth="2.2" strokeLinecap="round" />
+                    <svg width="46" height="18" viewBox="0 0 46 18">
+                      <path d="M2,15 C10,15 15,6 24,9 C32,12 36,4 44,2" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </div>
-                  <div style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: '600', marginTop: '4px' }}>
+                  <div style={{ fontSize: '0.65rem', color: '#10b981', fontWeight: '600', marginTop: '2px' }}>
                     {t.leadsTrend}
                   </div>
                 </div>
 
                 <div style={{
-                  padding: '14px 16px',
-                  background: '#f8fafc',
-                  borderRadius: '10px',
-                  border: '1px solid #e2e8f0'
+                  padding: '10px 12px',
+                  background: '#f9fafb',
+                  borderRadius: '9px',
+                  border: '1px solid #f3f4f6'
                 }}>
-                  <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '500' }}>
+                  <div style={{ fontSize: '0.68rem', color: '#6b7280', fontWeight: '500' }}>
                     {t.dailyAvgClose}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
-                    <span style={{ fontSize: '1.35rem', fontWeight: '800', color: '#0f172a' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '3px' }}>
+                    <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#111827' }}>
                       486
                     </span>
                     {/* Sparkline Verde */}
-                    <svg width="50" height="20" viewBox="0 0 50 20">
-                      <path d="M2,14 C12,14 18,16 28,6 C36,11 40,4 48,3" fill="none" stroke="#10b981" strokeWidth="2.2" strokeLinecap="round" />
+                    <svg width="46" height="18" viewBox="0 0 46 18">
+                      <path d="M2,13 C12,13 18,15 26,5 C34,9 38,3 44,2" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </div>
-                  <div style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: '600', marginTop: '4px' }}>
+                  <div style={{ fontSize: '0.65rem', color: '#10b981', fontWeight: '600', marginTop: '2px' }}>
                     {t.closeTrend}
                   </div>
                 </div>
               </div>
 
-              {/* Volume Trend Gráfico de Barras Expandido */}
+              {/* Volume Trend Gráfico de Barras com Tooltip Flutuante */}
               <div style={{
-                flex: 1,
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'space-between',
-                padding: '16px 18px',
-                background: '#f8fafc',
-                borderRadius: '10px',
-                border: '1px solid #e2e8f0'
+                padding: '12px 14px',
+                background: '#f9fafb',
+                borderRadius: '9px',
+                border: '1px solid #f3f4f6'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                   <div>
-                    <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: '500', display: 'block' }}>
+                    <span style={{ fontSize: '0.68rem', color: '#6b7280', fontWeight: '500', display: 'block' }}>
                       {t.ticketTrend}
                     </span>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '7px', marginTop: '2px' }}>
-                      <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>
-                        4.790
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '1px' }}>
+                      <span style={{ fontSize: '1.15rem', fontWeight: '800', color: '#111827' }}>
+                        4,790
                       </span>
-                      <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: '600' }}>
+                      <span style={{ fontSize: '0.65rem', color: '#10b981', fontWeight: '600' }}>
                         {t.ticketTrendBadge}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* 7 Barras com Tooltip de Terça-Feira e Altura Generosa */}
-                <div style={{ position: 'relative', paddingTop: '24px' }}>
-                  {/* Tooltip 'Ter : 584' */}
+                {/* 7 Barras com Tooltip 'Tue : 584' e Linha Pontilhada */}
+                <div style={{ position: 'relative', paddingTop: '20px' }}>
+                  {/* Tooltip flutuante sobre a terça-feira */}
                   <div style={{
                     position: 'absolute',
                     top: '0px',
@@ -1065,15 +943,14 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     transform: 'translateX(-50%)',
                     background: '#0f172a',
                     color: '#ffffff',
-                    padding: '3px 8px',
-                    borderRadius: '5px',
-                    fontSize: '0.66rem',
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                    fontSize: '0.62rem',
                     fontWeight: '700',
-                    boxShadow: '0 4px 10px rgba(0,0,0,0.25)',
+                    boxShadow: '0 4px 8px rgba(0,0,0,0.25)',
                     zIndex: 2,
                     display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px'
+                    alignItems: 'center'
                   }}>
                     <span>{t.tueTooltip}</span>
                   </div>
@@ -1081,15 +958,15 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   {/* Linha pontilhada horizontal */}
                   <div style={{
                     position: 'absolute',
-                    top: '10px',
+                    top: '8px',
                     left: '42%',
                     right: '6%',
                     height: '1px',
-                    borderTop: '1px dashed #cbd5e1',
+                    borderTop: '1px dashed #d1d5db',
                     zIndex: 1
                   }} />
 
-                  <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '80px', gap: '10px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '62px', gap: '8px' }}>
                     {[
                       { day: t.days[0], height: 38, active: false },
                       { day: t.days[1], height: 56, active: false },
@@ -1099,17 +976,17 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                       { day: t.days[5], height: 60, active: false },
                       { day: t.days[6], height: 36, active: false }
                     ].map(col => (
-                      <div key={col.day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
+                      <div key={col.day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
                         <div style={{
                           width: '100%',
                           height: `${col.height}%`,
-                          borderRadius: '5px',
+                          borderRadius: '4px',
                           background: col.active
                             ? 'linear-gradient(180deg, #1e293b 0%, #475569 100%)'
-                            : '#e2e8f0',
+                            : '#e5e7eb',
                           transition: 'height 0.3s ease'
                         }} />
-                        <span style={{ fontSize: '0.66rem', color: '#94a3b8', fontWeight: col.active ? '700' : '400' }}>
+                        <span style={{ fontSize: '0.62rem', color: '#9ca3af', fontWeight: col.active ? '700' : '400' }}>
                           {col.day}
                         </span>
                       </div>
@@ -1120,32 +997,32 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          {/* DEPOIMENTO DE CLIENTE FIXO NO RODAPÉ DA COLUNA DIREITA */}
-          <div style={{ marginTop: '26px' }}>
+          {/* DEPOIMENTO NO RODAPÉ DA COLUNA DIREITA */}
+          <div style={{ marginTop: '20px' }}>
             <p style={{
-              fontSize: '1.1rem',
-              lineHeight: '1.6',
-              color: '#1e293b',
-              margin: '0 0 16px 0',
+              fontSize: '1.02rem',
+              lineHeight: '1.5',
+              color: '#1f2937',
+              margin: '0 0 14px 0',
               fontWeight: '500',
               letterSpacing: '-0.01em'
             }}>
-              <strong style={{ color: '#0f172a', fontWeight: '800' }}>
+              <strong style={{ color: '#111827', fontWeight: '800' }}>
                 {lang === 'pt' ? 'O LeadScope mudou completamente' : 'LeadScope has completely changed'}
               </strong>{' '}
               {lang === 'pt'
                 ? 'como gerenciamos nossa prospecção. É rápido, intuitivo e nos dá '
                 : 'how we manage customer support. It\'s fast, intuitive, and gives us '}
-              <strong style={{ color: '#0f172a', fontWeight: '800' }}>
+              <strong style={{ color: '#111827', fontWeight: '800' }}>
                 {lang === 'pt' ? 'insights claros' : 'clear insights'}
               </strong>{' '}
               {lang === 'pt' ? 'que realmente importam.' : 'that actually matter.'}
             </p>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{
-                width: '42px',
-                height: '42px',
+                width: '38px',
+                height: '38px',
                 borderRadius: '50%',
                 background: '#0f172a',
                 color: '#ffffff',
@@ -1153,23 +1030,24 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: '700',
-                fontSize: '0.92rem',
+                fontSize: '0.85rem',
                 border: '2px solid #ffffff',
-                boxShadow: '0 4px 10px rgba(0,0,0,0.12)'
+                boxShadow: '0 3px 8px rgba(0,0,0,0.1)'
               }}>
                 SK
               </div>
               <div>
-                <div style={{ fontSize: '0.92rem', fontWeight: '700', color: '#0f172a' }}>
+                <div style={{ fontSize: '0.88rem', fontWeight: '700', color: '#111827' }}>
                   {t.testimonialAuthor}
                 </div>
-                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
+                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
                   {t.testimonialRole}
                 </div>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
       {/* ==================== MODAL DE RECUPERAÇÃO DE SENHA (SUPABASE AUTH) ==================== */}
       {showForgotModal && (
@@ -1187,9 +1065,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
           <div style={{
             background: '#ffffff',
             borderRadius: '20px',
-            maxWidth: '460px',
+            maxWidth: '440px',
             width: '100%',
-            padding: '32px',
+            padding: '28px',
             boxShadow: '0 25px 50px rgba(0,0,0,0.15)',
             boxSizing: 'border-box',
             position: 'relative'
@@ -1203,69 +1081,69 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               }}
               style={{
                 position: 'absolute',
-                top: '20px',
-                right: '20px',
+                top: '18px',
+                right: '18px',
                 background: 'none',
                 border: 'none',
-                color: '#94a3b8',
+                color: '#9ca3af',
                 cursor: 'pointer',
                 padding: '4px'
               }}
             >
-              <X size={20} />
+              <X size={18} />
             </button>
 
-            <h2 style={{ fontSize: '1.35rem', fontWeight: '700', color: '#0f172a', margin: '0 0 8px 0' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#111827', margin: '0 0 6px 0' }}>
               {t.forgotModalTitle}
             </h2>
-            <p style={{ fontSize: '0.86rem', color: '#64748b', margin: '0 0 20px 0', lineHeight: '1.5' }}>
+            <p style={{ fontSize: '0.84rem', color: '#6b7280', margin: '0 0 18px 0', lineHeight: '1.5' }}>
               {t.forgotModalSub}
             </p>
 
             {forgotSuccess && (
               <div style={{
-                padding: '12px 14px',
+                padding: '10px 12px',
                 background: 'rgba(16, 185, 129, 0.12)',
                 border: '1px solid rgba(16, 185, 129, 0.35)',
                 borderRadius: '8px',
                 color: '#059669',
-                fontSize: '0.84rem',
-                marginBottom: '16px',
+                fontSize: '0.82rem',
+                marginBottom: '14px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                <CheckCircle2 size={18} />
+                <CheckCircle2 size={16} />
                 <span>{forgotSuccess}</span>
               </div>
             )}
 
             {forgotError && (
               <div style={{
-                padding: '12px 14px',
+                padding: '10px 12px',
                 background: '#fef2f2',
                 border: '1px solid #fecaca',
                 borderRadius: '8px',
                 color: '#dc2626',
-                fontSize: '0.84rem',
-                marginBottom: '16px',
+                fontSize: '0.82rem',
+                marginBottom: '14px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '8px'
               }}>
-                <AlertCircle size={18} />
+                <AlertCircle size={16} />
                 <span>{forgotError}</span>
               </div>
             )}
 
             {!forgotSuccess ? (
-              <form onSubmit={handleForgotPasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <form onSubmit={handleForgotPasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: '#374151', marginBottom: '5px' }}>
                     {t.emailLabel}
                   </label>
                   <div style={{ position: 'relative' }}>
-                    <Mail size={16} color="#94a3b8" style={{ position: 'absolute', left: '13px', top: '12px' }} />
+                    <Mail size={15} color="#9ca3af" style={{ position: 'absolute', left: '12px', top: '11px' }} />
                     <input
                       type="email"
                       required
@@ -1274,12 +1152,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                       placeholder={t.emailPlaceholder}
                       style={{
                         width: '100%',
-                        padding: '10px 14px 10px 38px',
+                        padding: '9px 12px 9px 36px',
                         background: '#ffffff',
-                        border: '1px solid #cbd5e1',
+                        border: '1px solid #d1d5db',
                         borderRadius: '8px',
-                        color: '#0f172a',
-                        fontSize: '0.86rem',
+                        color: '#111827',
+                        fontSize: '0.84rem',
                         outline: 'none',
                         boxSizing: 'border-box'
                       }}
@@ -1292,12 +1170,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   disabled={forgotLoading}
                   style={{
                     width: '100%',
-                    padding: '11px',
+                    padding: '10px',
                     background: '#0f172a',
                     color: '#ffffff',
                     border: 'none',
                     borderRadius: '8px',
-                    fontSize: '0.88rem',
+                    fontSize: '0.86rem',
                     fontWeight: '600',
                     cursor: forgotLoading ? 'not-allowed' : 'pointer',
                     display: 'flex',
@@ -1306,7 +1184,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     gap: '8px'
                   }}
                 >
-                  {forgotLoading && <Loader2 size={16} className="spinner" />}
+                  {forgotLoading && <Loader2 size={15} className="spinner" />}
                   <span>{forgotLoading ? t.sendingResetBtn : t.sendResetBtn}</span>
                 </button>
               </form>
@@ -1319,12 +1197,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 }}
                 style={{
                   width: '100%',
-                  padding: '11px',
+                  padding: '10px',
                   background: '#0f172a',
                   color: '#ffffff',
                   border: 'none',
                   borderRadius: '8px',
-                  fontSize: '0.88rem',
+                  fontSize: '0.86rem',
                   fontWeight: '600',
                   cursor: 'pointer'
                 }}
@@ -1352,9 +1230,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
           <div style={{
             background: '#ffffff',
             borderRadius: '20px',
-            maxWidth: '480px',
+            maxWidth: '440px',
             width: '100%',
-            padding: '32px',
+            padding: '28px',
             boxShadow: '0 25px 50px rgba(0,0,0,0.15)',
             boxSizing: 'border-box',
             position: 'relative'
@@ -1364,51 +1242,51 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               onClick={() => setShowAdminModal(false)}
               style={{
                 position: 'absolute',
-                top: '20px',
-                right: '20px',
+                top: '18px',
+                right: '18px',
                 background: 'none',
                 border: 'none',
-                color: '#94a3b8',
+                color: '#9ca3af',
                 cursor: 'pointer',
                 padding: '4px'
               }}
             >
-              <X size={20} />
+              <X size={18} />
             </button>
 
             <div style={{
-              width: '42px',
-              height: '42px',
-              borderRadius: '10px',
+              width: '38px',
+              height: '38px',
+              borderRadius: '9px',
               background: '#f1f5f9',
               color: '#0f172a',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              marginBottom: '16px'
+              marginBottom: '14px'
             }}>
-              <HelpCircle size={22} />
+              <HelpCircle size={20} />
             </div>
 
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#0f172a', margin: '0 0 8px 0' }}>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: '700', color: '#111827', margin: '0 0 6px 0' }}>
               {t.adminModalTitle}
             </h2>
-            <p style={{ fontSize: '0.86rem', color: '#64748b', margin: '0 0 20px 0', lineHeight: '1.5' }}>
+            <p style={{ fontSize: '0.84rem', color: '#6b7280', margin: '0 0 16px 0', lineHeight: '1.5' }}>
               {t.adminModalSub}
             </p>
 
             <div style={{
-              background: '#f8fafc',
-              border: '1px solid #e2e8f0',
-              borderRadius: '12px',
-              padding: '16px',
-              marginBottom: '20px'
+              background: '#f9fafb',
+              border: '1px solid #e5e7eb',
+              borderRadius: '10px',
+              padding: '14px',
+              marginBottom: '16px'
             }}>
-              <span style={{ fontSize: '0.78rem', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '8px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#4b5563', display: 'block', marginBottom: '6px' }}>
                 {t.adminContactTitle}
               </span>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.9rem', fontWeight: '700', color: '#0f172a' }}>
+                <span style={{ fontSize: '0.88rem', fontWeight: '700', color: '#111827' }}>
                   suporte@leadscope.com
                 </span>
                 <button
@@ -1417,18 +1295,18 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px',
-                    padding: '6px 10px',
+                    gap: '5px',
+                    padding: '5px 8px',
                     background: '#ffffff',
-                    border: '1px solid #cbd5e1',
+                    border: '1px solid #d1d5db',
                     borderRadius: '6px',
-                    fontSize: '0.76rem',
+                    fontSize: '0.74rem',
                     fontWeight: '600',
-                    color: '#334155',
+                    color: '#374151',
                     cursor: 'pointer'
                   }}
                 >
-                  <Copy size={13} />
+                  <Copy size={12} />
                   <span>{copiedEmail ? t.emailCopied : t.copyEmail}</span>
                 </button>
               </div>
@@ -1439,12 +1317,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               onClick={() => setShowAdminModal(false)}
               style={{
                 width: '100%',
-                padding: '11px',
+                padding: '10px',
                 background: '#0f172a',
                 color: '#ffffff',
                 border: 'none',
                 borderRadius: '8px',
-                fontSize: '0.88rem',
+                fontSize: '0.86rem',
                 fontWeight: '600',
                 cursor: 'pointer'
               }}
