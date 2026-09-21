@@ -284,6 +284,17 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       boxSizing: 'border-box',
       transition: 'background 0.25s ease'
     }}>
+      <style>{`
+        .leadscope-login-input:-webkit-autofill,
+        .leadscope-login-input:-webkit-autofill:hover, 
+        .leadscope-login-input:-webkit-autofill:focus, 
+        .leadscope-login-input:-webkit-autofill:active {
+          -webkit-box-shadow: 0 0 0 1000px ${isDark ? '#1a1c22' : '#ffffff'} inset !important;
+          -webkit-text-fill-color: ${isDark ? '#ffffff' : '#0f172a'} !important;
+          caret-color: ${isDark ? '#ffffff' : '#0f172a'} !important;
+          transition: background-color 5000s ease-in-out 0s;
+        }
+      `}</style>
       {/* CARD FLUTUANTE EXPANDIDO ("BOLHA FLUTUANDO" MAIOR, COM MODO ESCURO COMPLETO) */}
       <div style={{
         width: '100%',
@@ -552,6 +563,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   <input
                     type="email"
                     required
+                    className="leadscope-login-input"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder={t.emailPlaceholder}
@@ -563,6 +575,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                       border: isDark ? '1px solid #2e323b' : '1px solid #cbd5e1',
                       borderRadius: '8px',
                       color: isDark ? '#ffffff' : '#0f172a',
+                      colorScheme: isDark ? 'dark' : 'light',
                       fontSize: '0.88rem',
                       outline: 'none',
                       boxSizing: 'border-box',
@@ -588,6 +601,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
+                    className="leadscope-login-input"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder={t.passwordPlaceholder}
@@ -599,6 +613,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                       border: isDark ? '1px solid #2e323b' : '1px solid #cbd5e1',
                       borderRadius: '8px',
                       color: isDark ? '#ffffff' : '#0f172a',
+                      colorScheme: isDark ? 'dark' : 'light',
                       fontSize: '0.88rem',
                       outline: 'none',
                       boxSizing: 'border-box',
@@ -1200,6 +1215,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     <input
                       type="email"
                       required
+                      className="leadscope-login-input"
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
                       placeholder={t.emailPlaceholder}
@@ -1210,6 +1226,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                         border: isDark ? '1px solid #2e323b' : '1px solid #cbd5e1',
                         borderRadius: '8px',
                         color: isDark ? '#ffffff' : '#0f172a',
+                        colorScheme: isDark ? 'dark' : 'light',
                         fontSize: '0.84rem',
                         outline: 'none',
                         boxSizing: 'border-box'
