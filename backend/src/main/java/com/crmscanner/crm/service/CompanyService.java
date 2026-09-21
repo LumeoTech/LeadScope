@@ -24,6 +24,7 @@ public class CompanyService {
 
     private final CompanyRepository companyRepository;
     private final AuditService auditService;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     @Transactional(readOnly = true)
     public Page<CompanyResponse> search(
@@ -144,6 +145,18 @@ public class CompanyService {
                 null,
                 "Empresa excluída: " + company.getRazaoSocial()
         );
+        // Cascade delete all dependent records safely
+        try {
+            jdbcTemplate.update("DELETE FROM activities WHERE lead_id IN (SELECT id FROM leads WHERE company_id = ?)", id);
+            jdbcTemplate.update("DELETE FROM lead_notes WHERE lead_id IN (SELECT id FROM leads WHERE company_id = ?)", id);
+            jdbcTemplate.update("DELETE FROM contracts WHERE company_id = ?", id);
+            jdbcTemplate.update("DELETE FROM company_agreements WHERE company_id = ?", id);
+            jdbcTemplate.update("DELETE FROM proposals WHERE company_id = ?", id);
+            jdbcTemplate.update("DELETE FROM contacts WHERE company_id = ?", id);
+            jdbcTemplate.update("DELETE FROM leads WHERE company_id = ?", id);
+        } catch (Exception ignored) {
+            // Continues to delete company
+        }
         companyRepository.delete(company);
     }
 

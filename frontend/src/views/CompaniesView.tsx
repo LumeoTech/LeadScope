@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { api, Company, Contract } from '../services/api';
+import { api, Company, Contract, UserInfo } from '../services/api';
+import { permissionsService } from '../services/permissionsService';
 import {
   Building2,
   Search,
@@ -15,17 +16,36 @@ import {
   Trash2,
   Edit2,
   AlertTriangle,
-  X
+  X,
+  MoreHorizontal,
+  Eye,
+  FileText,
+  Briefcase,
+  AlertCircle
 } from 'lucide-react';
 import { ContractModal } from '../components/ContractModal';
 
 export const CompaniesView: React.FC = () => {
+  const [currentUser, setCurrentUser] = useState<UserInfo | null>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      return null;
+    }
+  });
+
   const [companies, setCompanies] = useState<Company[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterClient, setFilterClient] = useState<'ALL' | 'CLIENTS' | 'PROSPECTS'>('ALL');
   const [selectedCompanyForContract, setSelectedCompanyForContract] = useState<Company | null>(null);
   const [companyContracts, setCompanyContracts] = useState<Record<string, Contract>>({});
+
+  // Menu Dropdown ativo por ID da empresa
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
+
+  // Modal Ver Detalhes da Empresa
+  const [companyToView, setCompanyToView] = useState<Company | null>(null);
 
   // Form Nova Empresa
   const [showModal, setShowModal] = useState(false);
@@ -55,6 +75,34 @@ export const CompaniesView: React.FC = () => {
   const [companyToDelete, setCompanyToDelete] = useState<Company | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Toast / Feedback em tela (sem alert feio do navegador)
+  const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setFeedback({ message, type });
+    setTimeout(() => setFeedback(null), 4500);
+  };
+
+  // Re-render when permissions update
+  const [, setPermissionsTick] = useState(0);
+  useEffect(() => {
+    const handlePermChange = () => setPermissionsTick(t => t + 1);
+    window.addEventListener('lumeo_permissions_changed', handlePermChange);
+    return () => window.removeEventListener('lumeo_permissions_changed', handlePermChange);
+  }, []);
+
+  // Fechar dropdown ao clicar fora
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.dropdown-container')) {
+        setOpenMenuId(null);
+      }
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, []);
+
   useEffect(() => {
     loadCompanies();
   }, [search]);
@@ -82,12 +130,19 @@ export const CompaniesView: React.FC = () => {
       } catch (err) {
         console.warn('Contratos não puderam ser carregados:', err);
       }
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      showToast('Erro ao carregar empresas: ' + (e.message || 'Falha de conexão'), 'error');
     } finally {
       setLoading(false);
     }
   };
+
+  // Permissões dinâmicas
+  const userRole = currentUser?.role || 'VENDEDOR';
+  const canCreate = permissionsService.hasPermission(userRole, 'can_create_companies');
+  const canEdit = permissionsService.hasPermission(userRole, 'can_edit_companies');
+  const canDelete = permissionsService.hasPermission(userRole, 'can_delete_companies');
+  const canExport = permissionsService.hasPermission(userRole, 'can_export_data');
 
   const handleCreateCompany = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,9 +166,10 @@ export const CompaniesView: React.FC = () => {
       setCidade('');
       setTelefone('');
       setEmail('');
+      showToast('Empresa cadastrada com sucesso!', 'success');
       loadCompanies();
     } catch (e: any) {
-      alert(e.message || 'Erro ao cadastrar empresa');
+      showToast(e.message || 'Erro ao cadastrar empresa', 'error');
     }
   };
 
@@ -147,9 +203,10 @@ export const CompaniesView: React.FC = () => {
         email: editEmail
       });
       setCompanyToEdit(null);
+      showToast('Empresa atualizada com sucesso!', 'success');
       loadCompanies();
     } catch (e: any) {
-      alert(e.message || 'Erro ao atualizar empresa');
+      showToast(e.message || 'Erro ao atualizar empresa', 'error');
     }
   };
 
@@ -158,10 +215,11 @@ export const CompaniesView: React.FC = () => {
     setDeleting(true);
     try {
       await api.companies.delete(companyToDelete.id);
+      showToast(`Empresa "${companyToDelete.razaoSocial}" excluída com sucesso!`, 'success');
       setCompanyToDelete(null);
       loadCompanies();
     } catch (e: any) {
-      alert('Erro ao excluir empresa: ' + (e.message || 'Erro desconhecido'));
+      showToast('Erro ao excluir empresa: ' + (e.message || 'Erro desconhecido'), 'error');
     } finally {
       setDeleting(false);
     }
@@ -169,7 +227,7 @@ export const CompaniesView: React.FC = () => {
 
   const handleExportCsv = () => {
     if (companies.length === 0) {
-      alert('Nenhuma empresa para exportar.');
+      showToast('Nenhuma empresa para exportar.', 'error');
       return;
     }
 
@@ -193,11 +251,12 @@ export const CompaniesView: React.FC = () => {
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
-    link.setAttribute('download', `lumeo_crm_empresas_${new Date().toISOString().slice(0, 10)}.csv`);
+    link.setAttribute('download', `leadscope_empresas_${new Date().toISOString().slice(0, 10)}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     URL.revokeObjectURL(url);
+    showToast('Exportação concluída!', 'success');
   };
 
   const filteredCompanies = companies.filter(c => {
@@ -208,6 +267,34 @@ export const CompaniesView: React.FC = () => {
 
   return (
     <div>
+      {/* Toast Notification */}
+      {feedback && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '14px 20px',
+            borderRadius: '10px',
+            background: feedback.type === 'success' ? '#064e3b' : '#7f1d1d',
+            color: '#ffffff',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+            border: `1px solid ${feedback.type === 'success' ? '#10b981' : '#ef4444'}`,
+            fontSize: '0.88rem',
+            fontWeight: '500',
+            animation: 'fadeIn 0.2s ease-out'
+          }}
+        >
+          {feedback.type === 'success' ? <CheckCircle size={18} color="#10b981" /> : <AlertCircle size={18} color="#f87171" />}
+          <span>{feedback.message}</span>
+        </div>
+      )}
+
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px', flexWrap: 'wrap', gap: '14px' }}>
         <div>
           <h1 style={{ fontSize: '1.85rem', fontWeight: '800', marginBottom: '4px', color: 'var(--text-primary)' }}>
@@ -231,21 +318,25 @@ export const CompaniesView: React.FC = () => {
             />
           </div>
 
-          <button
-            type="button"
-            onClick={handleExportCsv}
-            className="btn btn-secondary"
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-            title="Exportar empresas em CSV"
-          >
-            <Download size={15} />
-            <span>Exportar</span>
-          </button>
+          {canExport && (
+            <button
+              type="button"
+              onClick={handleExportCsv}
+              className="btn btn-secondary"
+              style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              title="Exportar empresas em CSV"
+            >
+              <Download size={15} />
+              <span>Exportar</span>
+            </button>
+          )}
 
-          <button onClick={() => setShowModal(true)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <Plus size={16} />
-            <span>+ Nova Empresa</span>
-          </button>
+          {canCreate && (
+            <button onClick={() => setShowModal(true)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Plus size={16} />
+              <span>+ Nova Empresa</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -272,7 +363,7 @@ export const CompaniesView: React.FC = () => {
       </div>
 
       {/* Table */}
-      <div className="glass-panel" style={{ overflow: 'hidden' }}>
+      <div className="glass-panel" style={{ overflow: 'visible' }}>
         <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.88rem' }}>
           <thead>
             <tr style={{ background: 'var(--bg-hover)', borderBottom: '1px solid var(--border-subtle)', color: 'var(--text-muted)' }}>
@@ -282,7 +373,7 @@ export const CompaniesView: React.FC = () => {
               <th style={{ padding: '14px 18px' }}>CONTRATO DIGITAL</th>
               <th style={{ padding: '14px 18px' }}>SEGMENTO</th>
               <th style={{ padding: '14px 18px' }}>CIDADE / UF</th>
-              <th style={{ padding: '14px 18px', textAlign: 'right' }}>AÇÕES</th>
+              <th style={{ padding: '14px 18px', textAlign: 'center', width: '80px' }}>AÇÕES</th>
             </tr>
           </thead>
           <tbody>
@@ -295,10 +386,18 @@ export const CompaniesView: React.FC = () => {
             ) : (
               filteredCompanies.map(comp => {
                 const contract = companyContracts[comp.id];
+                const isMenuOpen = openMenuId === comp.id;
+
                 return (
                   <tr key={comp.id} style={{ borderBottom: '1px solid var(--border-subtle)', transition: 'background 0.2s' }}>
                     <td style={{ padding: '14px 18px' }}>
-                      <div style={{ fontWeight: '700', color: 'var(--text-primary)' }}>{comp.razaoSocial}</div>
+                      <div
+                        onClick={() => setCompanyToView(comp)}
+                        style={{ fontWeight: '700', color: 'var(--text-primary)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}
+                        title="Ver detalhes da empresa"
+                      >
+                        <span>{comp.razaoSocial}</span>
+                      </div>
                       {comp.nomeFantasia && (
                         <div style={{ fontSize: '0.78rem', color: 'var(--text-secondary)' }}>{comp.nomeFantasia}</div>
                       )}
@@ -337,40 +436,172 @@ export const CompaniesView: React.FC = () => {
                     <td style={{ padding: '14px 18px', color: 'var(--text-secondary)' }}>
                       {comp.cidade ? `${comp.cidade} - ${comp.estado}` : '—'}
                     </td>
-                    <td style={{ padding: '14px 18px', textAlign: 'right' }}>
-                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+
+                    {/* Menu de Três Pontinhos */}
+                    <td style={{ padding: '14px 18px', textAlign: 'center', position: 'relative' }}>
+                      <div className="dropdown-container" style={{ position: 'relative', display: 'inline-block' }}>
                         <button
                           type="button"
-                          onClick={() => setSelectedCompanyForContract(comp)}
-                          className="btn btn-secondary btn-sm"
-                          style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem' }}
-                          title="Gerenciar contrato digital"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setOpenMenuId(isMenuOpen ? null : comp.id);
+                          }}
+                          style={{
+                            background: isMenuOpen ? 'rgba(255, 255, 255, 0.12)' : 'rgba(255, 255, 255, 0.04)',
+                            border: '1px solid rgba(255, 255, 255, 0.08)',
+                            color: isMenuOpen ? '#ffffff' : 'var(--text-muted)',
+                            borderRadius: '8px',
+                            padding: '6px 8px',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.15s ease'
+                          }}
+                          title="Ações da empresa"
                         >
-                          <FileSignature size={14} color="var(--accent-coral)" />
-                          <span>{contract ? 'Gerenciar Contrato' : 'Enviar Contrato'}</span>
+                          <MoreHorizontal size={16} />
                         </button>
 
-                        <button
-                          type="button"
-                          onClick={() => handleOpenEdit(comp)}
-                          className="btn btn-secondary btn-sm"
-                          style={{ padding: '6px', color: 'var(--text-secondary)' }}
-                          title="Editar dados da empresa"
-                        >
-                          <Edit2 size={14} />
-                        </button>
+                        {/* Floating Menu Dropdown */}
+                        {isMenuOpen && (
+                          <div
+                            style={{
+                              position: 'absolute',
+                              right: 0,
+                              top: 'calc(100% + 6px)',
+                              background: '#16171b',
+                              border: '1px solid rgba(255, 255, 255, 0.12)',
+                              borderRadius: '10px',
+                              boxShadow: '0 12px 28px rgba(0, 0, 0, 0.65)',
+                              minWidth: '185px',
+                              zIndex: 1000,
+                              padding: '6px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '2px'
+                            }}
+                            onClick={(e) => e.stopPropagation()}
+                          >
+                            {/* 1. Ver empresa */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                setCompanyToView(comp);
+                              }}
+                              style={{
+                                width: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '8px 12px',
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#e5e7eb',
+                                fontSize: '0.82rem',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                textAlign: 'left'
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
+                              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                            >
+                              <Eye size={15} color="#60a5fa" />
+                              <span>Ver empresa</span>
+                            </button>
 
-                        <button
-                          type="button"
-                          onClick={() => setCompanyToDelete(comp)}
-                          className="btn btn-secondary btn-sm"
-                          style={{ padding: '6px', color: 'var(--text-muted)' }}
-                          title="Excluir empresa"
-                          onMouseEnter={(e) => (e.currentTarget.style.color = '#ef4444')}
-                          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                            {/* 2. Editar */}
+                            {canEdit && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  handleOpenEdit(comp);
+                                }}
+                                style={{
+                                  width: '100%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  padding: '8px 12px',
+                                  background: 'transparent',
+                                  border: 'none',
+                                  color: '#e5e7eb',
+                                  fontSize: '0.82rem',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer',
+                                  textAlign: 'left'
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
+                                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                              >
+                                <Edit2 size={15} color="#fbbf24" />
+                                <span>Editar</span>
+                              </button>
+                            )}
+
+                            {/* 3. Enviar contrato */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setOpenMenuId(null);
+                                setSelectedCompanyForContract(comp);
+                              }}
+                              style={{
+                                width: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '8px',
+                                padding: '8px 12px',
+                                background: 'transparent',
+                                border: 'none',
+                                color: '#e5e7eb',
+                                fontSize: '0.82rem',
+                                borderRadius: '6px',
+                                cursor: 'pointer',
+                                textAlign: 'left'
+                              }}
+                              onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
+                              onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                            >
+                              <FileSignature size={15} color="var(--accent-coral)" />
+                              <span>{contract ? 'Gerenciar contrato' : 'Enviar contrato'}</span>
+                            </button>
+
+                            <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.06)', margin: '4px 0' }} />
+
+                            {/* 4. Excluir */}
+                            {canDelete && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenMenuId(null);
+                                  setCompanyToDelete(comp);
+                                }}
+                                style={{
+                                  width: '100%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  padding: '8px 12px',
+                                  background: 'transparent',
+                                  border: 'none',
+                                  color: '#f87171',
+                                  fontSize: '0.82rem',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer',
+                                  textAlign: 'left'
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)')}
+                                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                              >
+                                <Trash2 size={15} color="#f87171" />
+                                <span>Excluir</span>
+                              </button>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -381,22 +612,156 @@ export const CompaniesView: React.FC = () => {
         </table>
       </div>
 
-      {/* Modal de Contrato DocuSeal */}
-      <ContractModal
-        isOpen={!!selectedCompanyForContract}
-        onClose={() => setSelectedCompanyForContract(null)}
-        company={selectedCompanyForContract}
-        onContractSent={(c) => {
-          if (selectedCompanyForContract) {
-            setCompanyContracts(prev => ({ ...prev, [selectedCompanyForContract.id]: c }));
-          }
-        }}
-      />
+      {/* Modal: Ver Detalhes da Empresa */}
+      {companyToView && (
+        <div className="modal-overlay" onClick={() => setCompanyToView(null)}>
+          <div className="modal-content" style={{ maxWidth: '640px', width: '100%' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '12px',
+                  background: 'rgba(59, 130, 246, 0.15)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: '#60a5fa'
+                }}>
+                  <Building2 size={24} />
+                </div>
+                <div>
+                  <h2 style={{ fontSize: '1.35rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>
+                    {companyToView.razaoSocial}
+                  </h2>
+                  {companyToView.nomeFantasia && (
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                      {companyToView.nomeFantasia}
+                    </div>
+                  )}
+                </div>
+              </div>
 
-      {/* Modal: Nova Empresa */}
+              <button
+                type="button"
+                onClick={() => setCompanyToView(null)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Badges Principais */}
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '22px' }}>
+              {companyToView.isClient ? (
+                <span className="badge badge-success">
+                  <CheckCircle size={12} />
+                  <span>Cliente Ativo</span>
+                </span>
+              ) : (
+                <span className="badge badge-warning">
+                  <Clock size={12} />
+                  <span>Prospect em Prospecção</span>
+                </span>
+              )}
+
+              <span className="badge badge-primary">
+                {companyToView.segmento || 'Segmento Geral'}
+              </span>
+
+              <span className="badge badge-secondary">
+                Porte: {companyToView.porte || 'EPP'}
+              </span>
+            </div>
+
+            {/* Dados Cadastrais */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', background: 'var(--bg-hover)', padding: '16px', borderRadius: '10px', marginBottom: '20px' }}>
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>CNPJ</span>
+                <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', fontWeight: '600', fontFamily: 'monospace', color: 'var(--accent-coral)' }}>
+                  {companyToView.cnpj || 'Não informado'}
+                </p>
+              </div>
+
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>Localização</span>
+                <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                  {companyToView.cidade ? `${companyToView.cidade} - ${companyToView.estado}` : 'Não informada'}
+                </p>
+              </div>
+
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>Telefone / WhatsApp</span>
+                <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                  {companyToView.telefone || 'Não informado'}
+                </p>
+              </div>
+
+              <div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>E-mail Comercial</span>
+                <p style={{ margin: '4px 0 0 0', fontSize: '0.9rem', color: 'var(--text-primary)' }}>
+                  {companyToView.email || 'Não informado'}
+                </p>
+              </div>
+            </div>
+
+            {/* Contrato Digital */}
+            <div style={{ border: '1px solid var(--border-subtle)', borderRadius: '10px', padding: '16px', marginBottom: '24px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <FileSignature size={18} color="var(--accent-coral)" />
+                  <span style={{ fontWeight: '700', fontSize: '0.9rem' }}>Status do Contrato Digital</span>
+                </div>
+                {companyContracts[companyToView.id] ? (
+                  <span className={`badge ${companyContracts[companyToView.id].status === 'SIGNED' ? 'badge-success' : 'badge-warning'}`}>
+                    {companyContracts[companyToView.id].status === 'SIGNED' ? 'Assinado' : 'Pendente de Assinatura'}
+                  </span>
+                ) : (
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>Nenhum contrato enviado</span>
+                )}
+              </div>
+            </div>
+
+            {/* Botões do Rodapé do Modal */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+              <button
+                type="button"
+                onClick={() => {
+                  const target = companyToView;
+                  setCompanyToView(null);
+                  setSelectedCompanyForContract(target);
+                }}
+                className="btn btn-secondary"
+                style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <FileSignature size={15} />
+                <span>Gerenciar Contrato</span>
+              </button>
+
+              {canEdit && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    const target = companyToView;
+                    setCompanyToView(null);
+                    handleOpenEdit(target);
+                  }}
+                  className="btn btn-primary"
+                  style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <Edit2 size={15} />
+                  <span>Editar Empresa</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Cadastrar Nova Empresa */}
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '18px', color: 'var(--text-primary)' }}>Cadastrar Empresa</h2>
             <form onSubmit={handleCreateCompany} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
@@ -504,8 +869,8 @@ export const CompaniesView: React.FC = () => {
 
       {/* Modal: Editar Empresa */}
       {companyToEdit && (
-        <div className="modal-overlay">
-          <div className="modal-content">
+        <div className="modal-overlay" onClick={() => setCompanyToEdit(null)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <h2 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '18px', color: 'var(--text-primary)' }}>Editar Empresa</h2>
             <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
@@ -611,8 +976,8 @@ export const CompaniesView: React.FC = () => {
 
       {/* Modal: Excluir Empresa */}
       {companyToDelete && (
-        <div className="modal-overlay">
-          <div className="card" style={{ maxWidth: '440px', width: '100%', padding: '24px' }}>
+        <div className="modal-overlay" onClick={() => setCompanyToDelete(null)}>
+          <div className="card" style={{ maxWidth: '440px', width: '100%', padding: '24px' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px', color: '#ef4444' }}>
               <AlertTriangle size={24} />
               <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '700' }}>Confirmar Exclusão</h3>
@@ -641,6 +1006,22 @@ export const CompaniesView: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Modal de Envio e Gestão de Contrato Digital */}
+      {selectedCompanyForContract && (
+        <ContractModal
+          isOpen={Boolean(selectedCompanyForContract)}
+          company={selectedCompanyForContract}
+          onClose={() => {
+            setSelectedCompanyForContract(null);
+            loadCompanies();
+          }}
+          onContractSent={() => {
+            loadCompanies();
+            showToast('Contrato digital enviado com sucesso!', 'success');
+          }}
+        />
       )}
     </div>
   );

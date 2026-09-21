@@ -296,7 +296,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                   {user?.name || 'Administrador'}
                 </div>
                 <div style={{ fontSize: '0.74rem', color: '#68707d', marginTop: '2px' }}>
-                  {user?.email || 'admin@crmscanner.com'}
+                  {user?.email || 'admin@empresa.com'}
                 </div>
                 <div style={{ marginTop: '6px' }}>
                   <span

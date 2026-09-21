@@ -274,7 +274,7 @@ export const SitesView: React.FC = () => {
                   <Check size={16} /> Respostas em Tempo Real
                 </span>
                 <span style={{ fontSize: '0.8rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <Check size={16} /> Enriquecimento com IA
+                  <Check size={16} /> Enriquecimento Automático
                 </span>
               </div>
               <button

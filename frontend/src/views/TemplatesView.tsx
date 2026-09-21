@@ -1,8 +1,21 @@
 import React, { useEffect, useState } from 'react';
-import { api, Site, SiteEmailTemplate } from '../services/api';
-import { Mail, Plus, Trash2, Edit3, Globe, AlertCircle, ExternalLink } from 'lucide-react';
+import { api, Site, SiteEmailTemplate, UserInfo } from '../services/api';
+import { permissionsService } from '../services/permissionsService';
+import { Mail, Plus, Trash2, Edit3, Globe, AlertCircle, ExternalLink, Check, AlertTriangle, ArrowRight } from 'lucide-react';
 
-export const TemplatesView: React.FC = () => {
+interface TemplatesViewProps {
+  onNavigate?: (tab: string) => void;
+}
+
+export const TemplatesView: React.FC<TemplatesViewProps> = ({ onNavigate }) => {
+  const [currentUser, setCurrentUser] = useState<UserInfo | null>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      return null;
+    }
+  });
+
   const [sites, setSites] = useState<Site[]>([]);
   const [templates, setTemplates] = useState<SiteEmailTemplate[]>([]);
   const [selectedSiteFilter, setSelectedSiteFilter] = useState<number | 'ALL'>('ALL');
@@ -26,6 +39,17 @@ export const TemplatesView: React.FC = () => {
     setFeedback({ text, type });
     setTimeout(() => setFeedback(null), 4000);
   };
+
+  // Re-render on permission changes
+  const [, setPermissionsTick] = useState(0);
+  useEffect(() => {
+    const handlePermChange = () => setPermissionsTick(t => t + 1);
+    window.addEventListener('lumeo_permissions_changed', handlePermChange);
+    return () => window.removeEventListener('lumeo_permissions_changed', handlePermChange);
+  }, []);
+
+  const userRole = currentUser?.role || 'VENDEDOR';
+  const canManageTemplates = permissionsService.hasPermission(userRole, 'can_manage_templates');
 
   useEffect(() => {
     loadData();
@@ -75,7 +99,7 @@ export const TemplatesView: React.FC = () => {
   const handleSaveTemplate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!templateForm.siteId) {
-      alert('Selecione um site para associar o template.');
+      showFeedback('Selecione ou cadastre um site para associar o template.', 'error');
       return;
     }
 
@@ -153,15 +177,16 @@ export const TemplatesView: React.FC = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => handleOpenModal()}
-          disabled={sites.length === 0}
-          className="btn btn-primary"
-          style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
-        >
-          <Plus size={18} />
-          <span>Novo Template</span>
-        </button>
+        {canManageTemplates && (
+          <button
+            onClick={() => handleOpenModal()}
+            className="btn btn-primary"
+            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Plus size={18} />
+            <span>Novo Template</span>
+          </button>
+        )}
       </div>
 
       {feedback && (
@@ -184,25 +209,27 @@ export const TemplatesView: React.FC = () => {
         </div>
       )}
 
-      {/* Filter by Site */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '22px' }}>
-        <span style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-secondary)' }}>
-          Filtrar por Site:
-        </span>
-        <select
-          value={selectedSiteFilter}
-          onChange={(e) => setSelectedSiteFilter(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
-          className="input-field"
-          style={{ minWidth: '220px', fontSize: '0.85rem', padding: '6px 12px' }}
-        >
-          <option value="ALL">Todos os Sites ({templates.length} templates)</option>
-          {sites.map(s => (
-            <option key={s.id} value={s.id}>
-              {s.name}
-            </option>
-          ))}
-        </select>
-      </div>
+      {/* Filter by Site (Oculto enquanto não houver sites cadastrados) */}
+      {sites.length > 0 && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '22px' }}>
+          <span style={{ fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-secondary)' }}>
+            Filtrar por Site:
+          </span>
+          <select
+            value={selectedSiteFilter}
+            onChange={(e) => setSelectedSiteFilter(e.target.value === 'ALL' ? 'ALL' : Number(e.target.value))}
+            className="input-field"
+            style={{ minWidth: '220px', fontSize: '0.85rem', padding: '6px 12px' }}
+          >
+            <option value="ALL">Todos os Sites ({templates.length} templates)</option>
+            {sites.map(s => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
+        </div>
+      )}
 
       {/* Templates Grid */}
       {loading ? (
@@ -218,10 +245,7 @@ export const TemplatesView: React.FC = () => {
           </p>
           <button
             type="button"
-            onClick={() => {
-              const sitesTabBtn = document.querySelector('button[title="Sites"]') as HTMLButtonElement;
-              if (sitesTabBtn) sitesTabBtn.click();
-            }}
+            onClick={() => onNavigate?.('sites')}
             className="btn btn-primary"
             style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
           >
@@ -236,9 +260,11 @@ export const TemplatesView: React.FC = () => {
           <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto 20px auto', fontSize: '0.9rem' }}>
             Cadastre seu primeiro template de email com respostas dinâmicas para este site.
           </p>
-          <button onClick={() => handleOpenModal()} className="btn btn-primary">
-            Criar Primeiro Template
-          </button>
+          {canManageTemplates && (
+            <button onClick={() => handleOpenModal()} className="btn btn-primary">
+              Criar Primeiro Template
+            </button>
+          )}
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(380px, 1fr))', gap: '20px' }}>
@@ -258,195 +284,238 @@ export const TemplatesView: React.FC = () => {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
                   <div>
                     <h3 style={{ fontSize: '1.15rem', fontWeight: '700', margin: 0 }}>{tpl.name}</h3>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
-                      <Globe size={13} color="var(--text-muted)" />
-                      <span style={{ fontSize: '0.78rem', color: '#60a5fa', fontWeight: '600' }}>
-                        {tpl.siteName || `Site #${tpl.siteId}`}
-                      </span>
-                    </div>
+                    <span style={{ fontSize: '0.78rem', color: '#60a5fa', fontWeight: '600' }}>
+                      {tpl.siteName || `Site #${tpl.siteId}`}
+                    </span>
                   </div>
-                  <span className={`badge ${tpl.active ? 'badge-success' : 'badge-danger'}`}>
-                    {tpl.active ? 'Ativo' : 'Inativo'}
+                  <span
+                    style={{
+                      fontSize: '0.72rem',
+                      fontWeight: '700',
+                      padding: '3px 8px',
+                      borderRadius: '12px',
+                      background: tpl.active ? 'rgba(34, 197, 94, 0.15)' : 'rgba(156, 163, 175, 0.15)',
+                      color: tpl.active ? '#4ade80' : '#9ca3af',
+                      border: `1px solid ${tpl.active ? 'rgba(34, 197, 94, 0.3)' : 'rgba(156, 163, 175, 0.3)'}`,
+                    }}
+                  >
+                    {tpl.active ? 'Ativo' : 'Pausado'}
                   </span>
                 </div>
 
-                <div style={{ marginBottom: '12px' }}>
-                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>
-                    Assunto:
+                <div style={{ marginBottom: '16px' }}>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600', display: 'block', marginBottom: '4px' }}>
+                    Assunto do E-mail
                   </span>
-                  <div style={{ fontSize: '0.88rem', fontWeight: '600', color: 'var(--text-primary)', marginTop: '2px' }}>
+                  <div
+                    style={{
+                      fontSize: '0.88rem',
+                      color: 'var(--text-primary)',
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      border: '1px solid var(--border-subtle)',
+                      fontWeight: '500',
+                    }}
+                  >
                     {tpl.subject}
                   </div>
                 </div>
 
-                <div style={{ marginBottom: '16px' }}>
-                  <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600' }}>
-                    Visualização HTML:
+                <div>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', textTransform: 'uppercase', fontWeight: '600', display: 'block', marginBottom: '4px' }}>
+                    Pré-visualização do Conteúdo
                   </span>
                   <div
                     style={{
-                      background: 'rgba(0,0,0,0.2)',
-                      padding: '10px 12px',
-                      borderRadius: '6px',
                       fontSize: '0.8rem',
                       color: 'var(--text-secondary)',
-                      maxHeight: '120px',
+                      background: 'rgba(0, 0, 0, 0.25)',
+                      padding: '10px 12px',
+                      borderRadius: '6px',
+                      maxHeight: '110px',
                       overflowY: 'auto',
-                      marginTop: '4px',
-                      border: '1px solid rgba(255,255,255,0.05)',
+                      border: '1px solid var(--border-subtle)',
+                      lineHeight: '1.4',
                     }}
                     dangerouslySetInnerHTML={{ __html: tpl.bodyHtml }}
                   />
                 </div>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '14px', borderTop: '1px solid var(--border-subtle)' }}>
-                <button
-                  onClick={() => handleOpenModal(tpl)}
-                  className="btn btn-secondary btn-sm"
-                  style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                >
-                  <Edit3 size={14} />
-                  <span>Editar</span>
-                </button>
-                <button
-                  onClick={() => handleDeleteTemplate(tpl)}
-                  className="btn btn-danger btn-sm"
-                  style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
-                >
-                  <Trash2 size={14} />
-                  <span>Excluir</span>
-                </button>
-              </div>
+              {canManageTemplates && (
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleOpenModal(tpl)}
+                    className="btn btn-secondary btn-sm"
+                    style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+                  >
+                    <Edit3 size={14} />
+                    <span>Editar</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleDeleteTemplate(tpl)}
+                    className="btn btn-secondary btn-sm"
+                    style={{ color: '#ef4444', padding: '6px' }}
+                    title="Excluir Template"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              )}
             </div>
           ))}
         </div>
       )}
 
-      {/* Modal Criar / Editar Template */}
+      {/* Modal: Novo/Editar Template */}
       {isModalOpen && (
-        <div className="modal-backdrop" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '680px', padding: '28px', borderRadius: '12px' }}>
+        <div className="modal-overlay" onClick={() => setIsModalOpen(false)}>
+          <div className="modal-content" style={{ maxWidth: '680px' }} onClick={(e) => e.stopPropagation()}>
             <h3 style={{ fontSize: '1.3rem', fontWeight: '700', marginBottom: '16px' }}>
               {editingTemplate ? 'Editar Template de E-mail' : 'Novo Template de E-mail'}
             </h3>
 
-            <form onSubmit={handleSaveTemplate}>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
-                    Site Associado *
-                  </label>
-                  <select
-                    value={templateForm.siteId}
-                    onChange={(e) => setTemplateForm({ ...templateForm, siteId: Number(e.target.value) })}
-                    className="input-field"
-                    style={{ width: '100%' }}
-                    disabled={Boolean(editingTemplate)}
-                  >
-                    {sites.map(s => (
-                      <option key={s.id} value={s.id}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
+            {sites.length === 0 ? (
+              <div style={{ padding: '20px', background: 'rgba(239, 68, 68, 0.1)', border: '1px solid rgba(239, 68, 68, 0.3)', borderRadius: '10px', marginBottom: '20px', textAlign: 'center' }}>
+                <AlertTriangle size={32} color="#f87171" style={{ marginBottom: '10px' }} />
+                <h4 style={{ margin: '0 0 8px 0', color: '#ffffff' }}>Nenhum site cadastrado</h4>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: '0 0 16px 0' }}>
+                  Para associar e disparar este template, é necessário ter pelo menos um site cadastrado no sistema.
+                </p>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsModalOpen(false);
+                    onNavigate?.('sites');
+                  }}
+                  className="btn btn-primary"
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}
+                >
+                  <span>Ir para tela de Sites</span>
+                  <ArrowRight size={16} />
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleSaveTemplate}>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '16px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
+                      Site Associado *
+                    </label>
+                    <select
+                      value={templateForm.siteId}
+                      onChange={(e) => setTemplateForm({ ...templateForm, siteId: Number(e.target.value) })}
+                      className="input-field"
+                      style={{ width: '100%' }}
+                      disabled={Boolean(editingTemplate)}
+                    >
+                      {sites.map(s => (
+                        <option key={s.id} value={s.id}>
+                          {s.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div>
+                    <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
+                      Nome do Template *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="Ex: Boas-vindas Lead Novo"
+                      value={templateForm.name}
+                      onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
+                      className="input-field"
+                      style={{ width: '100%' }}
+                    />
+                  </div>
                 </div>
 
-                <div>
+                <div style={{ marginBottom: '16px' }}>
                   <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
-                    Nome do Template *
+                    Assunto do E-mail *
                   </label>
                   <input
                     type="text"
                     required
-                    placeholder="Ex: Boas-vindas Lead Novo"
-                    value={templateForm.name}
-                    onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
+                    placeholder="Olá {{lead_name}}, recebemos seu contato na {{site_name}}!"
+                    value={templateForm.subject}
+                    onChange={(e) => setTemplateForm({ ...templateForm, subject: e.target.value })}
                     className="input-field"
                     style={{ width: '100%' }}
                   />
                 </div>
-              </div>
 
-              <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
-                  Assunto do E-mail *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Olá {{lead_name}}, recebemos seu contato na {{site_name}}!"
-                  value={templateForm.subject}
-                  onChange={(e) => setTemplateForm({ ...templateForm, subject: e.target.value })}
-                  className="input-field"
-                  style={{ width: '100%' }}
-                />
-              </div>
-
-              {/* Tags dinâmicas */}
-              <div style={{ marginBottom: '12px' }}>
-                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
-                  Tags Dinâmicas (clique para inserir no corpo do email):
-                </span>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                  {['{{lead_name}}', '{{company_name}}', '{{site_name}}', '{{phone}}', '{{email}}'].map(tag => (
-                    <button
-                      key={tag}
-                      type="button"
-                      onClick={() => insertVariable(tag)}
-                      className="btn-ghost"
-                      style={{
-                        padding: '3px 8px',
-                        background: 'rgba(59, 130, 246, 0.1)',
-                        border: '1px solid rgba(59, 130, 246, 0.3)',
-                        color: '#60a5fa',
-                        fontSize: '0.78rem',
-                        borderRadius: '4px',
-                        cursor: 'pointer',
-                      }}
-                    >
-                      {tag}
-                    </button>
-                  ))}
+                {/* Tags dinâmicas */}
+                <div style={{ marginBottom: '12px' }}>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>
+                    Tags Dinâmicas (clique para inserir no corpo do email):
+                  </span>
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {['{{lead_name}}', '{{company_name}}', '{{site_name}}', '{{phone}}', '{{email}}'].map(tag => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => insertVariable(tag)}
+                        className="btn-ghost"
+                        style={{
+                          padding: '3px 8px',
+                          background: 'rgba(59, 130, 246, 0.1)',
+                          border: '1px solid rgba(59, 130, 246, 0.3)',
+                          color: '#60a5fa',
+                          fontSize: '0.78rem',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                        }}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
 
-              <div style={{ marginBottom: '20px' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
-                  Corpo do E-mail (HTML) *
-                </label>
-                <textarea
-                  rows={8}
-                  required
-                  value={templateForm.bodyHtml}
-                  onChange={(e) => setTemplateForm({ ...templateForm, bodyHtml: e.target.value })}
-                  className="input-field"
-                  style={{ width: '100%', fontFamily: 'monospace', fontSize: '0.85rem' }}
-                />
-              </div>
+                <div style={{ marginBottom: '20px' }}>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
+                    Corpo do E-mail (HTML) *
+                  </label>
+                  <textarea
+                    rows={8}
+                    required
+                    value={templateForm.bodyHtml}
+                    onChange={(e) => setTemplateForm({ ...templateForm, bodyHtml: e.target.value })}
+                    className="input-field"
+                    style={{ width: '100%', fontFamily: 'monospace', fontSize: '0.85rem' }}
+                  />
+                </div>
 
-              <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <input
-                  type="checkbox"
-                  id="tplActiveMain"
-                  checked={templateForm.active}
-                  onChange={(e) => setTemplateForm({ ...templateForm, active: e.target.checked })}
-                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
-                />
-                <label htmlFor="tplActiveMain" style={{ fontSize: '0.9rem', cursor: 'pointer' }}>
-                  Ativar envio automático para leads capturados
-                </label>
-              </div>
+                <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <input
+                    type="checkbox"
+                    id="tplActiveMain"
+                    checked={templateForm.active}
+                    onChange={(e) => setTemplateForm({ ...templateForm, active: e.target.checked })}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <label htmlFor="tplActiveMain" style={{ fontSize: '0.9rem', cursor: 'pointer' }}>
+                    Ativar envio automático para leads capturados
+                  </label>
+                </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
-                <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-secondary">
-                  Cancelar
-                </button>
-                <button type="submit" className="btn btn-primary">
-                  {editingTemplate ? 'Salvar Alterações' : 'Criar Template'}
-                </button>
-              </div>
-            </form>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+                  <button type="button" onClick={() => setIsModalOpen(false)} className="btn btn-secondary">
+                    Cancelar
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    {editingTemplate ? 'Salvar Alterações' : 'Criar Template'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

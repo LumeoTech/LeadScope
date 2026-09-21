@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { api, Activity, Lead } from '../services/api';
+import { api, Activity, Lead, UserInfo } from '../services/api';
+import { permissionsService } from '../services/permissionsService';
 import {
   Calendar,
   Plus,
@@ -11,10 +12,19 @@ import {
   MessageSquare,
   Trash2,
   AlertTriangle,
-  X
+  X,
+  AlertCircle
 } from 'lucide-react';
 
 export const AgendaView: React.FC = () => {
+  const [currentUser, setCurrentUser] = useState<UserInfo | null>(() => {
+    try {
+      return JSON.parse(localStorage.getItem('user') || 'null');
+    } catch {
+      return null;
+    }
+  });
+
   const [activities, setActivities] = useState<Activity[]>([]);
   const [leads, setLeads] = useState<Lead[]>([]);
   const [loading, setLoading] = useState(true);
@@ -32,6 +42,25 @@ export const AgendaView: React.FC = () => {
   const [actToDelete, setActToDelete] = useState<Activity | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Feedback Toast
+  const [feedback, setFeedback] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+
+  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
+    setFeedback({ message, type });
+    setTimeout(() => setFeedback(null), 4000);
+  };
+
+  // Re-render when permissions update
+  const [, setPermissionsTick] = useState(0);
+  useEffect(() => {
+    const handlePermChange = () => setPermissionsTick(t => t + 1);
+    window.addEventListener('lumeo_permissions_changed', handlePermChange);
+    return () => window.removeEventListener('lumeo_permissions_changed', handlePermChange);
+  }, []);
+
+  const userRole = currentUser?.role || 'VENDEDOR';
+  const canCreateAgenda = permissionsService.hasPermission(userRole, 'can_create_agenda');
+
   useEffect(() => {
     loadAgenda();
   }, []);
@@ -45,8 +74,8 @@ export const AgendaView: React.FC = () => {
       ]);
       setActivities(actRes || []);
       setLeads(leadsRes.content || []);
-    } catch (e) {
-      console.error(e);
+    } catch (e: any) {
+      showToast('Erro ao carregar agenda: ' + (e.message || 'Falha de conexão'), 'error');
     } finally {
       setLoading(false);
     }
@@ -68,18 +97,20 @@ export const AgendaView: React.FC = () => {
       setTitle('');
       setScheduledAt('');
       setDescription('');
+      showToast('Compromisso agendado com sucesso!', 'success');
       loadAgenda();
     } catch (e: any) {
-      alert(e.message || 'Erro ao agendar compromisso');
+      showToast(e.message || 'Erro ao agendar compromisso', 'error');
     }
   };
 
   const handleMarkDone = async (id: number) => {
     try {
       await api.activities.markDone(id);
+      showToast('Compromisso concluído com sucesso!', 'success');
       loadAgenda();
     } catch (e: any) {
-      alert(e.message || 'Erro ao concluir compromisso');
+      showToast(e.message || 'Erro ao concluir compromisso', 'error');
     }
   };
 
@@ -88,10 +119,11 @@ export const AgendaView: React.FC = () => {
     setDeleting(true);
     try {
       await api.activities.delete(actToDelete.id);
+      showToast('Compromisso excluído com sucesso!', 'success');
       setActToDelete(null);
       loadAgenda();
     } catch (e: any) {
-      alert('Erro ao excluir compromisso: ' + (e.message || 'Erro desconhecido'));
+      showToast('Erro ao excluir compromisso: ' + (e.message || 'Erro desconhecido'), 'error');
     } finally {
       setDeleting(false);
     }
@@ -104,6 +136,34 @@ export const AgendaView: React.FC = () => {
 
   return (
     <div>
+      {/* Toast Notification */}
+      {feedback && (
+        <div
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            zIndex: 9999,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px',
+            padding: '14px 20px',
+            borderRadius: '10px',
+            background: feedback.type === 'success' ? '#064e3b' : '#7f1d1d',
+            color: '#ffffff',
+            boxShadow: '0 10px 25px rgba(0,0,0,0.5)',
+            border: `1px solid ${feedback.type === 'success' ? '#10b981' : '#ef4444'}`,
+            fontSize: '0.88rem',
+            fontWeight: '500',
+            animation: 'fadeIn 0.2s ease-out'
+          }}
+        >
+          {feedback.type === 'success' ? <CheckCircle size={18} color="#10b981" /> : <AlertCircle size={18} color="#f87171" />}
+          <span>{feedback.message}</span>
+        </div>
+      )}
+
+      {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px', flexWrap: 'wrap', gap: '14px' }}>
         <div>
           <h1 style={{ fontSize: '1.85rem', fontWeight: '800', marginBottom: '4px', color: 'var(--text-primary)' }}>
@@ -114,10 +174,12 @@ export const AgendaView: React.FC = () => {
           </p>
         </div>
 
-        <button onClick={() => setShowModal(true)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-          <Plus size={16} />
-          <span>+ Agendar Compromisso</span>
-        </button>
+        {canCreateAgenda && (
+          <button onClick={() => setShowModal(true)} className="btn btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <Plus size={16} />
+            <span>+ Agendar Compromisso</span>
+          </button>
+        )}
       </div>
 
       {/* Tabs Filter */}
@@ -151,8 +213,25 @@ export const AgendaView: React.FC = () => {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
         {filteredActivities.length === 0 ? (
-          <div className="glass-panel" style={{ padding: '60px', textAlign: 'center', color: 'var(--text-muted)' }}>
-            Nenhum compromisso pendente com este filtro.
+          <div className="glass-panel" style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--text-muted)' }}>
+            <Calendar size={44} style={{ opacity: 0.35, marginBottom: '12px', color: 'var(--text-muted)' }} />
+            <h3 style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '8px', color: 'var(--text-primary)' }}>
+              Nenhum compromisso agendado
+            </h3>
+            <p style={{ color: 'var(--text-secondary)', maxWidth: '440px', margin: '0 auto 20px auto', fontSize: '0.88rem' }}>
+              Organize reuniões, demonstrações, ligações e follow-ups com seus leads e clientes em um só lugar.
+            </p>
+            {canCreateAgenda && (
+              <button
+                type="button"
+                onClick={() => setShowModal(true)}
+                className="btn btn-primary"
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+              >
+                <Plus size={16} />
+                <span>Agendar agora</span>
+              </button>
+            )}
           </div>
         ) : (
           filteredActivities.map(act => (
@@ -221,14 +300,24 @@ export const AgendaView: React.FC = () => {
         )}
       </div>
 
-      {/* Modal: Agendar Reunião */}
+      {/* Modal: Agendar Compromisso */}
       {showModal && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '18px', color: 'var(--text-primary)' }}>Agendar Compromisso Comercial</h2>
+        <div className="modal-overlay" onClick={() => setShowModal(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+              <h2 style={{ fontSize: '1.4rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>Agendar Compromisso</h2>
+              <button
+                type="button"
+                onClick={() => setShowModal(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
             <form onSubmit={handleCreate} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>Lead Vinculado *</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>Oportunidade *</label>
                 <select
                   required
                   className="select"
@@ -236,12 +325,33 @@ export const AgendaView: React.FC = () => {
                   onChange={(e) => setLeadId(e.target.value ? Number(e.target.value) : '')}
                 >
                   <option value="">Selecione a oportunidade...</option>
-                  {leads.map((l) => (
-                    <option key={l.id} value={l.id}>
-                      {l.title} ({l.companyRazaoSocial})
-                    </option>
+                  {leads.map(l => (
+                    <option key={l.id} value={l.id}>{l.title} ({l.companyRazaoSocial})</option>
                   ))}
                 </select>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>Tipo *</label>
+                  <select className="select" value={type} onChange={(e) => setType(e.target.value)}>
+                    <option value="REUNIAO">Reunião / Demo</option>
+                    <option value="LIGACAO">Ligação Telefônica</option>
+                    <option value="WHATSAPP">Contato WhatsApp</option>
+                    <option value="EMAIL">Envio de Proposta / E-mail</option>
+                    <option value="TAREFA">Tarefa Interna</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>Data e Horário</label>
+                  <input
+                    type="datetime-local"
+                    className="input"
+                    value={scheduledAt}
+                    onChange={(e) => setScheduledAt(e.target.value)}
+                  />
+                </div>
               </div>
 
               <div>
@@ -255,34 +365,12 @@ export const AgendaView: React.FC = () => {
                 />
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>Tipo de Ação</label>
-                  <select className="select" value={type} onChange={(e) => setType(e.target.value)}>
-                    <option value="REUNIAO">Reunião / Demo</option>
-                    <option value="LIGACAO">Ligação Telefônica</option>
-                    <option value="WHATSAPP">Contato WhatsApp</option>
-                    <option value="EMAIL">E-mail Comercial</option>
-                    <option value="TAREFA">Tarefa Interna</option>
-                  </select>
-                </div>
-                <div>
-                  <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>Data e Hora</label>
-                  <input
-                    type="datetime-local"
-                    className="input"
-                    value={scheduledAt}
-                    onChange={(e) => setScheduledAt(e.target.value)}
-                  />
-                </div>
-              </div>
-
               <div>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>Pauta / Observações</label>
+                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>Descrição / Pauta</label>
                 <textarea
-                  className="input"
+                  className="textarea"
                   rows={3}
-                  placeholder="Pontos chave a serem tratados..."
+                  placeholder="Objetivos da reunião, links de sala de vídeo, etc."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                 />
@@ -301,15 +389,15 @@ export const AgendaView: React.FC = () => {
         </div>
       )}
 
-      {/* Modal: Excluir Agendamento */}
+      {/* Modal: Confirmar Exclusão de Atividade */}
       {actToDelete && (
-        <div className="modal-overlay">
-          <div className="card" style={{ maxWidth: '420px', width: '100%', padding: '24px' }}>
+        <div className="modal-overlay" onClick={() => setActToDelete(null)}>
+          <div className="card" style={{ maxWidth: '420px', width: '100%', padding: '24px' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px', color: '#ef4444' }}>
               <AlertTriangle size={24} />
               <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '700' }}>Excluir Compromisso</h3>
             </div>
-            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '20px' }}>
+            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: 1.5 }}>
               Deseja realmente remover o compromisso <strong>{actToDelete.title}</strong>?
             </p>
             <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>

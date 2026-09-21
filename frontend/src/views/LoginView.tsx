@@ -10,8 +10,8 @@ interface LoginViewProps {
 export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const [mode, setMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('admin@crmscanner.com');
-  const [password, setPassword] = useState('Admin@123');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -282,8 +282,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 setMode('LOGIN');
                 setError(null);
                 setSuccessMsg(null);
-                setEmail('admin@crmscanner.com');
-                setPassword('Admin@123');
               }}
               style={{
                 background: 'transparent',
@@ -301,31 +299,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             </button>
           )}
         </div>
-
-        {mode === 'LOGIN' && (
-          <div style={{ marginTop: '20px', paddingTop: '16px', borderTop: '1px solid var(--border-subtle)', textAlign: 'center' }}>
-            <button
-              type="button"
-              onClick={() => {
-                setEmail('admin@crmscanner.com');
-                setPassword('Admin@123');
-              }}
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: '#818cf8',
-                fontSize: '0.8rem',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '6px'
-              }}
-            >
-              <Sparkles size={14} />
-              <span>Acesso Administrador Padrão</span>
-            </button>
-          </div>
-        )}
       </div>
     </div>
   );

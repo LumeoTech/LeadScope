@@ -21,6 +21,7 @@ import { PublicAgreementView } from './views/PublicAgreementView';
 import { SitesView } from './views/SitesView';
 import { TemplatesView } from './views/TemplatesView';
 import { AcceptInviteView } from './views/AcceptInviteView';
+import { permissionsService } from './services/permissionsService';
 
 export const App: React.FC = () => {
   const [user, setUser] = useState<UserInfo | null>(null);
@@ -87,8 +88,35 @@ export const App: React.FC = () => {
   }, [user, loadPendingUsersCount]);
 
   useEffect(() => {
-    if ((user?.role === 'VENDEDOR' || user?.role === 'VIEWER') && (activeTab === 'audit' || activeTab === 'users' || activeTab === 'sites' || activeTab === 'templates')) {
+    if (!user) return;
+    const role = user.role || 'VENDEDOR';
+
+    // A tela de Team só é visível para Admin. Qualquer outro cargo é redirecionado imediatamente ao tentar acessar.
+    if (activeTab === 'users' && role !== 'ADMIN') {
       setActiveTab('kanban');
+      return;
+    }
+
+    if (activeTab === 'audit' && role !== 'ADMIN') {
+      setActiveTab('kanban');
+      return;
+    }
+
+    // Verificação de permissões em tempo real por tela
+    if (activeTab === 'kanban' && !permissionsService.hasPermission(role, 'can_view_leads')) {
+      setActiveTab('dashboard');
+    } else if (activeTab === 'companies' && !permissionsService.hasPermission(role, 'can_view_companies')) {
+      setActiveTab('dashboard');
+    } else if (activeTab === 'agenda' && !permissionsService.hasPermission(role, 'can_view_agenda')) {
+      setActiveTab('dashboard');
+    } else if (activeTab === 'campaigns' && !permissionsService.hasPermission(role, 'can_view_campaigns')) {
+      setActiveTab('dashboard');
+    } else if (activeTab === 'sites' && !permissionsService.hasPermission(role, 'can_view_sites')) {
+      setActiveTab('dashboard');
+    } else if (activeTab === 'templates' && !permissionsService.hasPermission(role, 'can_view_templates')) {
+      setActiveTab('dashboard');
+    } else if ((activeTab === 'scanner' || activeTab === 'goals') && !permissionsService.hasPermission(role, 'can_view_analytics')) {
+      setActiveTab('dashboard');
     }
   }, [user, activeTab]);
 
@@ -166,7 +194,7 @@ export const App: React.FC = () => {
           {activeTab === 'users' && <UsersView onRefreshPendingCount={loadPendingUsersCount} />}
           {activeTab === 'audit' && <AuditView />}
           {activeTab === 'sites' && <SitesView />}
-          {activeTab === 'templates' && <TemplatesView />}
+          {activeTab === 'templates' && <TemplatesView onNavigate={(tab) => setActiveTab(tab as any)} />}
         </main>
       </div>
 

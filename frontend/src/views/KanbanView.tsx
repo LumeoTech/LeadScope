@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api, Lead, LeadStatus, Company, UserInfo, DailyScanStatus } from '../services/api';
+import { permissionsService } from '../services/permissionsService';
 import { LeadDetailsModal } from '../components/LeadDetailsModal';
 import { getUserTheme } from '../utils/userColors';
 import {
@@ -23,6 +24,7 @@ import {
   Star,
   Tag,
   Edit3,
+  Edit2,
   MoreHorizontal,
   X,
   Table as TableIcon,
@@ -31,7 +33,9 @@ import {
   Filter as FilterIcon,
   Columns,
   Bot,
-  Zap
+  Zap,
+  Eye,
+  UserCheck
 } from 'lucide-react';
 
 export const KanbanView: React.FC = () => {
@@ -93,6 +97,40 @@ export const KanbanView: React.FC = () => {
   const [newValue, setNewValue] = useState('');
   const [newPriority, setNewPriority] = useState('MEDIA');
 
+  // Menu Dropdown de Ações por Lead
+  const [openLeadMenuId, setOpenLeadMenuId] = useState<number | null>(null);
+
+  // Modal: Editar Oportunidade
+  const [leadToEdit, setLeadToEdit] = useState<Lead | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editValue, setEditValue] = useState('');
+  const [editPriority, setEditPriority] = useState('MEDIA');
+  const [editStatusId, setEditStatusId] = useState<number | ''>('');
+
+  // Modal: Atribuir Responsável
+  const [leadToAssign, setLeadToAssign] = useState<Lead | null>(null);
+  const [assignTargetUserId, setAssignTargetUserId] = useState<number | null>(null);
+
+  // Dynamic Permissions listener
+  const [, setPermissionsTick] = useState(0);
+  useEffect(() => {
+    const handlePermChange = () => setPermissionsTick(t => t + 1);
+    window.addEventListener('lumeo_permissions_changed', handlePermChange);
+    return () => window.removeEventListener('lumeo_permissions_changed', handlePermChange);
+  }, []);
+
+  // Fechar dropdown de ações ao clicar fora
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (!target.closest('.lead-menu-container')) {
+        setOpenLeadMenuId(null);
+      }
+    };
+    window.addEventListener('click', handleOutsideClick);
+    return () => window.removeEventListener('click', handleOutsideClick);
+  }, []);
+
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -124,6 +162,60 @@ export const KanbanView: React.FC = () => {
       console.error(e);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const userRole = currentUser?.role || 'VENDEDOR';
+  const canCreateLeads = permissionsService.hasPermission(userRole, 'can_create_leads');
+  const canEditLeads = permissionsService.hasPermission(userRole, 'can_edit_leads');
+  const canAssignLeads = permissionsService.hasPermission(userRole, 'can_assign_leads');
+  const canDeleteLeads = permissionsService.hasPermission(userRole, 'can_delete_leads');
+  const canExportData = permissionsService.hasPermission(userRole, 'can_export_data');
+
+  const handleOpenEdit = (lead: Lead) => {
+    setLeadToEdit(lead);
+    setEditTitle(lead.title || '');
+    setEditValue(lead.value ? String(lead.value) : '');
+    setEditPriority(lead.priority || 'MEDIA');
+    setEditStatusId(lead.statusId || '');
+  };
+
+  const handleSaveEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!leadToEdit) return;
+    try {
+      await api.leads.update(leadToEdit.id, {
+        title: editTitle,
+        value: editValue ? Number(editValue) : undefined,
+        priority: editPriority,
+      });
+      if (editStatusId && editStatusId !== leadToEdit.statusId) {
+        await api.leads.updateStatus(leadToEdit.id, Number(editStatusId));
+      }
+      setToastMsg('Oportunidade atualizada com sucesso!');
+      setTimeout(() => setToastMsg(null), 3500);
+      setLeadToEdit(null);
+      loadData();
+    } catch (err: any) {
+      alert('Erro ao atualizar oportunidade: ' + (err.message || 'Erro'));
+    }
+  };
+
+  const handleOpenAssign = (lead: Lead) => {
+    setLeadToAssign(lead);
+    setAssignTargetUserId(lead.assignedToId || null);
+  };
+
+  const handleSaveAssign = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!leadToAssign) return;
+    try {
+      await handleAssignLead(leadToAssign.id, assignTargetUserId);
+      setToastMsg('Responsável atribuído com sucesso!');
+      setTimeout(() => setToastMsg(null), 3500);
+      setLeadToAssign(null);
+    } catch (err: any) {
+      alert('Erro ao atribuir responsável: ' + (err.message || 'Erro'));
     }
   };
 
@@ -843,16 +935,18 @@ export const KanbanView: React.FC = () => {
           </div>
 
           {/* Export CSV Button */}
-          <button
-            type="button"
-            onClick={() => handleExportCsv(filteredLeads)}
-            className="btn btn-secondary btn-sm"
-            style={{ padding: '7px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
-            title="Exportar dados reais em CSV"
-          >
-            <Download size={14} />
-            <span>Exportar</span>
-          </button>
+          {canExportData && (
+            <button
+              type="button"
+              onClick={() => handleExportCsv(filteredLeads)}
+              className="btn btn-secondary btn-sm"
+              style={{ padding: '7px 12px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              title="Exportar dados reais em CSV"
+            >
+              <Download size={14} />
+              <span>Exportar</span>
+            </button>
+          )}
 
           {/* Daily Auto Lead Scanner Trigger */}
           {currentUser?.role !== 'VIEWER' && (
@@ -878,7 +972,7 @@ export const KanbanView: React.FC = () => {
             </button>
           )}
 
-          {/* AI Autonomous Qualification Trigger */}
+          {/* Qualification Trigger */}
           {currentUser?.role !== 'VIEWER' && (
             <button
               type="button"
@@ -894,15 +988,15 @@ export const KanbanView: React.FC = () => {
                 borderColor: 'rgba(59, 130, 246, 0.3)',
                 color: '#60a5fa'
               }}
-              title="Executar Agente Autônomo de Qualificação de Leads"
+              title="Executar Qualificação de Leads"
             >
               <Bot size={14} className={runningAgent ? 'spin' : ''} />
-              <span>{runningAgent ? 'Qualificando...' : 'Qualificar Leads (IA)'}</span>
+              <span>{runningAgent ? 'Qualificando...' : 'Qualificar Leads'}</span>
             </button>
           )}
 
-          {/* Primary Button: + Nova Oportunidade (Oculto para Viewer) */}
-          {currentUser?.role !== 'VIEWER' && (
+          {/* Primary Button: + Nova Oportunidade */}
+          {canCreateLeads && (
             <button
               type="button"
               onClick={() => setShowNewLeadModal(true)}
@@ -1145,26 +1239,176 @@ export const KanbanView: React.FC = () => {
                         </td>
                       )}
 
-                      {/* Ações (Excluir) */}
-                      <td onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center' }}>
-                        <button
-                          type="button"
-                          onClick={() => setLeadToDelete(lead)}
-                          title="Excluir Oportunidade"
-                          style={{
-                            background: 'none',
-                            border: 'none',
-                            color: 'var(--text-muted)',
-                            cursor: 'pointer',
-                            padding: '4px',
-                            borderRadius: '4px',
-                            transition: 'color 0.2s'
-                          }}
-                          onMouseEnter={(e) => (e.currentTarget.style.color = '#ef4444')}
-                          onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
-                        >
-                          <Trash2 size={15} />
-                        </button>
+                      {/* Ações (Menu 3 Pontinhos) */}
+                      <td onClick={(e) => e.stopPropagation()} style={{ textAlign: 'center', position: 'relative' }}>
+                        <div className="lead-menu-container" style={{ position: 'relative', display: 'inline-block' }}>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setOpenLeadMenuId(openLeadMenuId === lead.id ? null : lead.id);
+                            }}
+                            title="Ações da oportunidade"
+                            style={{
+                              background: openLeadMenuId === lead.id ? 'rgba(255, 255, 255, 0.12)' : 'none',
+                              border: 'none',
+                              color: openLeadMenuId === lead.id ? '#ffffff' : 'var(--text-muted)',
+                              cursor: 'pointer',
+                              padding: '5px',
+                              borderRadius: '6px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <MoreHorizontal size={16} />
+                          </button>
+
+                          {/* Floating Dropdown */}
+                          {openLeadMenuId === lead.id && (
+                            <div
+                              style={{
+                                position: 'absolute',
+                                right: 0,
+                                top: 'calc(100% + 4px)',
+                                background: '#16171b',
+                                border: '1px solid rgba(255, 255, 255, 0.12)',
+                                borderRadius: '10px',
+                                boxShadow: '0 12px 28px rgba(0, 0, 0, 0.65)',
+                                minWidth: '190px',
+                                zIndex: 1000,
+                                padding: '6px',
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '2px',
+                                textAlign: 'left'
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              {/* 1. Ver detalhes */}
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setOpenLeadMenuId(null);
+                                  setSelectedLead(lead);
+                                }}
+                                style={{
+                                  width: '100%',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                  padding: '8px 12px',
+                                  background: 'transparent',
+                                  border: 'none',
+                                  color: '#e5e7eb',
+                                  fontSize: '0.82rem',
+                                  borderRadius: '6px',
+                                  cursor: 'pointer',
+                                  textAlign: 'left'
+                                }}
+                                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
+                                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                              >
+                                <Eye size={15} color="#60a5fa" />
+                                <span>Ver detalhes</span>
+                              </button>
+
+                              {/* 2. Editar */}
+                              {canEditLeads && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenLeadMenuId(null);
+                                    handleOpenEdit(lead);
+                                  }}
+                                  style={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '8px 12px',
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: '#e5e7eb',
+                                    fontSize: '0.82rem',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    textAlign: 'left'
+                                  }}
+                                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
+                                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                                >
+                                  <Edit2 size={15} color="#fbbf24" />
+                                  <span>Editar</span>
+                                </button>
+                              )}
+
+                              {/* 3. Atribuir responsável */}
+                              {canAssignLeads && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenLeadMenuId(null);
+                                    handleOpenAssign(lead);
+                                  }}
+                                  style={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '8px 12px',
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: '#e5e7eb',
+                                    fontSize: '0.82rem',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    textAlign: 'left'
+                                  }}
+                                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
+                                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                                >
+                                  <UserCheck size={15} color="#a78bfa" />
+                                  <span>Atribuir responsável</span>
+                                </button>
+                              )}
+
+                              {/* 4. Excluir */}
+                              {canDeleteLeads && (
+                                <>
+                                  <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.06)', margin: '4px 0' }} />
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setOpenLeadMenuId(null);
+                                      setLeadToDelete(lead);
+                                    }}
+                                    style={{
+                                      width: '100%',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '8px',
+                                      padding: '8px 12px',
+                                      background: 'transparent',
+                                      border: 'none',
+                                      color: '#f87171',
+                                      fontSize: '0.82rem',
+                                      borderRadius: '6px',
+                                      cursor: 'pointer',
+                                      textAlign: 'left'
+                                    }}
+                                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)')}
+                                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                                  >
+                                    <Trash2 size={15} color="#f87171" />
+                                    <span>Excluir</span>
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   );
@@ -1420,25 +1664,169 @@ export const KanbanView: React.FC = () => {
                             </div>
                           </div>
 
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setLeadToDelete(lead);
-                            }}
-                            title="Excluir Lead"
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: 'var(--text-muted)',
-                              cursor: 'pointer',
-                              padding: '2px'
-                            }}
-                            onMouseEnter={(e) => (e.currentTarget.style.color = '#ef4444')}
-                            onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
-                          >
-                            <Trash2 size={14} />
-                          </button>
+                          {/* Menu 3 Pontinhos no Card */}
+                          <div className="lead-menu-container" style={{ position: 'relative' }}>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setOpenLeadMenuId(openLeadMenuId === lead.id ? null : lead.id);
+                              }}
+                              title="Ações do Lead"
+                              style={{
+                                background: openLeadMenuId === lead.id ? 'rgba(255, 255, 255, 0.12)' : 'none',
+                                border: 'none',
+                                color: openLeadMenuId === lead.id ? '#ffffff' : 'var(--text-muted)',
+                                cursor: 'pointer',
+                                padding: '3px',
+                                borderRadius: '4px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                              }}
+                            >
+                              <MoreHorizontal size={14} />
+                            </button>
+
+                            {openLeadMenuId === lead.id && (
+                              <div
+                                style={{
+                                  position: 'absolute',
+                                  right: 0,
+                                  top: 'calc(100% + 4px)',
+                                  background: '#16171b',
+                                  border: '1px solid rgba(255, 255, 255, 0.12)',
+                                  borderRadius: '10px',
+                                  boxShadow: '0 12px 28px rgba(0, 0, 0, 0.65)',
+                                  minWidth: '180px',
+                                  zIndex: 1000,
+                                  padding: '6px',
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  gap: '2px',
+                                  textAlign: 'left'
+                                }}
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setOpenLeadMenuId(null);
+                                    setSelectedLead(lead);
+                                  }}
+                                  style={{
+                                    width: '100%',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '8px',
+                                    padding: '7px 10px',
+                                    background: 'transparent',
+                                    border: 'none',
+                                    color: '#e5e7eb',
+                                    fontSize: '0.8rem',
+                                    borderRadius: '6px',
+                                    cursor: 'pointer',
+                                    textAlign: 'left'
+                                  }}
+                                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
+                                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                                >
+                                  <Eye size={14} color="#60a5fa" />
+                                  <span>Ver detalhes</span>
+                                </button>
+
+                                {canEditLeads && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setOpenLeadMenuId(null);
+                                      handleOpenEdit(lead);
+                                    }}
+                                    style={{
+                                      width: '100%',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '8px',
+                                      padding: '7px 10px',
+                                      background: 'transparent',
+                                      border: 'none',
+                                      color: '#e5e7eb',
+                                      fontSize: '0.8rem',
+                                      borderRadius: '6px',
+                                      cursor: 'pointer',
+                                      textAlign: 'left'
+                                    }}
+                                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
+                                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                                  >
+                                    <Edit2 size={14} color="#fbbf24" />
+                                    <span>Editar</span>
+                                  </button>
+                                )}
+
+                                {canAssignLeads && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setOpenLeadMenuId(null);
+                                      handleOpenAssign(lead);
+                                    }}
+                                    style={{
+                                      width: '100%',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      gap: '8px',
+                                      padding: '7px 10px',
+                                      background: 'transparent',
+                                      border: 'none',
+                                      color: '#e5e7eb',
+                                      fontSize: '0.8rem',
+                                      borderRadius: '6px',
+                                      cursor: 'pointer',
+                                      textAlign: 'left'
+                                    }}
+                                    onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
+                                    onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                                  >
+                                    <UserCheck size={14} color="#a78bfa" />
+                                    <span>Atribuir responsável</span>
+                                  </button>
+                                )}
+
+                                {canDeleteLeads && (
+                                  <>
+                                    <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.06)', margin: '3px 0' }} />
+                                    <button
+                                      type="button"
+                                      onClick={() => {
+                                        setOpenLeadMenuId(null);
+                                        setLeadToDelete(lead);
+                                      }}
+                                      style={{
+                                        width: '100%',
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: '8px',
+                                        padding: '7px 10px',
+                                        background: 'transparent',
+                                        border: 'none',
+                                        color: '#f87171',
+                                        fontSize: '0.8rem',
+                                        borderRadius: '6px',
+                                        cursor: 'pointer',
+                                        textAlign: 'left'
+                                      }}
+                                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239, 68, 68, 0.12)')}
+                                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                                    >
+                                      <Trash2 size={14} color="#f87171" />
+                                      <span>Excluir</span>
+                                    </button>
+                                  </>
+                                )}
+                              </div>
+                            )}
+                          </div>
                         </div>
 
                         {/* Valor & Prioridade */}
@@ -1858,6 +2246,158 @@ export const KanbanView: React.FC = () => {
                 </button>
                 <button type="submit" className="btn btn-primary">
                   Criar Oportunidade
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Editar Oportunidade */}
+      {leadToEdit && (
+        <div className="modal-overlay" onClick={() => setLeadToEdit(null)}>
+          <div className="modal-content" style={{ maxWidth: '520px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Edit2 size={18} color="#fbbf24" />
+                <h2 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>
+                  Editar Oportunidade
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setLeadToEdit(null)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveEdit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                  Título da Oportunidade *
+                </label>
+                <input
+                  required
+                  className="input"
+                  value={editTitle}
+                  onChange={(e) => setEditTitle(e.target.value)}
+                  placeholder="Nome da oportunidade"
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                    Valor Estimado (R$)
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="input"
+                    value={editValue}
+                    onChange={(e) => setEditValue(e.target.value)}
+                    placeholder="0.00"
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                    Prioridade
+                  </label>
+                  <select
+                    className="select"
+                    value={editPriority}
+                    onChange={(e) => setEditPriority(e.target.value)}
+                  >
+                    <option value="BAIXA">Baixa</option>
+                    <option value="MEDIA">Média</option>
+                    <option value="ALTA">Alta</option>
+                    <option value="URGENTE">Urgente</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                  Estágio / Status do Funil
+                </label>
+                <select
+                  className="select"
+                  value={editStatusId}
+                  onChange={(e) => setEditStatusId(e.target.value ? Number(e.target.value) : '')}
+                >
+                  {statuses.map(s => (
+                    <option key={s.id} value={s.id}>
+                      {s.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+                <button type="button" onClick={() => setLeadToEdit(null)} className="btn btn-secondary">
+                  Cancelar
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Salvar Alterações
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Atribuir Responsável pelo Lead */}
+      {leadToAssign && (
+        <div className="modal-overlay" onClick={() => setLeadToAssign(null)}>
+          <div className="modal-content" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <UserCheck size={18} color="#a78bfa" />
+                <h2 style={{ fontSize: '1.2rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>
+                  Atribuir Responsável
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setLeadToAssign(null)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginBottom: '16px' }}>
+              Selecione o membro da equipe responsável por <strong>{leadToAssign.title}</strong>:
+            </p>
+
+            <form onSubmit={handleSaveAssign} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                  Membro Responsável
+                </label>
+                <select
+                  className="select"
+                  value={assignTargetUserId || ''}
+                  onChange={(e) => setAssignTargetUserId(e.target.value ? Number(e.target.value) : null)}
+                >
+                  <option value="">Não atribuído</option>
+                  {systemUsers.map(u => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} ({u.role || 'Usuário'}) — {u.email}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', marginTop: '10px' }}>
+                <button type="button" onClick={() => setLeadToAssign(null)} className="btn btn-secondary">
+                  Cancelar
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  Confirmar Atribuição
                 </button>
               </div>
             </form>

@@ -26,6 +26,7 @@ import {
 import { UserInfo, api } from '../services/api';
 import { accountManager, StoredAccount } from '../services/accountManager';
 import { getUserTheme } from '../utils/userColors';
+import { permissionsService } from '../services/permissionsService';
 
 export type ActiveTab =
   | 'dashboard'
@@ -152,6 +153,24 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const otherAccounts = savedAccounts.filter(
     (a) => a.user.email.toLowerCase() !== (activeUser?.email || '').toLowerCase()
   );
+
+  // Dynamic permissions listener
+  const [, setPermissionsTick] = useState(0);
+  useEffect(() => {
+    const handlePermChange = () => setPermissionsTick(t => t + 1);
+    window.addEventListener('lumeo_permissions_changed', handlePermChange);
+    return () => window.removeEventListener('lumeo_permissions_changed', handlePermChange);
+  }, []);
+
+  const userCurrentRole = activeUser?.role || userRole || 'VENDEDOR';
+  const isAdmin = userCurrentRole.toUpperCase() === 'ADMIN';
+
+  const canSeeLeads = permissionsService.hasPermission(userCurrentRole, 'can_view_leads') || permissionsService.hasPermission(userCurrentRole, 'can_view_campaigns');
+  const canSeeAnalytics = permissionsService.hasPermission(userCurrentRole, 'can_view_analytics');
+  const canSeeAgenda = permissionsService.hasPermission(userCurrentRole, 'can_view_agenda');
+  const canSeeSites = permissionsService.hasPermission(userCurrentRole, 'can_view_sites');
+  const canSeeTemplates = permissionsService.hasPermission(userCurrentRole, 'can_view_templates');
+  const canSeeCompanies = permissionsService.hasPermission(userCurrentRole, 'can_view_companies');
 
   const handleSwitchAccount = (email: string) => {
     const switched = accountManager.switchAccount(email);
@@ -382,124 +401,146 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </button>
 
         {/* Campaigns */}
-        <button
-          onClick={() => setActiveTab('kanban')}
-          style={getNavItemStyle(activeTab === 'kanban', isCollapsed)}
-          title="Campaigns"
-        >
-          <Flag size={16} color={activeTab === 'kanban' ? '#ffffff' : '#8c93a0'} />
-          {!isCollapsed && <span>Campaigns</span>}
-        </button>
+        {canSeeLeads && (
+          <button
+            onClick={() => setActiveTab('kanban')}
+            style={getNavItemStyle(activeTab === 'kanban', isCollapsed)}
+            title="Campaigns"
+          >
+            <Flag size={16} color={activeTab === 'kanban' ? '#ffffff' : '#8c93a0'} />
+            {!isCollapsed && <span>Campaigns</span>}
+          </button>
+        )}
 
         {/* Analytics */}
-        <button
-          onClick={() => setActiveTab('scanner')}
-          style={getNavItemStyle(activeTab === 'scanner', isCollapsed)}
-          title="Analytics"
-        >
-          <BarChart2 size={16} color={activeTab === 'scanner' ? '#ffffff' : '#8c93a0'} />
-          {!isCollapsed && <span>Analytics</span>}
-        </button>
+        {canSeeAnalytics && (
+          <button
+            onClick={() => setActiveTab('scanner')}
+            style={getNavItemStyle(activeTab === 'scanner', isCollapsed)}
+            title="Analytics"
+          >
+            <BarChart2 size={16} color={activeTab === 'scanner' ? '#ffffff' : '#8c93a0'} />
+            {!isCollapsed && <span>Analytics</span>}
+          </button>
+        )}
 
         {/* GRUPO 2: CONTEÚDO */}
-        {!isCollapsed ? (
-          <div style={{
-            fontSize: '0.68rem',
-            fontWeight: '700',
-            letterSpacing: '0.07em',
-            textTransform: 'uppercase',
-            color: '#525866',
-            padding: '16px 10px 6px 10px',
-            userSelect: 'none'
-          }}>
-            Conteúdo
-          </div>
-        ) : (
-          <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.05)', margin: '10px 4px 6px' }} />
+        {(canSeeAgenda || canSeeSites || canSeeTemplates) && (
+          <>
+            {!isCollapsed ? (
+              <div style={{
+                fontSize: '0.68rem',
+                fontWeight: '700',
+                letterSpacing: '0.07em',
+                textTransform: 'uppercase',
+                color: '#525866',
+                padding: '16px 10px 6px 10px',
+                userSelect: 'none'
+              }}>
+                Conteúdo
+              </div>
+            ) : (
+              <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.05)', margin: '10px 4px 6px' }} />
+            )}
+
+            {/* Content Calendar */}
+            {canSeeAgenda && (
+              <button
+                onClick={() => setActiveTab('agenda')}
+                style={getNavItemStyle(activeTab === 'agenda', isCollapsed)}
+                title="Content Calendar"
+              >
+                <Calendar size={16} color={activeTab === 'agenda' ? '#ffffff' : '#8c93a0'} />
+                {!isCollapsed && <span>Content Calendar</span>}
+              </button>
+            )}
+
+            {/* Sites */}
+            {canSeeSites && (
+              <button
+                onClick={() => setActiveTab('sites')}
+                style={getNavItemStyle(activeTab === 'sites', isCollapsed)}
+                title="Sites"
+              >
+                <Globe size={16} color={activeTab === 'sites' ? '#ffffff' : '#8c93a0'} />
+                {!isCollapsed && <span>Sites</span>}
+              </button>
+            )}
+
+            {/* Templates */}
+            {canSeeTemplates && (
+              <button
+                onClick={() => setActiveTab('templates')}
+                style={getNavItemStyle(activeTab === 'templates', isCollapsed)}
+                title="Templates"
+              >
+                <Mail size={16} color={activeTab === 'templates' ? '#ffffff' : '#8c93a0'} />
+                {!isCollapsed && <span>Templates</span>}
+              </button>
+            )}
+          </>
         )}
-
-        {/* Content Calendar */}
-        <button
-          onClick={() => setActiveTab('agenda')}
-          style={getNavItemStyle(activeTab === 'agenda', isCollapsed)}
-          title="Content Calendar"
-        >
-          <Calendar size={16} color={activeTab === 'agenda' ? '#ffffff' : '#8c93a0'} />
-          {!isCollapsed && <span>Content Calendar</span>}
-        </button>
-
-        {/* Sites */}
-        <button
-          onClick={() => setActiveTab('sites')}
-          style={getNavItemStyle(activeTab === 'sites', isCollapsed)}
-          title="Sites"
-        >
-          <Globe size={16} color={activeTab === 'sites' ? '#ffffff' : '#8c93a0'} />
-          {!isCollapsed && <span>Sites</span>}
-        </button>
-
-        {/* Templates */}
-        <button
-          onClick={() => setActiveTab('templates')}
-          style={getNavItemStyle(activeTab === 'templates', isCollapsed)}
-          title="Templates"
-        >
-          <Mail size={16} color={activeTab === 'templates' ? '#ffffff' : '#8c93a0'} />
-          {!isCollapsed && <span>Templates</span>}
-        </button>
 
         {/* GRUPO 3: GESTÃO */}
-        {!isCollapsed ? (
-          <div style={{
-            fontSize: '0.68rem',
-            fontWeight: '700',
-            letterSpacing: '0.07em',
-            textTransform: 'uppercase',
-            color: '#525866',
-            padding: '16px 10px 6px 10px',
-            userSelect: 'none'
-          }}>
-            Gestão
-          </div>
-        ) : (
-          <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.05)', margin: '10px 4px 6px' }} />
+        {(isAdmin || canSeeCompanies) && (
+          <>
+            {!isCollapsed ? (
+              <div style={{
+                fontSize: '0.68rem',
+                fontWeight: '700',
+                letterSpacing: '0.07em',
+                textTransform: 'uppercase',
+                color: '#525866',
+                padding: '16px 10px 6px 10px',
+                userSelect: 'none'
+              }}>
+                Gestão
+              </div>
+            ) : (
+              <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.05)', margin: '10px 4px 6px' }} />
+            )}
+
+            {/* Team - Visível EXCLUSIVAMENTE para Admin */}
+            {isAdmin && (
+              <button
+                onClick={() => setActiveTab('users')}
+                style={getNavItemStyle(activeTab === 'users', isCollapsed)}
+                title="Team"
+              >
+                <Users size={16} color={activeTab === 'users' ? '#ffffff' : '#8c93a0'} />
+                {!isCollapsed && (
+                  <>
+                    <span style={{ flex: 1 }}>Team</span>
+                    {Boolean(pendingUsersCount && pendingUsersCount > 0) && (
+                      <span style={{
+                        background: '#ef4444',
+                        color: '#ffffff',
+                        fontSize: '0.7rem',
+                        fontWeight: '700',
+                        padding: '2px 6px',
+                        borderRadius: '10px'
+                      }}>
+                        {pendingUsersCount}
+                      </span>
+                    )}
+                  </>
+                )}
+              </button>
+            )}
+
+            {/* Integrations */}
+            {canSeeCompanies && (
+              <button
+                onClick={() => setActiveTab('companies')}
+                style={getNavItemStyle(activeTab === 'companies', isCollapsed)}
+                title="Integrations"
+              >
+                <Share2 size={16} color={activeTab === 'companies' ? '#ffffff' : '#8c93a0'} />
+                {!isCollapsed && <span>Integrations</span>}
+              </button>
+            )}
+          </>
         )}
-
-        {/* Team */}
-        <button
-          onClick={() => setActiveTab('users')}
-          style={getNavItemStyle(activeTab === 'users', isCollapsed)}
-          title="Team"
-        >
-          <Users size={16} color={activeTab === 'users' ? '#ffffff' : '#8c93a0'} />
-          {!isCollapsed && (
-            <>
-              <span style={{ flex: 1 }}>Team</span>
-              {Boolean(pendingUsersCount && pendingUsersCount > 0) && (
-                <span style={{
-                  background: '#ef4444',
-                  color: '#ffffff',
-                  fontSize: '0.7rem',
-                  fontWeight: '700',
-                  padding: '2px 6px',
-                  borderRadius: '10px'
-                }}>
-                  {pendingUsersCount}
-                </span>
-              )}
-            </>
-          )}
-        </button>
-
-        {/* Integrations */}
-        <button
-          onClick={() => setActiveTab('companies')}
-          style={getNavItemStyle(activeTab === 'companies', isCollapsed)}
-          title="Integrations"
-        >
-          <Share2 size={16} color={activeTab === 'companies' ? '#ffffff' : '#8c93a0'} />
-          {!isCollapsed && <span>Integrations</span>}
-        </button>
       </div>
 
       {/* PAINEL DE CONTROLE DE HORÁRIO: CAPTURA AUTOMÁTICA DE LEADS (LIMPO E DISCRETO) */}
