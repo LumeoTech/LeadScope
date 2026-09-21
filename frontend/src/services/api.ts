@@ -411,7 +411,12 @@ export interface AuditLog {
 }
 
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
-  const token = localStorage.getItem('token');
+  const token =
+    localStorage.getItem('token') ||
+    sessionStorage.getItem('token') ||
+    localStorage.getItem('crm_auth_token') ||
+    sessionStorage.getItem('crm_auth_token');
+
   const headers: HeadersInit = {
     'Content-Type': 'application/json',
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -442,7 +447,13 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   if (response.status === 401 && !endpoint.startsWith('/auth')) {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
-    window.location.reload();
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
+    localStorage.removeItem('crm_auth_token');
+    localStorage.removeItem('crm_user_info');
+    sessionStorage.removeItem('crm_auth_token');
+    sessionStorage.removeItem('crm_user_info');
+    window.dispatchEvent(new CustomEvent('leadscope_auth_expired'));
     throw new Error('Sessão expirada. Faça login novamente.');
   }
 

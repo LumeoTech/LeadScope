@@ -204,13 +204,21 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       const token = response.accessToken || (response as any).token;
 
       if (rememberMe) {
+        localStorage.setItem('token', token);
+        localStorage.setItem('user', JSON.stringify(response.user));
         localStorage.setItem('crm_auth_token', token);
         localStorage.setItem('crm_user_info', JSON.stringify(response.user));
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
         sessionStorage.removeItem('crm_auth_token');
         sessionStorage.removeItem('crm_user_info');
       } else {
+        sessionStorage.setItem('token', token);
+        sessionStorage.setItem('user', JSON.stringify(response.user));
         sessionStorage.setItem('crm_auth_token', token);
         sessionStorage.setItem('crm_user_info', JSON.stringify(response.user));
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
         localStorage.removeItem('crm_auth_token');
         localStorage.removeItem('crm_user_info');
       }

@@ -91,8 +91,17 @@ export const App: React.FC = () => {
       }
     }
 
-    const savedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
-    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
+    const savedUser =
+      localStorage.getItem('user') ||
+      sessionStorage.getItem('user') ||
+      localStorage.getItem('crm_user_info') ||
+      sessionStorage.getItem('crm_user_info');
+    const token =
+      localStorage.getItem('token') ||
+      sessionStorage.getItem('token') ||
+      localStorage.getItem('crm_auth_token') ||
+      sessionStorage.getItem('crm_auth_token');
+
     if (savedUser && token) {
       try {
         const parsed = JSON.parse(savedUser);
@@ -105,11 +114,21 @@ export const App: React.FC = () => {
       }
     }
     setInitializing(false);
+
+    const handleAuthExpired = () => {
+      setUser(null);
+    };
+    window.addEventListener('leadscope_auth_expired', handleAuthExpired);
+    return () => window.removeEventListener('leadscope_auth_expired', handleAuthExpired);
   }, []);
 
   // Synchronize current active session in accountManager
   useEffect(() => {
-    const token = localStorage.getItem('token');
+    const token =
+      localStorage.getItem('token') ||
+      sessionStorage.getItem('token') ||
+      localStorage.getItem('crm_auth_token') ||
+      sessionStorage.getItem('crm_auth_token');
     if (user && token) {
       accountManager.saveCurrentSession(token, user, 'Efferd LLC');
     }
