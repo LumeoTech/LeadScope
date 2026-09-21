@@ -301,44 +301,29 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
 
   return (
     <div style={{
+      height: '100vh',
       minHeight: '100vh',
       width: '100vw',
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '16px', // Margem fina ao redor do card
-      background: '#ebe9e1', // Cinza claro suave idêntico à referência Kravio
+      display: 'grid',
+      gridTemplateColumns: '1fr 1fr', // 50% / 50% ocupando a tela inteira de ponta a ponta
+      margin: 0,
+      padding: 0,
+      background: '#ffffff',
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+      overflow: 'hidden',
       boxSizing: 'border-box'
     }}>
-      {/* CARD PRINCIPAL EXPANSIVO (ALTURA MÍNIMA 90VH E LARGURA MÍNIMA 85VW) */}
+      {/* ==================== COLUNA ESQUERDA: FORMULÁRIO (50% DA TELA) ==================== */}
       <div style={{
-        width: 'calc(100vw - 32px)',
-        minWidth: '85vw',
-        maxWidth: '1680px',
-        height: 'calc(100vh - 32px)',
-        minHeight: '90vh',
+        height: '100vh',
+        padding: '44px 72px 32px 72px',
+        display: 'flex',
+        flexDirection: 'column',
+        justifyContent: 'space-between',
         background: '#ffffff',
-        borderRadius: '28px',
-        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.06)',
-        border: '1px solid rgba(0, 0, 0, 0.04)',
-        display: 'grid',
-        gridTemplateColumns: '1fr 1fr', // 50% / 50% exatos
-        alignItems: 'stretch',
-        overflow: 'hidden'
+        boxSizing: 'border-box',
+        overflowY: 'auto'
       }}>
-
-        {/* ==================== COLUNA ESQUERDA: FORMULÁRIO (50%) ==================== */}
-        <div style={{
-          height: '100%',
-          padding: '40px 60px 32px 60px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          background: '#ffffff',
-          boxSizing: 'border-box',
-          overflowY: 'auto'
-        }}>
           {/* TOPO: LOGO LEADSCOPE À ESQUERDA E SELETOR DE IDIOMA À DIREITA */}
           <div style={{
             display: 'flex',
@@ -802,16 +787,17 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
           </div>
         </div>
 
-        {/* ==================== COLUNA DIREITA: PRÉVIA DO SISTEMA (50%) ==================== */}
+        {/* ==================== COLUNA DIREITA: PRÉVIA DO SISTEMA (50% DA TELA) ==================== */}
         <div style={{
-          height: '100%',
-          background: '#f6f7f9',
-          borderLeft: '1px solid #f1f5f9',
-          padding: '36px 44px',
+          height: '100vh',
+          background: '#f7f8fa',
+          borderLeft: '1px solid #eef0f3',
+          padding: '40px 52px 32px 52px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          overflowY: 'auto'
         }}>
           {/* PRÉVIA DO DASHBOARD DO LEADSCOPE (PREENCHE A MAIOR PARTE DA COLUNA) */}
           <div style={{
@@ -1184,7 +1170,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
         </div>
-      </div>
 
       {/* ==================== MODAL DE RECUPERAÇÃO DE SENHA (SUPABASE AUTH) ==================== */}
       {showForgotModal && (
