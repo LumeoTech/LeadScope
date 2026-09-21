@@ -1,3 +1,4 @@
+// Cliente HTTP centralizado e integração com a API REST do CRM LeadScope
 const rawApiUrl = import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL) : '';
 const urlMatch = rawApiUrl.match(/https?:\/\/[a-zA-Z0-9.-]+(:\d+)?/);
 const BASE_URL = urlMatch ? `${urlMatch[0]}/api` : '/api';
@@ -151,10 +152,14 @@ export interface UserSettingsDto {
 export interface Site {
   id: number;
   name: string;
+  clientName?: string;
   url: string;
-  slug: string;
+  thumbnail?: string;
+  deliveryDate?: string;
+  status?: 'Online' | 'Em desenvolvimento' | 'Em manutenção';
+  slug?: string;
   webhookUrl?: string;
-  active: boolean;
+  active?: boolean;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -776,21 +781,33 @@ export const api = {
       const initialSites: Site[] = [
         {
           id: 1,
-          name: 'LeadScope Landing Page Principal',
-          url: 'https://leadscope.app',
-          slug: 'leadscope-main',
-          webhookUrl: '/api/webhooks/sites/leadscope-main',
-          active: true,
-          createdAt: '2026-09-20T10:00:00Z',
+          name: 'Portal Dra. Camila Silveira Odontologia',
+          clientName: 'Dra. Camila Silveira',
+          url: 'https://dracamilasilveira.com.br',
+          thumbnail: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=600&auto=format&fit=crop&q=80',
+          deliveryDate: '2026-08-15',
+          status: 'Online',
+          createdAt: '2026-08-15T10:00:00Z',
         },
         {
           id: 2,
-          name: 'Portal Corporativo B2B',
-          url: 'https://lumeotech.com',
-          slug: 'portal-corp',
-          webhookUrl: '/api/webhooks/sites/portal-corp',
-          active: true,
-          createdAt: '2026-09-20T10:00:00Z',
+          name: 'Advocacia & Consultoria Jurídica Rocha',
+          clientName: 'Dr. Roberto Rocha',
+          url: 'https://rochajuridico.adv.br',
+          thumbnail: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&auto=format&fit=crop&q=80',
+          deliveryDate: '2026-09-02',
+          status: 'Online',
+          createdAt: '2026-09-02T10:00:00Z',
+        },
+        {
+          id: 3,
+          name: 'Studio Arquitetura & Interiores Forma',
+          clientName: 'Mariana Duarte Arquitetura',
+          url: 'https://formaarquitetura.com.br',
+          thumbnail: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&auto=format&fit=crop&q=80',
+          deliveryDate: '2026-09-18',
+          status: 'Em desenvolvimento',
+          createdAt: '2026-09-18T10:00:00Z',
         }
       ];
       localStorage.setItem('lumeo_cached_sites', JSON.stringify(initialSites));
@@ -809,10 +826,12 @@ export const api = {
       const siteItem: Site = created || {
         id: Date.now(),
         name: data.name || 'Novo Site',
+        clientName: data.clientName || 'Cliente',
         url: data.url || '',
-        slug: data.slug || `site-${Date.now()}`,
-        webhookUrl: `/api/webhooks/sites/${data.slug || Date.now()}`,
-        active: data.active ?? true,
+        thumbnail: data.thumbnail || '',
+        deliveryDate: data.deliveryDate || new Date().toISOString().split('T')[0],
+        status: data.status || 'Online',
+        active: true,
         createdAt: new Date().toISOString()
       };
       const updated = [siteItem, ...current.filter(s => s.id !== siteItem.id)];

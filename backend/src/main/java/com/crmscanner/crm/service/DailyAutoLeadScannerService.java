@@ -28,6 +28,7 @@ import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+// Serviço responsável pela prospecção diária de leads e cálculo de métricas de aceitação
 @Service
 @RequiredArgsConstructor
 @Slf4j

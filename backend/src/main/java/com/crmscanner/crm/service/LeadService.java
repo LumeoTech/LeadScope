@@ -26,6 +26,7 @@ import com.crmscanner.crm.dto.TransferLeadRequest;
 import com.crmscanner.crm.dto.SendLeadRequest;
 import com.crmscanner.notification.service.NotificationService;
 
+// Serviço central para gerenciamento do ciclo de vida, kanban e enriquecimento de leads
 @Service
 @RequiredArgsConstructor
 public class LeadService {

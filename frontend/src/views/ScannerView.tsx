@@ -757,42 +757,50 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
             </button>
           </form>
 
-          {/* Container do Mapa Leaflet com OpenStreetMap */}
-          <div
-            ref={mapContainerRef}
-            style={{
-              height: '380px',
-              minHeight: '380px',
-              width: '100%',
-              borderRadius: '10px',
-              overflow: 'hidden',
-              border: '1px solid #334155',
-              background: '#0f172a',
-              boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.5)',
-              position: 'relative',
-              zIndex: 1
-            }}
-          />
+          {/* Container do Mapa Leaflet com OpenStreetMap e Badge de Raio */}
+          <div style={{ position: 'relative', width: '100%', borderRadius: '10px', overflow: 'hidden' }}>
+            <div
+              ref={mapContainerRef}
+              style={{
+                height: '380px',
+                minHeight: '380px',
+                width: '100%',
+                borderRadius: '10px',
+                overflow: 'hidden',
+                border: '1px solid #334155',
+                background: '#0f172a',
+                boxShadow: 'inset 0 2px 8px rgba(0,0,0,0.5)',
+                position: 'relative',
+                zIndex: 1
+              }}
+            />
 
-          {selectedCoords && (
-            <div style={{
-              marginTop: '12px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              padding: '10px 16px',
-              background: '#1e293b',
-              border: '1px solid #334155',
-              borderRadius: '8px',
-              fontSize: '12px'
-            }}>
-              <span style={{ color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2563eb', display: 'inline-block' }}></span>
-                <strong>Raio de Captura:</strong> 3.000m ao redor do ponto ({selectedCoords.lat.toFixed(4)}, {selectedCoords.lng.toFixed(4)})
-              </span>
-              <span style={{ color: '#94a3b8' }}>Clique no mapa para alterar o ponto</span>
-            </div>
-          )}
+            {selectedCoords && (
+              <div style={{
+                position: 'absolute',
+                bottom: '12px',
+                left: '12px',
+                right: '12px',
+                zIndex: 400,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '8px 14px',
+                background: 'rgba(15, 23, 42, 0.92)',
+                backdropFilter: 'blur(8px)',
+                border: '1px solid rgba(59, 130, 246, 0.4)',
+                borderRadius: '8px',
+                fontSize: '12px',
+                boxShadow: '0 4px 16px rgba(0,0,0,0.5)'
+              }}>
+                <span style={{ color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6', display: 'inline-block' }}></span>
+                  <strong>Raio de Captura:</strong> 3.000m ao redor do ponto ({selectedCoords.lat.toFixed(4)}, {selectedCoords.lng.toFixed(4)})
+                </span>
+                <span style={{ color: '#94a3b8', fontSize: '11px' }}>Clique no mapa para alterar o ponto</span>
+              </div>
+            )}
+          </div>
         </section>
 
         {/* ———————————————————————————————————————————————————— */}
@@ -868,7 +876,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
           )}
 
           <div style={{ position: 'relative', marginBottom: '20px' }}>
-            <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)' }} />
+            <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '14px', top: '50%', transform: 'translateY(-50%)', pointerEvents: 'none' }} />
             <input
               type="text"
               value={nicheSearch}
@@ -883,7 +891,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                 color: 'var(--text-primary)',
                 fontSize: '13px',
                 outline: 'none',
-                transition: 'border-color 0.2s'
+                transition: 'border-color 0.2s',
+                boxSizing: 'border-box'
               }}
             />
           </div>

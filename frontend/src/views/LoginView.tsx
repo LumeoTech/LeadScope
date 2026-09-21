@@ -396,7 +396,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
 
                 {mode === 'LOGIN' && (
                   <span
-                    onClick={() => alert('Para redefinir sua senha, solicite ao Administrador do CRM LeadScope.')}
+                    onClick={() => {
+                      setError(null);
+                      setSuccessMsg('Para redefinir sua senha, solicite ao Administrador do CRM LeadScope.');
+                    }}
                     style={{
                       color: isDark ? '#93c5fd' : '#2563eb',
                       cursor: 'pointer',
@@ -489,7 +492,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
           }}>
             <span>© 2026 LeadScope</span>
             <span
-              onClick={() => alert('Suporte técnico LeadScope: suporte@leadscope.com')}
+              onClick={() => {
+                setError(null);
+                setSuccessMsg('Central de Suporte: suporte@leadscope.com');
+              }}
               style={{ cursor: 'pointer', color: isDark ? '#8b949e' : '#64748b' }}
             >
               Need help? Contact Support
@@ -570,7 +576,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   86%
                 </div>
                 <div style={{ fontSize: '0.66rem', color: '#10b981', fontWeight: '600', marginTop: '2px' }}>
-                  +14% precisão IA
+                  +14% assertividade
                 </div>
               </div>
             </div>

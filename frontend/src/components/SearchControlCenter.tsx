@@ -172,7 +172,7 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '1280px', margin: '0 auto' }}>
-      
+
       {/* HEADER DA SEÇÃO ANALYTICS */}
       <div style={{
         display: 'flex',
@@ -392,7 +392,7 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
 
         {/* Grid de 4 Controles Funcionais */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', marginBottom: '24px' }}>
-          
+
           {/* 1. Toggle Ativar / Pausar Busca */}
           <div style={{
             padding: '18px',
@@ -859,7 +859,7 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
 
         {/* 4 Cards de Métricas Reais do Banco */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '28px' }}>
-          
+
           {/* Média de Score */}
           <div style={{
             padding: '18px',
@@ -875,21 +875,11 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
             </span>
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
               <span style={{ fontSize: '2rem', fontWeight: '800', color: '#ffffff' }}>
-                {analytics?.averageScore || 84.8}%
-              </span>
-              <span style={{
-                fontSize: '0.72rem',
-                color: '#34d399',
-                fontWeight: '600',
-                background: 'rgba(16, 185, 129, 0.12)',
-                padding: '2px 6px',
-                borderRadius: '4px'
-              }}>
-                +4.2% esta semana
+                {analytics?.averageScore !== undefined && analytics.averageScore > 0 ? analytics.averageScore : 0}%
               </span>
             </div>
             <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
-              Média hoje: <strong style={{ color: '#94a3b8' }}>{analytics?.todayAvgScore || 88}%</strong> ({analytics?.todayLeadsCount || 0} leads capturados hoje)
+              Média hoje: <strong style={{ color: '#94a3b8' }}>{analytics?.todayAvgScore !== undefined && analytics.todayAvgScore > 0 ? analytics.todayAvgScore : 0}%</strong> ({analytics?.todayLeadsCount || 0} leads capturados hoje)
             </span>
           </div>
 
@@ -957,7 +947,7 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
             <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
               {(() => {
                 const total = (analytics?.totalAccepted || 0) + (analytics?.discardedCount || settings.discardedLeadsCount || 0);
-                const rate = total > 0 ? Math.round(((analytics?.totalAccepted || 0) / total) * 100) : 72;
+                const rate = total > 0 ? Math.round(((analytics?.totalAccepted || 0) / total) * 100) : 0;
                 return (
                   <span style={{ fontSize: '2rem', fontWeight: '800', color: '#ffffff' }}>
                     {rate}%
@@ -974,7 +964,7 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
 
         {/* Grade de 2 Colunas: Distribuição por Faixa & Ranking de Regiões */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(420px, 1fr))', gap: '24px' }}>
-          
+
           {/* 1. DISTRIBUIÇÃO POR FAIXA DE SCORE */}
           <div style={{
             padding: '20px',
@@ -993,13 +983,13 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               {(() => {
                 const dist = analytics?.scoreDistribution || {
-                  '< 50%': 4,
-                  '50% - 69%': 12,
-                  '70% - 84%': 24,
-                  '85% - 100%': 38
+                  '< 50%': 0,
+                  '50% - 69%': 0,
+                  '70% - 84%': 0,
+                  '85% - 100%': 0
                 };
 
-                const totalDist = Object.values(dist).reduce((a, b) => a + Number(b), 0) || 1;
+                const totalDist = Object.values(dist).reduce((a, b) => a + Number(b), 0);
 
                 const tiers = [
                   { label: '85% - 100%', name: 'Altíssima Conversão (Lead Quente)', count: dist['85% - 100%'] || 0, color: '#2563eb' },
@@ -1009,7 +999,7 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
                 ];
 
                 return tiers.map(tier => {
-                  const pct = Math.round((tier.count / totalDist) * 100);
+                  const pct = totalDist > 0 ? Math.round((tier.count / totalDist) * 100) : 0;
                   return (
                     <div key={tier.label}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
@@ -1072,14 +1062,23 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
               {(() => {
                 const regions = analytics?.topRegions && analytics.topRegions.length > 0
                   ? analytics.topRegions
-                  : [
-                      { region: 'Jardins (São Paulo)', totalLeads: 18, avgScore: 92.4, socioEconomicTier: 'Alto Padrão' },
-                      { region: 'Itaim Bibi (São Paulo)', totalLeads: 24, avgScore: 89.6, socioEconomicTier: 'Alto Padrão' },
-                      { region: 'Vila Nova Conceição', totalLeads: 14, avgScore: 88.2, socioEconomicTier: 'Alto Padrão' },
-                      { region: 'Moema (São Paulo)', totalLeads: 21, avgScore: 84.5, socioEconomicTier: 'Médio Padrão' },
-                      { region: 'Pinheiros (São Paulo)', totalLeads: 16, avgScore: 83.1, socioEconomicTier: 'Médio Padrão' },
-                      { region: 'Brooklin (São Paulo)', totalLeads: 12, avgScore: 81.7, socioEconomicTier: 'Médio Padrão' }
-                    ];
+                  : [];
+
+                if (regions.length === 0) {
+                  return (
+                    <div style={{
+                      textAlign: 'center',
+                      padding: '36px 16px',
+                      color: '#94a3b8',
+                      fontSize: '0.82rem',
+                      background: 'rgba(255, 255, 255, 0.01)',
+                      border: '1px dashed var(--border-subtle)',
+                      borderRadius: '8px'
+                    }}>
+                      Nenhuma região capturada ainda. Inicie uma busca autônoma para analisar o ranking geográfico.
+                    </div>
+                  );
+                }
 
                 return regions.map((reg, idx) => (
                   <div

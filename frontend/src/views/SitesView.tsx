@@ -1,127 +1,102 @@
 import React, { useEffect, useState } from 'react';
-import { api, Site, SiteEmailTemplate } from '../services/api';
+import { api, Site } from '../services/api';
 import {
   Globe,
-  Mail,
   Plus,
   Trash2,
   Edit3,
-  Copy,
-  Check,
   ExternalLink,
-  Code2,
-  AlertCircle,
-  CheckCircle2,
-  Terminal,
-  Zap,
-  RefreshCw,
   Search,
-  ChevronRight,
-  Shield,
+  CheckCircle2,
+  AlertCircle,
+  Calendar,
+  User,
+  Clock,
+  Sparkles,
   Layers,
-  Send,
-  X
+  X,
+  Image as ImageIcon
 } from 'lucide-react';
 
-const DEFAULT_STARTER_SITES: Site[] = [
+const DEFAULT_PORTFOLIO_SITES: Site[] = [
   {
     id: 1,
-    name: 'LeadScope Landing Page Principal',
-    url: 'https://leadscope.app',
-    slug: 'leadscope-main',
-    webhookUrl: '/api/webhooks/sites/leadscope-main',
-    active: true,
-    createdAt: '2026-09-20T10:00:00Z',
+    name: 'Portal Dra. Camila Silveira Odontologia',
+    clientName: 'Dra. Camila Silveira',
+    url: 'https://dracamilasilveira.com.br',
+    thumbnail: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=600&auto=format&fit=crop&q=80',
+    deliveryDate: '2026-08-15',
+    status: 'Online',
+    createdAt: '2026-08-15T10:00:00Z',
   },
   {
     id: 2,
-    name: 'Portal Corporativo B2B',
-    url: 'https://lumeotech.com',
-    slug: 'portal-corp',
-    webhookUrl: '/api/webhooks/sites/portal-corp',
-    active: true,
-    createdAt: '2026-09-20T10:00:00Z',
+    name: 'Advocacia & Consultoria Jurídica Rocha',
+    clientName: 'Dr. Roberto Rocha',
+    url: 'https://rochajuridico.adv.br',
+    thumbnail: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&auto=format&fit=crop&q=80',
+    deliveryDate: '2026-09-02',
+    status: 'Online',
+    createdAt: '2026-09-02T10:00:00Z',
+  },
+  {
+    id: 3,
+    name: 'Studio Arquitetura & Interiores Forma',
+    clientName: 'Mariana Duarte Arquitetura',
+    url: 'https://formaarquitetura.com.br',
+    thumbnail: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&auto=format&fit=crop&q=80',
+    deliveryDate: '2026-09-18',
+    status: 'Em desenvolvimento',
+    createdAt: '2026-09-18T10:00:00Z',
   }
 ];
 
 export const SitesView: React.FC = () => {
-  // Inicialização com cache imediato para eliminar qualquer delay ou travamento
+  // Carregamento instantâneo via cache local
   const [sites, setSites] = useState<Site[]>(() => {
-    try {
-      const cached = localStorage.getItem('lumeo_cached_sites');
-      if (cached) return JSON.parse(cached);
-    } catch {}
-    return DEFAULT_STARTER_SITES;
-  });
-
-  const [selectedSite, setSelectedSite] = useState<Site | null>(() => {
     try {
       const cached = localStorage.getItem('lumeo_cached_sites');
       if (cached) {
         const parsed = JSON.parse(cached);
-        if (parsed.length > 0) return parsed[0];
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
       }
     } catch {}
-    return DEFAULT_STARTER_SITES[0];
+    return DEFAULT_PORTFOLIO_SITES;
   });
 
-  const [templates, setTemplates] = useState<SiteEmailTemplate[]>([]);
   const [loading, setLoading] = useState(false);
-  const [loadingTemplates, setLoadingTemplates] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeTab, setActiveTab] = useState<'OVERVIEW' | 'TEMPLATES' | 'TELEMETRY'>('OVERVIEW');
+  const [statusFilter, setStatusFilter] = useState<'TODOS' | 'Online' | 'Em desenvolvimento' | 'Em manutenção'>('TODOS');
 
-  // Modais Site
-  const [isSiteModalOpen, setIsSiteModalOpen] = useState(false);
+  // Modal de Cadastro / Edição
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingSite, setEditingSite] = useState<Site | null>(null);
-  const [siteForm, setSiteForm] = useState({ name: '', url: '', slug: '', webhookUrl: '', active: true });
-
-  // Modais Template
-  const [isTemplateModalOpen, setIsTemplateModalOpen] = useState(false);
-  const [editingTemplate, setEditingTemplate] = useState<SiteEmailTemplate | null>(null);
-  const [templateForm, setTemplateForm] = useState({
+  const [formData, setFormData] = useState({
     name: '',
-    triggerEvent: 'LEAD_CAPTURED',
-    subject: '',
-    bodyHtml: '',
-    active: true,
+    clientName: '',
+    url: '',
+    thumbnail: '',
+    status: 'Online' as 'Online' | 'Em desenvolvimento' | 'Em manutenção',
+    deliveryDate: new Date().toISOString().split('T')[0]
   });
 
-  const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
-  const [statusMessage, setStatusMessage] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
-  const [simulatingWebhook, setSimulatingWebhook] = useState(false);
+  // Modal de Exclusão
+  const [deleteConfirmSite, setDeleteConfirmSite] = useState<Site | null>(null);
+  const [feedback, setFeedback] = useState<{ text: string; type: 'success' | 'error' } | null>(null);
 
   const showFeedback = (text: string, type: 'success' | 'error' = 'success') => {
-    setStatusMessage({ text, type });
-    setTimeout(() => setStatusMessage(null), 4000);
+    setFeedback({ text, type });
+    setTimeout(() => setFeedback(null), 3500);
   };
 
   const loadSites = async () => {
-    setLoading(true);
     try {
       const data = await api.sites.list();
-      if (data && data.length > 0) {
+      if (Array.isArray(data)) {
         setSites(data);
-        if (!selectedSite || !data.some(s => s.id === selectedSite.id)) {
-          setSelectedSite(data[0]);
-        }
       }
-    } catch (e: any) {
-      // Mantém fallback ativo
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadTemplates = async (siteId: number) => {
-    setLoadingTemplates(true);
-    try {
-      const data = await api.sites.listTemplates(siteId);
-      setTemplates(data || []);
-    } catch (e: any) {
-      setTemplates([]);
-    } finally {
-      setLoadingTemplates(false);
+    } catch {
+      // Falha silenciosa; usa cache ativo
     }
   };
 
@@ -129,832 +104,825 @@ export const SitesView: React.FC = () => {
     loadSites();
   }, []);
 
-  useEffect(() => {
-    if (selectedSite) {
-      loadTemplates(selectedSite.id);
-    }
-  }, [selectedSite?.id]);
-
-  const handleOpenSiteModal = (site?: Site) => {
-    if (site) {
-      setEditingSite(site);
-      setSiteForm({
-        name: site.name,
-        url: site.url || '',
-        slug: site.slug,
-        webhookUrl: site.webhookUrl || '',
-        active: site.active,
-      });
-    } else {
-      setEditingSite(null);
-      setSiteForm({ name: '', url: '', slug: '', webhookUrl: '', active: true });
-    }
-    setIsSiteModalOpen(true);
+  const openCreateModal = () => {
+    setEditingSite(null);
+    setFormData({
+      name: '',
+      clientName: '',
+      url: '',
+      thumbnail: '',
+      status: 'Online',
+      deliveryDate: new Date().toISOString().split('T')[0]
+    });
+    setIsModalOpen(true);
   };
 
-  const handleSaveSite = async (e: React.FormEvent) => {
+  const openEditModal = (site: Site) => {
+    setEditingSite(site);
+    setFormData({
+      name: site.name || '',
+      clientName: site.clientName || '',
+      url: site.url || '',
+      thumbnail: site.thumbnail || '',
+      status: (site.status as any) || 'Online',
+      deliveryDate: site.deliveryDate || (site.createdAt ? site.createdAt.split('T')[0] : new Date().toISOString().split('T')[0])
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      const slugGenerated = siteForm.slug || siteForm.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
-      const sitePayload = {
-        ...siteForm,
-        slug: slugGenerated,
-        webhookUrl: `/api/webhooks/sites/${slugGenerated}`
-      };
+    if (!formData.name.trim()) {
+      showFeedback('Informe o nome do site.', 'error');
+      return;
+    }
+    if (!formData.clientName.trim()) {
+      showFeedback('Informe o nome do cliente.', 'error');
+      return;
+    }
+    if (!formData.url.trim()) {
+      showFeedback('Informe a URL do site.', 'error');
+      return;
+    }
 
+    let formattedUrl = formData.url.trim();
+    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+      formattedUrl = 'https://' + formattedUrl;
+    }
+
+    setLoading(true);
+    try {
       if (editingSite) {
-        const updated = await api.sites.update(editingSite.id, sitePayload);
-        setSites(prev => prev.map(s => s.id === editingSite.id ? updated : s));
-        if (selectedSite?.id === editingSite.id) setSelectedSite(updated);
-        showFeedback('Site atualizado com sucesso!');
+        const updated = await api.sites.update(editingSite.id, {
+          name: formData.name.trim(),
+          clientName: formData.clientName.trim(),
+          url: formattedUrl,
+          thumbnail: formData.thumbnail.trim(),
+          status: formData.status,
+          deliveryDate: formData.deliveryDate
+        });
+        setSites(prev => prev.map(s => s.id === editingSite.id ? { ...s, ...updated } : s));
+        showFeedback('Site atualizado com sucesso no portfólio!');
       } else {
-        const created = await api.sites.create(sitePayload);
-        setSites(prev => [created, ...prev]);
-        setSelectedSite(created);
-        showFeedback('Novo site conectado com sucesso!');
+        const created = await api.sites.create({
+          name: formData.name.trim(),
+          clientName: formData.clientName.trim(),
+          url: formattedUrl,
+          thumbnail: formData.thumbnail.trim(),
+          status: formData.status,
+          deliveryDate: formData.deliveryDate
+        });
+        setSites(prev => [created, ...prev.filter(s => s.id !== created.id)]);
+        showFeedback('Site cadastrado com sucesso no portfólio!');
       }
-      setIsSiteModalOpen(false);
-    } catch (e: any) {
-      showFeedback('Erro ao salvar site: ' + (e.message || 'Erro desconhecido'), 'error');
+      setIsModalOpen(false);
+    } catch (err: any) {
+      showFeedback(err.message || 'Erro ao salvar site.', 'error');
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleDeleteSite = async (id: number, name: string) => {
-    if (!window.confirm(`Deseja remover o site "${name}" e todos os seus webhooks?`)) return;
+  const handleDelete = async (id: number) => {
     try {
       await api.sites.delete(id);
-      const remaining = sites.filter(s => s.id !== id);
-      setSites(remaining);
-      if (selectedSite?.id === id) {
-        setSelectedSite(remaining.length > 0 ? remaining[0] : null);
-      }
-      showFeedback('Site excluído com sucesso!');
-    } catch (e: any) {
-      showFeedback('Erro ao excluir site: ' + (e.message || 'Erro'), 'error');
+      setSites(prev => prev.filter(s => s.id !== id));
+      setDeleteConfirmSite(null);
+      showFeedback('Site removido do portfólio.');
+    } catch (err: any) {
+      showFeedback(err.message || 'Erro ao excluir site.', 'error');
     }
   };
 
-  const handleToggleSiteActive = async (site: Site) => {
-    const updated = { ...site, active: !site.active };
+  const filteredSites = sites.filter(site => {
+    const matchesSearch =
+      (site.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (site.clientName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (site.url || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === 'TODOS' || (site.status || 'Online') === statusFilter;
+    return matchesSearch && matchesStatus;
+  });
+
+  const getStatusBadge = (status?: string) => {
+    switch (status) {
+      case 'Em desenvolvimento':
+        return {
+          bg: 'rgba(59, 130, 246, 0.15)',
+          border: 'rgba(59, 130, 246, 0.35)',
+          color: '#60a5fa',
+          label: 'Em desenvolvimento'
+        };
+      case 'Em manutenção':
+        return {
+          bg: 'rgba(245, 158, 11, 0.15)',
+          border: 'rgba(245, 158, 11, 0.35)',
+          color: '#fbbf24',
+          label: 'Em manutenção'
+        };
+      case 'Online':
+      default:
+        return {
+          bg: 'rgba(16, 185, 129, 0.15)',
+          border: 'rgba(16, 185, 129, 0.35)',
+          color: '#34d399',
+          label: 'Online'
+        };
+    }
+  };
+
+  const formatDate = (dateStr?: string) => {
+    if (!dateStr) return 'Não informada';
     try {
-      await api.sites.update(site.id, { active: updated.active });
-      setSites(prev => prev.map(s => s.id === site.id ? updated : s));
-      if (selectedSite?.id === site.id) setSelectedSite(updated);
-      showFeedback(updated.active ? 'Site ativado.' : 'Site pausado.');
-    } catch {
-      showFeedback('Erro ao atualizar status.', 'error');
-    }
+      const [year, month, day] = dateStr.split('T')[0].split('-');
+      if (year && month && day) return `${day}/${month}/${year}`;
+    } catch {}
+    return dateStr;
   };
-
-  const handleCopyWebhook = (url: string) => {
-    const fullUrl = url.startsWith('http') ? url : `${window.location.origin}${url}`;
-    navigator.clipboard.writeText(fullUrl);
-    setCopiedSlug(url);
-    setTimeout(() => setCopiedSlug(null), 2500);
-    showFeedback('URL do Webhook copiada!', 'success');
-  };
-
-  const handleSimulateWebhookTest = () => {
-    setSimulatingWebhook(true);
-    setTimeout(() => {
-      setSimulatingWebhook(false);
-      showFeedback('Lead de teste injetado via Webhook! Telemetria atualizada.', 'success');
-      setActiveTab('TELEMETRY');
-    }, 850);
-  };
-
-  const filteredSites = sites.filter(s =>
-    !searchQuery ||
-    s.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    (s.url && s.url.toLowerCase().includes(searchQuery.toLowerCase())) ||
-    s.slug.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
-  const activeSitesCount = sites.filter(s => s.active).length;
 
   return (
-    <div style={{ padding: '8px 16px', maxWidth: '1600px', margin: '0 auto', color: '#ffffff' }}>
-      {/* Top Header Myrmex AI Style */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '8px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div style={{
-            width: '28px',
-            height: '28px',
-            borderRadius: 'var(--radius-sm)',
-            background: 'rgba(59, 130, 246, 0.15)',
-            border: '1px solid rgba(59, 130, 246, 0.4)',
+    <div style={{
+      maxWidth: '1380px',
+      margin: '0 auto',
+      padding: '24px 20px',
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '24px'
+    }}>
+      {/* HEADER DA PÁGINA */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '16px',
+        paddingBottom: '20px',
+        borderBottom: '1px solid var(--border-subtle)'
+      }}>
+        <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '4px' }}>
+            <div style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '6px',
+              background: '#1e3a5f',
+              border: '1px solid #2e558a',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }}>
+              <Globe size={18} color="#ffffff" />
+            </div>
+            <h1 style={{ fontSize: '1.35rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
+              Portfólio de Sites de Clientes
+            </h1>
+          </div>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: 0 }}>
+            Catálogo completo dos sites desenvolvidos, clientes atendidos, datas de entrega e status online
+          </p>
+        </div>
+
+        <button
+          onClick={openCreateModal}
+          className="btn btn-primary"
+          style={{
+            padding: '8px 18px',
+            fontSize: '0.84rem',
+            fontWeight: '600',
             display: 'flex',
             alignItems: 'center',
-            justifyContent: 'center',
-            color: '#60a5fa'
-          }}>
-            <Globe size={16} />
-          </div>
-          <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h1 style={{ fontSize: '1.15rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>
-                Sites Conectados & Webhooks
-              </h1>
-              {/* Myrmex Style Status Chips */}
-              <span style={{
-                fontSize: '0.68rem',
-                fontWeight: '700',
-                padding: '2px 7px',
-                borderRadius: 'var(--radius-xs)',
-                background: 'rgba(16, 185, 129, 0.12)',
-                color: '#10b981',
-                border: '1px solid rgba(16, 185, 129, 0.25)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px'
-              }}>
-                <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981' }} />
-                {activeSitesCount}/{sites.length} ativos
-              </span>
-              <span style={{
-                fontSize: '0.68rem',
-                fontWeight: '600',
-                padding: '2px 7px',
-                borderRadius: 'var(--radius-xs)',
-                background: 'rgba(59, 130, 246, 0.12)',
-                color: '#60a5fa',
-                border: '1px solid rgba(59, 130, 246, 0.25)'
-              }}>
-                Captura Automática Ativa
-              </span>
-            </div>
-            <p style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', margin: 0 }}>
-              Endpoints de integração HTTP para ingestão instantânea de formulários no CRM
-            </p>
-          </div>
-        </div>
-
-        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <button
-            onClick={loadSites}
-            disabled={loading}
-            className="btn btn-secondary btn-sm"
-            style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 9px', fontSize: '0.76rem' }}
-            title="Recarregar sites"
-          >
-            <RefreshCw size={12} className={loading ? 'spin' : ''} />
-            <span>Atualizar</span>
-          </button>
-
-          <button
-            onClick={() => handleOpenSiteModal()}
-            className="btn btn-primary btn-sm"
-            style={{ display: 'flex', alignItems: 'center', gap: '4px', padding: '5px 10px', fontSize: '0.76rem' }}
-          >
-            <Plus size={13} />
-            <span>Conectar Novo Site</span>
-          </button>
-        </div>
+            gap: '8px'
+          }}
+        >
+          <Plus size={16} />
+          <span>Cadastrar Site</span>
+        </button>
       </div>
 
-      {/* Toast Feedback */}
-      {statusMessage && (
+      {/* FEEDBACK BANNER */}
+      {feedback && (
         <div style={{
-          padding: '7px 12px',
-          borderRadius: 'var(--radius-sm)',
-          marginBottom: '8px',
+          padding: '12px 16px',
+          borderRadius: '8px',
+          background: feedback.type === 'success' ? 'rgba(16, 185, 129, 0.12)' : 'rgba(239, 68, 68, 0.12)',
+          border: feedback.type === 'success' ? '1px solid rgba(16, 185, 129, 0.35)' : '1px solid rgba(239, 68, 68, 0.35)',
+          color: feedback.type === 'success' ? '#34d399' : '#f87171',
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
-          background: statusMessage.type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-          border: `1px solid ${statusMessage.type === 'success' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
-          color: statusMessage.type === 'success' ? '#10b981' : '#ef4444',
-          fontSize: '0.78rem',
+          gap: '10px',
+          fontSize: '0.85rem',
           fontWeight: '500'
         }}>
-          {statusMessage.type === 'success' ? <CheckCircle2 size={14} /> : <AlertCircle size={14} />}
-          <span>{statusMessage.text}</span>
+          {feedback.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+          <span>{feedback.text}</span>
         </div>
       )}
 
-      {/* Main 2-Column Split Workspace (Myrmex AI Inspired) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'minmax(280px, 360px) 1fr', gap: '10px', height: 'calc(100vh - 128px)', overflow: 'hidden' }}>
-        {/* Left Pane: Sites Navigator */}
-        <div className="card" style={{ padding: '10px', display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', paddingBottom: '4px', borderBottom: '1px solid rgba(255, 255, 255, 0.05)' }}>
-            <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              Sites Cadastrados ({filteredSites.length})
-            </span>
-            <div style={{ position: 'relative', width: '130px' }}>
-              <Search size={11} color="#64748b" style={{ position: 'absolute', left: '6px', top: '7px' }} />
-              <input
-                type="text"
-                placeholder="Filtrar..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="input"
-                style={{ width: '100%', padding: '3px 6px 3px 20px', fontSize: '0.72rem', borderRadius: 'var(--radius-xs)' }}
-              />
-            </div>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-            {filteredSites.length === 0 ? (
-              <div style={{ padding: '30px 10px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.78rem' }}>
-                Nenhum site cadastrado.
-              </div>
-            ) : (
-              filteredSites.map(s => {
-                const isSelected = selectedSite?.id === s.id;
-
-                return (
-                  <div
-                    key={s.id}
-                    onClick={() => setSelectedSite(s)}
-                    style={{
-                      padding: '8px 10px',
-                      borderRadius: 'var(--radius-sm)',
-                      background: isSelected ? 'rgba(59, 130, 246, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-                      border: `1px solid ${isSelected ? 'rgba(59, 130, 246, 0.35)' : 'rgba(255, 255, 255, 0.05)'}`,
-                      cursor: 'pointer',
-                      transition: 'all 0.12s ease'
-                    }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span style={{
-                          width: '6px',
-                          height: '6px',
-                          borderRadius: '50%',
-                          background: s.active ? '#10b981' : '#64748b',
-                          boxShadow: s.active ? '0 0 5px #10b981' : 'none'
-                        }} />
-                        <span style={{ fontWeight: '700', fontSize: '0.82rem', color: isSelected ? '#ffffff' : 'var(--text-primary)' }}>
-                          {s.name}
-                        </span>
-                      </div>
-
-                      {/* Status switch */}
-                      <div
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleToggleSiteActive(s);
-                        }}
-                        title={s.active ? 'Pausar site' : 'Ativar site'}
-                        style={{
-                          width: '26px',
-                          height: '14px',
-                          borderRadius: 'var(--radius-xs)',
-                          background: s.active ? '#10b981' : '#374151',
-                          position: 'relative',
-                          cursor: 'pointer',
-                          flexShrink: 0
-                        }}
-                      >
-                        <div style={{
-                          width: '10px',
-                          height: '10px',
-                          borderRadius: 'var(--radius-xs)',
-                          background: '#ffffff',
-                          position: 'absolute',
-                          top: '2px',
-                          left: s.active ? '14px' : '2px',
-                          transition: 'left 0.15s ease'
-                        }} />
-                      </div>
-                    </div>
-
-                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginBottom: '4px' }}>
-                      {s.url || 'URL não vinculada'}
-                    </div>
-
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: '4px', borderTop: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                      <span style={{
-                        fontSize: '0.62rem',
-                        fontWeight: '600',
-                        color: '#60a5fa',
-                        fontFamily: 'monospace'
-                      }}>
-                        /{s.slug}
-                      </span>
-
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleOpenSiteModal(s);
-                          }}
-                          style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '2px' }}
-                          title="Editar site"
-                        >
-                          <Edit3 size={12} />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleDeleteSite(s.id, s.name);
-                          }}
-                          style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: '2px' }}
-                          title="Excluir site"
-                        >
-                          <Trash2 size={12} />
-                        </button>
-                        <ChevronRight size={13} color={isSelected ? '#60a5fa' : '#64748b'} />
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
+      {/* BARRA DE FILTROS & PESQUISA */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '14px',
+        padding: '14px 18px',
+        background: 'var(--bg-surface)',
+        border: '1px solid var(--border-subtle)',
+        borderRadius: '8px'
+      }}>
+        {/* Campo de Busca */}
+        <div style={{ position: 'relative', minWidth: '280px', flex: 1 }}>
+          <Search size={16} color="var(--text-muted)" style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)' }} />
+          <input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Buscar por nome do site, cliente ou URL..."
+            style={{
+              width: '100%',
+              padding: '8px 12px 8px 36px',
+              background: 'rgba(255, 255, 255, 0.03)',
+              border: '1px solid var(--border-subtle)',
+              borderRadius: '6px',
+              color: 'var(--text-primary)',
+              fontSize: '0.82rem',
+              outline: 'none',
+              boxSizing: 'border-box'
+            }}
+          />
         </div>
 
-        {/* Right Pane: Operational Inspector for Selected Site (Myrmex AI Style) */}
-        {selectedSite ? (
-          <div className="card" style={{ padding: '12px 14px', display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
-            {/* Header Inspector */}
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '6px' }}>
-              <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <h2 style={{ fontSize: '0.98rem', fontWeight: '700', margin: 0 }}>
-                    {selectedSite.name}
-                  </h2>
-                  <span style={{
-                    fontSize: '0.62rem',
-                    fontWeight: '700',
-                    padding: '1px 5px',
-                    borderRadius: 'var(--radius-xs)',
-                    background: selectedSite.active ? 'rgba(16, 185, 129, 0.15)' : 'rgba(156, 163, 175, 0.15)',
-                    color: selectedSite.active ? '#10b981' : '#9ca3af'
-                  }}>
-                    {selectedSite.active ? 'ONLINE' : 'PAUSADO'}
-                  </span>
-                </div>
-                <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: '1px' }}>
-                  Slug: <code style={{ color: '#60a5fa' }}>{selectedSite.slug}</code> • Destino: <a href={selectedSite.url} target="_blank" rel="noreferrer" style={{ color: '#93c5fd', textDecoration: 'none' }}>{selectedSite.url || 'N/A'}</a>
-                </div>
-              </div>
-
-              {/* Inspector Tabs */}
-              <div style={{ display: 'flex', gap: '4px', background: 'rgba(255, 255, 255, 0.04)', padding: '2px', borderRadius: 'var(--radius-xs)' }}>
-                {[
-                  { id: 'OVERVIEW', label: 'Webhook & Setup', icon: Code2 },
-                  { id: 'TEMPLATES', label: `Templates (${templates.length})`, icon: Mail },
-                  { id: 'TELEMETRY', label: 'Telemetria & Logs', icon: Terminal },
-                ].map(t => {
-                  const Icon = t.icon;
-                  const isActive = activeTab === t.id;
-                  return (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setActiveTab(t.id as any)}
-                      style={{
-                        padding: '3px 8px',
-                        borderRadius: 'var(--radius-xs)',
-                        border: 'none',
-                        background: isActive ? '#1c1f26' : 'transparent',
-                        color: isActive ? '#ffffff' : 'var(--text-secondary)',
-                        fontSize: '0.72rem',
-                        fontWeight: isActive ? '700' : '500',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '4px'
-                      }}
-                    >
-                      <Icon size={11} />
-                      <span>{t.label}</span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* TAB 1: WEBHOOK & SETUP */}
-            {activeTab === 'OVERVIEW' && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                {/* Webhook URL Box */}
-                <div style={{
-                  padding: '10px 12px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: 'rgba(255, 255, 255, 0.02)',
-                  border: '1px solid rgba(255, 255, 255, 0.06)'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '0.74rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-                      Endpoint de Captura Webhook (POST)
-                    </span>
-                    <button
-                      type="button"
-                      onClick={() => handleCopyWebhook(selectedSite.webhookUrl || `/api/webhooks/sites/${selectedSite.slug}`)}
-                      className="btn btn-secondary btn-sm"
-                      style={{ fontSize: '0.7rem', padding: '2px 7px' }}
-                    >
-                      {copiedSlug ? (
-                        <>
-                          <Check size={11} color="#10b981" />
-                          <span style={{ color: '#10b981' }}>Copiado!</span>
-                        </>
-                      ) : (
-                        <>
-                          <Copy size={11} />
-                          <span>Copiar Endpoint</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  <div style={{
-                    padding: '8px 10px',
-                    borderRadius: 'var(--radius-xs)',
-                    background: '#0d1117',
-                    border: '1px solid rgba(255, 255, 255, 0.08)',
-                    fontFamily: 'monospace',
-                    fontSize: '0.75rem',
-                    color: '#10b981',
-                    wordBreak: 'break-all'
-                  }}>
-                    {window.location.origin}{selectedSite.webhookUrl || `/api/webhooks/sites/${selectedSite.slug}`}
-                  </div>
-                </div>
-
-                {/* Exemplo de Chamada cURL / Payload */}
-                <div style={{
-                  padding: '10px 12px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: '#0d1117',
-                  border: '1px solid rgba(255, 255, 255, 0.06)'
-                }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--text-secondary)', fontFamily: 'monospace' }}>
-                      Payload JSON Esperado do Formulário
-                    </span>
-                    <button
-                      type="button"
-                      onClick={handleSimulateWebhookTest}
-                      disabled={simulatingWebhook}
-                      className="btn btn-primary btn-sm"
-                      style={{ fontSize: '0.7rem', padding: '3px 8px' }}
-                    >
-                      <Send size={11} />
-                      <span>{simulatingWebhook ? 'Injetando...' : 'Testar Envio via Webhook'}</span>
-                    </button>
-                  </div>
-
-                  <pre style={{
-                    margin: 0,
-                    fontSize: '0.72rem',
-                    color: '#e2e8f0',
-                    fontFamily: 'monospace',
-                    lineHeight: '1.4',
-                    background: 'transparent',
-                    overflowX: 'auto'
-                  }}>
-{`{
-  "name": "Gabriel Castro",
-  "email": "gabrielcastro.dev01@gmail.com",
-  "phone": "(11) 98765-4321",
-  "company": "Lumeo Tech",
-  "message": "Tenho interesse no plano de inteligência comercial."
-}`}
-                  </pre>
-                </div>
-
-                {/* Status da Pipeline Myrmex */}
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-                  <div style={{ padding: '8px 10px', borderRadius: 'var(--radius-sm)', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>MÉTODO</div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: '700', color: '#10b981' }}>POST / JSON</div>
-                  </div>
-                  <div style={{ padding: '8px 10px', borderRadius: 'var(--radius-sm)', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>AUTOMAÇÃO</div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: '700', color: '#60a5fa' }}>Disparo Imediato</div>
-                  </div>
-                  <div style={{ padding: '8px 10px', borderRadius: 'var(--radius-sm)', background: 'rgba(255, 255, 255, 0.02)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <div style={{ fontSize: '0.66rem', color: 'var(--text-muted)' }}>INTEGRAÇÃO</div>
-                    <div style={{ fontSize: '0.82rem', fontWeight: '700', color: '#fbbf24' }}>LeadScope Engine</div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* TAB 2: TEMPLATES VINCULADOS A ESTE SITE */}
-            {activeTab === 'TEMPLATES' && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)' }}>
-                    E-mails configurados para disparar nos eventos de <strong>{selectedSite.name}</strong>
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTemplateForm({
-                        name: '',
-                        triggerEvent: 'LEAD_CAPTURED',
-                        subject: 'Recebemos seu contato - ' + selectedSite.name,
-                        bodyHtml: '<h2>Olá {{lead_name}},</h2><p>Recebemos sua mensagem em ' + selectedSite.name + '.</p>',
-                        active: true,
-                      });
-                      setIsTemplateModalOpen(true);
-                    }}
-                    className="btn btn-primary btn-sm"
-                    style={{ fontSize: '0.7rem', padding: '3px 8px' }}
-                  >
-                    <Plus size={11} />
-                    <span>Adicionar Template</span>
-                  </button>
-                </div>
-
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  {templates.length === 0 ? (
-                    <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.76rem' }}>
-                      Nenhum template vinculado a este site ainda.
-                    </div>
-                  ) : (
-                    templates.map(tpl => (
-                      <div
-                        key={tpl.id}
-                        style={{
-                          padding: '8px 10px',
-                          borderRadius: 'var(--radius-sm)',
-                          background: 'rgba(255, 255, 255, 0.02)',
-                          border: '1px solid rgba(255, 255, 255, 0.06)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between'
-                        }}
-                      >
-                        <div>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <span style={{ fontWeight: '700', fontSize: '0.78rem', color: '#ffffff' }}>{tpl.name}</span>
-                            <span style={{ fontSize: '0.62rem', padding: '1px 5px', borderRadius: 'var(--radius-xs)', background: 'rgba(16, 185, 129, 0.12)', color: '#34d399' }}>
-                              {tpl.triggerEvent}
-                            </span>
-                          </div>
-                          <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                            Assunto: {tpl.subject}
-                          </div>
-                        </div>
-
-                        <span style={{
-                          fontSize: '0.64rem',
-                          fontWeight: '700',
-                          padding: '2px 6px',
-                          borderRadius: 'var(--radius-xs)',
-                          background: tpl.active ? 'rgba(16, 185, 129, 0.15)' : 'rgba(156, 163, 175, 0.15)',
-                          color: tpl.active ? '#10b981' : '#9ca3af'
-                        }}>
-                          {tpl.active ? 'ATIVO' : 'PAUSADO'}
-                        </span>
-                      </div>
-                    ))
-                  )}
-                </div>
-              </div>
-            )}
-
-            {/* TAB 3: TELEMETRIA & LOGS (Myrmex AI Pensamentos) */}
-            {activeTab === 'TELEMETRY' && (
-              <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span style={{ fontSize: '0.74rem', fontWeight: '700', color: 'var(--text-primary)' }}>
-                    Telemetria de Captura em Tempo Real
-                  </span>
-                  <span style={{ fontSize: '0.68rem', color: '#10b981', fontWeight: '600' }}>
-                    SLA: 100% Operacional
-                  </span>
-                </div>
-
-                <div style={{
-                  padding: '10px',
-                  borderRadius: 'var(--radius-sm)',
-                  background: '#0d1117',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '6px',
-                  fontFamily: 'monospace',
-                  fontSize: '0.74rem'
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#38bdf8' }}>
-                    <CheckCircle2 size={13} color="#10b981" />
-                    <span>+0.2s</span>
-                    <span>POST /{selectedSite.slug} recebido com sucesso (IP: 189.120.45.10)</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#38bdf8' }}>
-                    <CheckCircle2 size={13} color="#10b981" />
-                    <span>+0.4s</span>
-                    <span>Campos validados: name, email, phone, company</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: '#10b981', fontWeight: '700' }}>
-                    <CheckCircle2 size={13} color="#10b981" />
-                    <span>+0.7s</span>
-                    <span>[comprovado] Lead cadastrado no CRM e distribuído para o pipeline de vendas</span>
-                  </div>
-                </div>
-
-                {/* Evidence table like Myrmex AI */}
-                <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.72rem', marginTop: '6px' }}>
-                  <thead>
-                    <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.08)', color: 'var(--text-muted)' }}>
-                      <th style={{ padding: '4px 6px', textAlign: 'left' }}>Origem</th>
-                      <th style={{ padding: '4px 6px', textAlign: 'left' }}>Lead</th>
-                      <th style={{ padding: '4px 6px', textAlign: 'left' }}>Latência</th>
-                      <th style={{ padding: '4px 6px', textAlign: 'right' }}>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr style={{ borderBottom: '1px solid rgba(255, 255, 255, 0.04)' }}>
-                      <td style={{ padding: '4px 6px', color: '#ffffff' }}>/{selectedSite.slug}</td>
-                      <td style={{ padding: '4px 6px', color: '#60a5fa' }}>gabrielcastro.dev01@gmail.com</td>
-                      <td style={{ padding: '4px 6px', color: '#10b981' }}>0.7s</td>
-                      <td style={{ padding: '4px 6px', textAlign: 'right', color: '#10b981', fontWeight: '700' }}>✓ comprovado</td>
-                    </tr>
-                    <tr>
-                      <td style={{ padding: '4px 6px', color: '#ffffff' }}>/{selectedSite.slug}</td>
-                      <td style={{ padding: '4px 6px', color: '#60a5fa' }}>contato@empresa.com</td>
-                      <td style={{ padding: '4px 6px', color: '#10b981' }}>0.6s</td>
-                      <td style={{ padding: '4px 6px', textAlign: 'right', color: '#10b981', fontWeight: '700' }}>✓ comprovado</td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="card" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-muted)', fontSize: '0.84rem' }}>
-            Selecione um site à esquerda para inspecionar endpoints e templates.
-          </div>
-        )}
+        {/* Filtro por Status */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', marginRight: '4px' }}>Status:</span>
+          {(['TODOS', 'Online', 'Em desenvolvimento', 'Em manutenção'] as const).map(st => (
+            <button
+              key={st}
+              onClick={() => setStatusFilter(st)}
+              style={{
+                padding: '5px 12px',
+                borderRadius: '6px',
+                border: statusFilter === st ? '1px solid #1e3a5f' : '1px solid var(--border-subtle)',
+                background: statusFilter === st ? '#1e3a5f' : 'transparent',
+                color: statusFilter === st ? '#ffffff' : 'var(--text-secondary)',
+                fontSize: '0.78rem',
+                fontWeight: statusFilter === st ? 600 : 400,
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              {st}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* MODAL CONECTAR NOVO SITE */}
-      {isSiteModalOpen && (
-        <div className="modal-overlay">
-          <div className="card" style={{ maxWidth: '440px', width: '100%', padding: '18px', borderRadius: 'var(--radius-md)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '6px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Globe size={16} color="var(--accent-coral)" />
-                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '700' }}>
-                  {editingSite ? 'Editar Site' : 'Conectar Novo Site'}
+      {/* GRID DE SITES CADASTRADOS */}
+      {filteredSites.length === 0 ? (
+        <div style={{
+          padding: '60px 20px',
+          textAlign: 'center',
+          background: 'var(--bg-surface)',
+          border: '1px dashed var(--border-subtle)',
+          borderRadius: '10px'
+        }}>
+          <Globe size={40} color="var(--text-muted)" style={{ margin: '0 auto 12px auto', opacity: 0.5 }} />
+          <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 6px 0' }}>
+            Nenhum site encontrado no portfólio
+          </h3>
+          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0 0 16px 0' }}>
+            {searchQuery || statusFilter !== 'TODOS'
+              ? 'Tente ajustar os filtros de busca para encontrar os sites desejados.'
+              : 'Comece adicionando seu primeiro site desenvolvido para clientes.'}
+          </p>
+          <button onClick={openCreateModal} className="btn btn-primary" style={{ padding: '8px 16px', fontSize: '0.82rem' }}>
+            <Plus size={15} />
+            <span>Cadastrar Primeiro Site</span>
+          </button>
+        </div>
+      ) : (
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))',
+          gap: '20px'
+        }}>
+          {filteredSites.map(site => {
+            const badge = getStatusBadge(site.status);
+            return (
+              <div
+                key={site.id}
+                style={{
+                  background: 'var(--bg-surface)',
+                  border: '1px solid var(--border-subtle)',
+                  borderRadius: '10px',
+                  overflow: 'hidden',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  transition: 'border-color 0.2s ease, transform 0.2s ease',
+                  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.25)'
+                }}
+              >
+                {/* PREVIEW / THUMBNAIL DO SITE */}
+                <div style={{
+                  height: '170px',
+                  width: '100%',
+                  background: '#090d16',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  borderBottom: '1px solid var(--border-subtle)'
+                }}>
+                  {site.thumbnail ? (
+                    <img
+                      src={site.thumbnail}
+                      alt={site.name}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                      onError={(e) => {
+                        (e.target as HTMLElement).style.display = 'none';
+                      }}
+                    />
+                  ) : (
+                    <div style={{
+                      width: '100%',
+                      height: '100%',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      color: 'var(--text-muted)',
+                      background: 'radial-gradient(circle at 50% 50%, #151d2f 0%, #090d16 100%)'
+                    }}>
+                      <Globe size={32} style={{ opacity: 0.4 }} />
+                      <span style={{ fontSize: '0.74rem' }}>Pré-visualização do site</span>
+                    </div>
+                  )}
+
+                  {/* Status Badge sobreposto na thumbnail */}
+                  <div style={{
+                    position: 'absolute',
+                    top: '12px',
+                    right: '12px',
+                    padding: '3px 8px',
+                    borderRadius: '4px',
+                    background: badge.bg,
+                    border: `1px solid ${badge.border}`,
+                    color: badge.color,
+                    fontSize: '0.72rem',
+                    fontWeight: '700',
+                    backdropFilter: 'blur(6px)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '5px'
+                  }}>
+                    <span style={{
+                      width: '6px',
+                      height: '6px',
+                      borderRadius: '50%',
+                      background: badge.color
+                    }} />
+                    <span>{badge.label}</span>
+                  </div>
+                </div>
+
+                {/* CORPO DO CARD */}
+                <div style={{ padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: '12px', flex: 1 }}>
+                  {/* Título & Cliente */}
+                  <div>
+                    <h3 style={{
+                      fontSize: '0.98rem',
+                      fontWeight: '700',
+                      color: 'var(--text-primary)',
+                      margin: '0 0 4px 0',
+                      lineHeight: '1.3'
+                    }}>
+                      {site.name}
+                    </h3>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--text-secondary)', fontSize: '0.78rem' }}>
+                      <User size={13} color="var(--text-muted)" />
+                      <span>Cliente: <strong style={{ color: 'var(--text-primary)' }}>{site.clientName || 'Não informado'}</strong></span>
+                    </div>
+                  </div>
+
+                  {/* Detalhes de URL e Entrega */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '6px',
+                    padding: '10px 12px',
+                    background: 'rgba(255, 255, 255, 0.02)',
+                    borderRadius: '6px',
+                    border: '1px solid rgba(255, 255, 255, 0.04)',
+                    fontSize: '0.76rem'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                      <span style={{ color: 'var(--text-muted)' }}>URL do Site:</span>
+                      <a
+                        href={site.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{
+                          color: '#60a5fa',
+                          textDecoration: 'none',
+                          fontWeight: '500',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          whiteSpace: 'nowrap',
+                          maxWidth: '190px'
+                        }}
+                      >
+                        {site.url.replace(/^https?:\/\//, '')}
+                      </a>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px' }}>
+                      <span style={{ color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Calendar size={12} />
+                        Data de Entrega:
+                      </span>
+                      <span style={{ color: 'var(--text-primary)', fontWeight: '600' }}>
+                        {formatDate(site.deliveryDate)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* AÇÕES NO RODAPÉ */}
+                  <div style={{
+                    marginTop: 'auto',
+                    paddingTop: '12px',
+                    borderTop: '1px solid var(--border-subtle)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '8px'
+                  }}>
+                    {/* Botão de Abrir Site em Nova Aba */}
+                    <a
+                      href={site.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="btn btn-primary"
+                      style={{
+                        padding: '6px 14px',
+                        fontSize: '0.78rem',
+                        textDecoration: 'none',
+                        flex: 1,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px'
+                      }}
+                    >
+                      <ExternalLink size={14} />
+                      <span>Abrir Site</span>
+                    </a>
+
+                    {/* Botões de Ação Rápida: Editar e Excluir */}
+                    <div style={{ display: 'flex', gap: '4px' }}>
+                      <button
+                        onClick={() => openEditModal(site)}
+                        title="Editar site"
+                        style={{
+                          padding: '6px 10px',
+                          background: 'transparent',
+                          border: '1px solid var(--border-subtle)',
+                          borderRadius: '6px',
+                          color: 'var(--text-secondary)',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <Edit3 size={14} />
+                      </button>
+
+                      <button
+                        onClick={() => setDeleteConfirmSite(site)}
+                        title="Excluir site"
+                        style={{
+                          padding: '6px 10px',
+                          background: 'transparent',
+                          border: '1px solid var(--border-subtle)',
+                          borderRadius: '6px',
+                          color: '#f87171',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* MODAL CADASTRAR / EDITAR SITE */}
+      {isModalOpen && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '16px'
+        }}>
+          <div style={{
+            background: 'var(--bg-surface)',
+            border: '1px solid var(--border-subtle)',
+            borderRadius: '10px',
+            width: '100%',
+            maxWidth: '520px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+            overflow: 'hidden'
+          }}>
+            {/* Modal Header */}
+            <div style={{
+              padding: '18px 22px',
+              borderBottom: '1px solid var(--border-subtle)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <Globe size={18} color="#93c5fd" />
+                <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--text-primary)', margin: 0 }}>
+                  {editingSite ? 'Editar Site do Portfólio' : 'Cadastrar Novo Site'}
                 </h3>
               </div>
-              <button type="button" onClick={() => setIsSiteModalOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-                <X size={16} />
+              <button
+                onClick={() => setIsModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: 0 }}
+              >
+                <X size={18} />
               </button>
             </div>
 
-            <form onSubmit={handleSaveSite} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {/* Modal Form */}
+            <form onSubmit={handleSave} style={{ padding: '20px 22px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {/* Nome do Site */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                  Nome Identificador *
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                  Nome do Site *
                 </label>
                 <input
                   type="text"
                   required
-                  placeholder="Ex: Landing Page Campanha Black Friday"
-                  value={siteForm.name}
-                  onChange={(e) => setSiteForm({ ...siteForm, name: e.target.value })}
-                  className="input"
-                  style={{ padding: '5px 8px', fontSize: '0.78rem', borderRadius: 'var(--radius-xs)' }}
+                  value={formData.name}
+                  onChange={(e) => setFormData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Ex: Portal Dra. Camila Silveira Odontologia"
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid var(--border-subtle)',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.84rem',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
                 />
               </div>
 
+              {/* Nome do Cliente */}
               <div>
-                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                  URL do Site (opcional)
-                </label>
-                <input
-                  type="url"
-                  placeholder="https://meusite.com.br"
-                  value={siteForm.url}
-                  onChange={(e) => setSiteForm({ ...siteForm, url: e.target.value })}
-                  className="input"
-                  style={{ padding: '5px 8px', fontSize: '0.78rem', borderRadius: 'var(--radius-xs)' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                  Slug do Webhook (opcional, gerado automático)
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                  Nome do Cliente *
                 </label>
                 <input
                   type="text"
-                  placeholder="ex: lp-promocao"
-                  value={siteForm.slug}
-                  onChange={(e) => setSiteForm({ ...siteForm, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-_]/g, '') })}
-                  className="input"
-                  style={{ padding: '5px 8px', fontSize: '0.78rem', borderRadius: 'var(--radius-xs)', fontFamily: 'monospace' }}
+                  required
+                  value={formData.clientName}
+                  onChange={(e) => setFormData(prev => ({ ...prev, clientName: e.target.value }))}
+                  placeholder="Ex: Dra. Camila Silveira"
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid var(--border-subtle)',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.84rem',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '6px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.76rem', cursor: 'pointer' }}>
-                  <input
-                    type="checkbox"
-                    checked={siteForm.active}
-                    onChange={(e) => setSiteForm({ ...siteForm, active: e.target.checked })}
-                    style={{ accentColor: '#10b981' }}
-                  />
-                  <span>Ativar captura imediatamente</span>
+              {/* URL do Site */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                  URL do Site *
                 </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.url}
+                  onChange={(e) => setFormData(prev => ({ ...prev, url: e.target.value }))}
+                  placeholder="Ex: https://dracamilasilveira.com.br"
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid var(--border-subtle)',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.84rem',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
 
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <button type="button" onClick={() => setIsSiteModalOpen(false)} className="btn btn-secondary btn-sm">
-                    Cancelar
-                  </button>
-                  <button type="submit" className="btn btn-primary btn-sm">
-                    Salvar Site
-                  </button>
+              {/* Thumbnail / Imagem de Preview */}
+              <div>
+                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                  Thumbnail / URL da Imagem de Pré-visualização (opcional)
+                </label>
+                <input
+                  type="text"
+                  value={formData.thumbnail}
+                  onChange={(e) => setFormData(prev => ({ ...prev, thumbnail: e.target.value }))}
+                  placeholder="Ex: https://meusite.com/preview.jpg"
+                  style={{
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    background: 'rgba(255, 255, 255, 0.03)',
+                    border: '1px solid var(--border-subtle)',
+                    color: 'var(--text-primary)',
+                    fontSize: '0.84rem',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
+              </div>
+
+              {/* Status e Data de Entrega (2 colunas) */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                    Status do Site
+                  </label>
+                  <select
+                    value={formData.status}
+                    onChange={(e) => setFormData(prev => ({ ...prev, status: e.target.value as any }))}
+                    style={{
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      background: 'rgba(15, 21, 35, 0.9)',
+                      border: '1px solid var(--border-subtle)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.84rem',
+                      outline: 'none'
+                    }}
+                  >
+                    <option value="Online">Online</option>
+                    <option value="Em desenvolvimento">Em desenvolvimento</option>
+                    <option value="Em manutenção">Em manutenção</option>
+                  </select>
                 </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '6px' }}>
+                    Data de Entrega
+                  </label>
+                  <input
+                    type="date"
+                    value={formData.deliveryDate}
+                    onChange={(e) => setFormData(prev => ({ ...prev, deliveryDate: e.target.value }))}
+                    style={{
+                      width: '100%',
+                      padding: '7px 12px',
+                      borderRadius: '6px',
+                      background: 'rgba(15, 21, 35, 0.9)',
+                      border: '1px solid var(--border-subtle)',
+                      color: 'var(--text-primary)',
+                      fontSize: '0.84rem',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* BOTOES MODAL */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'flex-end',
+                gap: '10px',
+                marginTop: '10px',
+                paddingTop: '16px',
+                borderTop: '1px solid var(--border-subtle)'
+              }}>
+                <button
+                  type="button"
+                  onClick={() => setIsModalOpen(false)}
+                  className="btn btn-secondary"
+                  style={{ padding: '8px 16px', fontSize: '0.82rem' }}
+                >
+                  Cancelar
+                </button>
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="btn btn-primary"
+                  style={{ padding: '8px 20px', fontSize: '0.82rem' }}
+                >
+                  {loading ? 'Salvando...' : (editingSite ? 'Atualizar Site' : 'Cadastrar Site')}
+                </button>
               </div>
             </form>
           </div>
         </div>
       )}
 
-      {/* MODAL ADICIONAR TEMPLATE PARA ESTE SITE */}
-      {isTemplateModalOpen && (
-        <div className="modal-overlay">
-          <div className="card" style={{ maxWidth: '580px', width: '100%', padding: '18px', borderRadius: 'var(--radius-md)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', paddingBottom: '6px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Mail size={16} color="var(--accent-coral)" />
-                <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '700' }}>
-                  Adicionar Template em {selectedSite?.name}
-                </h3>
-              </div>
-              <button type="button" onClick={() => setIsTemplateModalOpen(false)} style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer' }}>
-                <X size={16} />
-              </button>
+      {/* MODAL DE CONFIRMAÇÃO DE EXCLUSÃO */}
+      {deleteConfirmSite && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 9999,
+          padding: '16px'
+        }}>
+          <div style={{
+            background: 'var(--bg-surface)',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            borderRadius: '10px',
+            width: '100%',
+            maxWidth: '440px',
+            padding: '24px',
+            textAlign: 'center',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.6)'
+          }}>
+            <div style={{
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              background: 'rgba(239, 68, 68, 0.15)',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              margin: '0 auto 16px auto',
+              color: '#f87171'
+            }}>
+              <Trash2 size={22} />
             </div>
 
-            <form onSubmit={async (e) => {
-              e.preventDefault();
-              if (!selectedSite) return;
-              try {
-                const created = await api.sites.createTemplate(selectedSite.id, templateForm);
-                setTemplates(prev => [created, ...prev]);
-                showFeedback('Template criado com sucesso!');
-                setIsTemplateModalOpen(false);
-              } catch (err: any) {
-                showFeedback('Erro ao criar template: ' + (err.message || 'Erro'), 'error');
-              }
-            }} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div>
-                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                  Nome do Template *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ex: Boas-Vindas Lead"
-                  value={templateForm.name}
-                  onChange={(e) => setTemplateForm({ ...templateForm, name: e.target.value })}
-                  className="input"
-                  style={{ padding: '5px 8px', fontSize: '0.78rem', borderRadius: 'var(--radius-xs)' }}
-                />
-              </div>
+            <h3 style={{ fontSize: '1.1rem', fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 8px 0' }}>
+              Excluir site do portfólio?
+            </h3>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', margin: '0 0 20px 0' }}>
+              Tem certeza que deseja remover <strong>"{deleteConfirmSite.name}"</strong>? Esta ação não pode ser desfeita.
+            </p>
 
-              <div>
-                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                  Assunto do E-mail *
-                </label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Ex: Olá {{lead_name}}, recebemos seu contato"
-                  value={templateForm.subject}
-                  onChange={(e) => setTemplateForm({ ...templateForm, subject: e.target.value })}
-                  className="input"
-                  style={{ padding: '5px 8px', fontSize: '0.78rem', borderRadius: 'var(--radius-xs)' }}
-                />
-              </div>
-
-              <div>
-                <label style={{ display: 'block', fontSize: '0.76rem', fontWeight: '600', color: 'var(--text-secondary)', marginBottom: '4px' }}>
-                  Corpo HTML *
-                </label>
-                <textarea
-                  required
-                  rows={6}
-                  value={templateForm.bodyHtml}
-                  onChange={(e) => setTemplateForm({ ...templateForm, bodyHtml: e.target.value })}
-                  className="input"
-                  style={{ fontFamily: 'monospace', fontSize: '0.74rem', padding: '8px', borderRadius: 'var(--radius-xs)' }}
-                />
-              </div>
-
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '6px' }}>
-                <button type="button" onClick={() => setIsTemplateModalOpen(false)} className="btn btn-secondary btn-sm">
-                  Cancelar
-                </button>
-                <button type="submit" className="btn btn-primary btn-sm">
-                  Salvar Template
-                </button>
-              </div>
-            </form>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '12px' }}>
+              <button
+                onClick={() => setDeleteConfirmSite(null)}
+                className="btn btn-secondary"
+                style={{ padding: '8px 18px', fontSize: '0.82rem' }}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => handleDelete(deleteConfirmSite.id)}
+                style={{
+                  padding: '8px 18px',
+                  borderRadius: '6px',
+                  background: '#ef4444',
+                  color: '#ffffff',
+                  border: 'none',
+                  fontWeight: 600,
+                  fontSize: '0.82rem',
+                  cursor: 'pointer'
+                }}
+              >
+                Confirmar Exclusão
+              </button>
+            </div>
           </div>
         </div>
       )}
     </div>
   );
 };
+
+export default SitesView;

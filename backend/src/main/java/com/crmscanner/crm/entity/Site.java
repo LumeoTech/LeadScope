@@ -26,7 +26,19 @@ public class Site {
     @Column(length = 300)
     private String url;
 
-    @Column(nullable = false, unique = true, length = 100)
+    @Column(name = "client_name", length = 150)
+    private String clientName;
+
+    @Column(length = 50)
+    private String status = "Online"; // Online, Em desenvolvimento, Em manutenção
+
+    @Column(name = "delivery_date")
+    private java.time.LocalDate deliveryDate;
+
+    @Column(length = 500)
+    private String thumbnail;
+
+    @Column(unique = true, length = 100)
     private String slug;
 
     @Column(name = "webhook_url", length = 300)

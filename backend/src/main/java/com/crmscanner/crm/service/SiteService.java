@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+// Serviço responsável pelo portfólio de websites desenvolvidos para clientes e templates de e-mail
 @Service
 @RequiredArgsConstructor
 @Slf4j
@@ -53,14 +54,28 @@ public class SiteService {
 
     @Transactional
     public SiteResponse create(SiteCreateRequest request) {
-        if (siteRepository.existsBySlug(request.slug())) {
-            throw new BusinessException("Já existe um site com o identificador (slug): " + request.slug());
+        String slug = request.slug();
+        if (slug == null || slug.isBlank()) {
+            slug = request.name().trim().toLowerCase()
+                    .replaceAll("[^a-z0-9]", "-")
+                    .replaceAll("-+", "-")
+                    .replaceAll("^-|-$", "") + "-" + System.currentTimeMillis() % 10000;
+        } else {
+            slug = slug.trim().toLowerCase();
+        }
+
+        if (siteRepository.existsBySlug(slug)) {
+            slug = slug + "-" + System.currentTimeMillis() % 10000;
         }
 
         Site site = new Site();
         site.setName(request.name().trim());
+        site.setClientName(request.clientName());
         site.setUrl(request.url());
-        site.setSlug(request.slug().trim().toLowerCase());
+        site.setThumbnail(request.thumbnail());
+        site.setDeliveryDate(request.deliveryDate());
+        site.setStatus(request.status() != null && !request.status().isBlank() ? request.status() : "Online");
+        site.setSlug(slug);
         site.setWebhookUrl(request.webhookUrl());
         site.setActive(request.active() != null ? request.active() : true);
 
@@ -74,7 +89,11 @@ public class SiteService {
                 .orElseThrow(() -> new ResourceNotFoundException("Site", id));
 
         if (request.name() != null) site.setName(request.name().trim());
+        if (request.clientName() != null) site.setClientName(request.clientName().trim());
         if (request.url() != null) site.setUrl(request.url());
+        if (request.thumbnail() != null) site.setThumbnail(request.thumbnail());
+        if (request.deliveryDate() != null) site.setDeliveryDate(request.deliveryDate());
+        if (request.status() != null) site.setStatus(request.status());
         if (request.webhookUrl() != null) site.setWebhookUrl(request.webhookUrl());
         if (request.active() != null) site.setActive(request.active());
 

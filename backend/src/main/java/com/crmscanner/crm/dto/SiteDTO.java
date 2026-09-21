@@ -12,8 +12,11 @@ public class SiteDTO {
     public record SiteCreateRequest(
         @NotBlank(message = "O nome do site é obrigatório")
         String name,
+        String clientName,
         String url,
-        @NotBlank(message = "O slug identificador é obrigatório")
+        String thumbnail,
+        java.time.LocalDate deliveryDate,
+        String status, // Online, Em desenvolvimento, Em manutenção
         String slug,
         String webhookUrl,
         Boolean active
@@ -21,7 +24,11 @@ public class SiteDTO {
 
     public record SiteUpdateRequest(
         String name,
+        String clientName,
         String url,
+        String thumbnail,
+        java.time.LocalDate deliveryDate,
+        String status,
         String slug,
         String webhookUrl,
         Boolean active
@@ -30,7 +37,11 @@ public class SiteDTO {
     public record SiteResponse(
         Long id,
         String name,
+        String clientName,
         String url,
+        String thumbnail,
+        java.time.LocalDate deliveryDate,
+        String status,
         String slug,
         String webhookUrl,
         Boolean active,
@@ -42,7 +53,11 @@ public class SiteDTO {
             return new SiteResponse(
                 s.getId(),
                 s.getName(),
+                s.getClientName(),
                 s.getUrl(),
+                s.getThumbnail(),
+                s.getDeliveryDate(),
+                s.getStatus() != null ? s.getStatus() : "Online",
                 s.getSlug(),
                 s.getWebhookUrl(),
                 s.getActive(),
