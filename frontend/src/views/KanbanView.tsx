@@ -35,7 +35,8 @@ import {
   Bot,
   Zap,
   Eye,
-  UserCheck
+  UserCheck,
+  Clock
 } from 'lucide-react';
 
 export const KanbanView: React.FC = () => {
@@ -51,6 +52,8 @@ export const KanbanView: React.FC = () => {
   const [runningAgent, setRunningAgent] = useState(false);
   const [dailyScanStatus, setDailyScanStatus] = useState<DailyScanStatus | null>(null);
   const [runningDailyScan, setRunningDailyScan] = useState(false);
+  const [scheduledTime, setScheduledTime] = useState<string>('06:00');
+  const [showSchedulePopover, setShowSchedulePopover] = useState<boolean>(false);
 
   // View Mode: Table (default like Uxerflow screenshot) or Kanban
   const [viewMode, setViewMode] = useState<'TABLE' | 'KANBAN'>('TABLE');
@@ -146,18 +149,20 @@ export const KanbanView: React.FC = () => {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [statusRes, leadsRes, compRes, usersRes, scanStatusRes] = await Promise.all([
+      const [statusRes, leadsRes, compRes, usersRes, scanStatusRes, scheduleRes] = await Promise.all([
         api.leadStatuses.list(),
         api.leads.list(),
         api.companies.list({ active: true }),
         api.users.listAll().catch(() => []),
         api.leads.getDailyScanStatus().catch(() => null),
+        api.leads.getSchedule().catch(() => null),
       ]);
       setStatuses(statusRes || []);
       setLeads(leadsRes.content || []);
       setCompanies(compRes.content || []);
       setSystemUsers(Array.isArray(usersRes) ? usersRes.filter(u => u.active !== false) : []);
       if (scanStatusRes) setDailyScanStatus(scanStatusRes);
+      if (scheduleRes?.timeString) setScheduledTime(scheduleRes.timeString);
     } catch (e) {
       console.error(e);
     } finally {
@@ -306,6 +311,17 @@ export const KanbanView: React.FC = () => {
       await loadData();
     } finally {
       setRunningDailyScan(false);
+    }
+  };
+
+  const handleSaveScheduleTime = async (newTime: string) => {
+    try {
+      await api.leads.updateSchedule({ time: newTime });
+      setScheduledTime(newTime);
+      setToastMsg(`Horário da busca diária configurado para ${newTime}`);
+      setTimeout(() => setToastMsg(null), 3500);
+    } catch (err: any) {
+      console.warn('Erro ao atualizar horário de busca:', err);
     }
   };
 
@@ -948,28 +964,126 @@ export const KanbanView: React.FC = () => {
             </button>
           )}
 
-          {/* Daily Auto Lead Scanner Trigger */}
+          {/* Daily Auto Lead Scanner Trigger com Configuração de Horário */}
           {currentUser?.role !== 'VIEWER' && (
-            <button
-              type="button"
-              onClick={handleRunDailyAutoScan}
-              disabled={runningDailyScan}
-              className="btn btn-secondary btn-sm"
-              style={{
-                padding: '7px 12px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.15))',
-                borderColor: 'rgba(245, 158, 11, 0.4)',
-                color: '#f59e0b',
-                fontWeight: '600'
-              }}
-              title="Busca Diária Automática: Gera 10 novos leads qualificados B2B para hoje"
-            >
-              <Zap size={14} className={runningDailyScan ? 'spin' : ''} fill="#f59e0b" />
-              <span>{runningDailyScan ? 'Buscando 10 Leads...' : '⚡ Buscar 10 Leads (Diário)'}</span>
-            </button>
+            <div style={{ display: 'inline-flex', alignItems: 'stretch', position: 'relative' }}>
+              <button
+                type="button"
+                onClick={handleRunDailyAutoScan}
+                disabled={runningDailyScan}
+                className="btn btn-secondary btn-sm"
+                style={{
+                  padding: '7px 12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.15), rgba(239, 68, 68, 0.15))',
+                  borderColor: 'rgba(245, 158, 11, 0.4)',
+                  color: '#f59e0b',
+                  fontWeight: '600',
+                  borderTopRightRadius: 0,
+                  borderBottomRightRadius: 0,
+                  borderRight: 'none'
+                }}
+                title="Busca Diária Automática: Gera 10 novos leads qualificados B2B para hoje"
+              >
+                <Zap size={14} className={runningDailyScan ? 'spin' : ''} fill="#f59e0b" />
+                <span>{runningDailyScan ? 'Buscando 10 Leads...' : '⚡ Buscar 10 Leads (Diário)'}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowSchedulePopover(!showSchedulePopover)}
+                className="btn btn-secondary btn-sm"
+                style={{
+                  padding: '7px 9px',
+                  background: 'rgba(245, 158, 11, 0.12)',
+                  borderColor: 'rgba(245, 158, 11, 0.4)',
+                  color: '#f59e0b',
+                  borderTopLeftRadius: 0,
+                  borderBottomLeftRadius: 0,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
+                title={`Configurar horário da captura diária (atual: ${scheduledTime})`}
+              >
+                <Clock size={13} />
+                <span style={{ fontSize: '0.75rem', fontWeight: '600' }}>{scheduledTime}</span>
+              </button>
+
+              {showSchedulePopover && (
+                <>
+                  <div
+                    onClick={() => setShowSchedulePopover(false)}
+                    style={{ position: 'fixed', inset: 0, zIndex: 9998 }}
+                  />
+                  <div style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    marginTop: '8px',
+                    background: '#16181d',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    borderRadius: '10px',
+                    boxShadow: '0 16px 36px rgba(0,0,0,0.6)',
+                    padding: '14px',
+                    width: '260px',
+                    zIndex: 9999,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Clock size={14} color="#f59e0b" />
+                        <span style={{ fontSize: '0.82rem', fontWeight: '700', color: '#ffffff' }}>Captura Diária</span>
+                      </div>
+                      <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: '600' }}>10 leads/dia</span>
+                    </div>
+
+                    <p style={{ fontSize: '0.74rem', color: '#9ca3af', margin: 0, lineHeight: 1.4 }}>
+                      Defina o horário em que o sistema buscará automaticamente 10 novos leads todo dia.
+                    </p>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <input
+                        type="time"
+                        value={scheduledTime}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setScheduledTime(val);
+                          handleSaveScheduleTime(val);
+                        }}
+                        style={{
+                          background: '#0f1012',
+                          border: '1px solid rgba(255, 255, 255, 0.15)',
+                          borderRadius: '6px',
+                          color: '#ffffff',
+                          fontSize: '0.85rem',
+                          padding: '6px 8px',
+                          fontWeight: '600',
+                          outline: 'none',
+                          flex: 1,
+                          colorScheme: 'dark'
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowSchedulePopover(false);
+                          handleRunDailyAutoScan();
+                        }}
+                        disabled={runningDailyScan}
+                        className="btn btn-primary btn-sm"
+                        style={{ fontSize: '0.74rem', padding: '6px 10px', whiteSpace: 'nowrap' }}
+                      >
+                        Buscar Agora
+                      </button>
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
           )}
 
           {/* Qualification Trigger */}

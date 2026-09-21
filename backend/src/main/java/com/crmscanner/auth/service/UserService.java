@@ -93,6 +93,15 @@ public class UserService {
                 "active", user.getActive()
         );
 
+        if (isMasterAdmin(user)) {
+            if (request.role() != null && !request.role().isBlank() && !"ADMIN".equalsIgnoreCase(request.role().trim())) {
+                throw new BusinessException("O usuário master Gabriel Castro possui cargo ADMIN intocável e não pode ser alterado.");
+            }
+            if (Boolean.FALSE.equals(request.active())) {
+                throw new BusinessException("O usuário master Gabriel Castro não pode ser desativado.");
+            }
+        }
+
         user.setName(request.name());
 
         if (request.role() != null && !request.role().isBlank()) {
@@ -132,6 +141,9 @@ public class UserService {
     @Transactional
     public UserResponse toggleStatus(Long id) {
         User user = getUserEntity(id);
+        if (isMasterAdmin(user)) {
+            throw new BusinessException("O usuário master Gabriel Castro é intocável e não pode ser desativado.");
+        }
         boolean newStatus = !Boolean.TRUE.equals(user.getActive());
         user.setActive(newStatus);
         User updated = userRepository.save(user);
@@ -205,6 +217,10 @@ public class UserService {
     @Transactional
     public void deleteUser(Long id, User currentUser) {
         User user = getUserEntity(id);
+
+        if (isMasterAdmin(user)) {
+            throw new BusinessException("O usuário master Gabriel Castro é intocável e não pode ser excluído.");
+        }
 
         if (currentUser != null && user.getId().equals(currentUser.getId())) {
             throw new BusinessException("Você não pode excluir o seu próprio usuário de administrador.");
@@ -297,5 +313,12 @@ public class UserService {
     private User getUserEntity(Long id) {
         return userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Usuário", id));
+    }
+
+    private boolean isMasterAdmin(User user) {
+        if (user == null) return false;
+        String name = user.getName() != null ? user.getName().toLowerCase().trim() : "";
+        String email = user.getEmail() != null ? user.getEmail().toLowerCase().trim() : "";
+        return name.contains("gabriel castro") || email.contains("gabriel@leadscope.com") || email.contains("gabrielcastro");
     }
 }

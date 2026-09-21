@@ -81,57 +81,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
 
-  // Auto Lead Capture Schedule State
-  const [scheduledTime, setScheduledTime] = useState<string>(() => localStorage.getItem('auto_lead_time') || '06:00');
-  const [scheduleActive, setScheduleActive] = useState<boolean>(true);
-  const [savingSchedule, setSavingSchedule] = useState<boolean>(false);
-  const [runningCapture, setRunningCapture] = useState<boolean>(false);
-  const [scheduleFeedback, setScheduleFeedback] = useState<string | null>(null);
-  const [isSchedulePopoverOpen, setIsSchedulePopoverOpen] = useState(false);
-
-  useEffect(() => {
-    api.leads.getSchedule().then(cfg => {
-      if (cfg && cfg.timeString) {
-        setScheduledTime(cfg.timeString);
-        setScheduleActive(cfg.active);
-        localStorage.setItem('auto_lead_time', cfg.timeString);
-      }
-    }).catch(() => {});
-  }, []);
-
-  const handleSaveScheduleTime = async (newTime: string, activeState: boolean = scheduleActive) => {
-    setSavingSchedule(true);
-    setScheduledTime(newTime);
-    localStorage.setItem('auto_lead_time', newTime);
-    try {
-      await api.leads.updateSchedule({ time: newTime, active: activeState });
-      setScheduleFeedback('Salvo!');
-      setTimeout(() => setScheduleFeedback(null), 2500);
-    } catch {
-      setScheduleFeedback('Salvo!');
-      setTimeout(() => setScheduleFeedback(null), 2500);
-    } finally {
-      setSavingSchedule(false);
-    }
-  };
-
-  const handleTriggerManualCapture = async () => {
-    setRunningCapture(true);
-    try {
-      const res = await api.leads.autoScanDaily();
-      setScheduleFeedback(`+${res.length} leads!`);
-      setTimeout(() => {
-        setScheduleFeedback(null);
-        window.location.reload();
-      }, 1500);
-    } catch (e: any) {
-      setScheduleFeedback('Erro');
-      setTimeout(() => setScheduleFeedback(null), 2500);
-    } finally {
-      setRunningCapture(false);
-    }
-  };
-
   // Load saved accounts on menu open or mount
   useEffect(() => {
     const list = accountManager.getAccounts();
@@ -377,14 +326,14 @@ export const Sidebar: React.FC<SidebarProps> = ({
         {!isCollapsed ? (
           <div style={{
             fontSize: '0.68rem',
-            fontWeight: '700',
-            letterSpacing: '0.07em',
+            fontWeight: '400',
+            letterSpacing: '0.08em',
             textTransform: 'uppercase',
-            color: '#525866',
-            padding: '8px 10px 6px 10px',
+            color: '#64748b',
+            padding: '8px 10px 4px 10px',
             userSelect: 'none'
           }}>
-            Principal
+            PRINCIPAL
           </div>
         ) : (
           <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.05)', margin: '6px 4px' }} />
@@ -430,17 +379,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {!isCollapsed ? (
               <div style={{
                 fontSize: '0.68rem',
-                fontWeight: '700',
-                letterSpacing: '0.07em',
+                fontWeight: '400',
+                letterSpacing: '0.08em',
                 textTransform: 'uppercase',
-                color: '#525866',
-                padding: '16px 10px 6px 10px',
+                color: '#64748b',
+                padding: '14px 10px 4px 10px',
                 userSelect: 'none'
               }}>
-                Conteúdo
+                CONTEÚDO
               </div>
             ) : (
-              <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.05)', margin: '10px 4px 6px' }} />
+              <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.05)', margin: '8px 4px' }} />
             )}
 
             {/* Content Calendar */}
@@ -487,17 +436,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
             {!isCollapsed ? (
               <div style={{
                 fontSize: '0.68rem',
-                fontWeight: '700',
-                letterSpacing: '0.07em',
+                fontWeight: '400',
+                letterSpacing: '0.08em',
                 textTransform: 'uppercase',
-                color: '#525866',
-                padding: '16px 10px 6px 10px',
+                color: '#64748b',
+                padding: '14px 10px 4px 10px',
                 userSelect: 'none'
               }}>
-                Gestão
+                GESTÃO
               </div>
             ) : (
-              <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.05)', margin: '10px 4px 6px' }} />
+              <div style={{ height: '1px', background: 'rgba(255, 255, 255, 0.05)', margin: '8px 4px' }} />
             )}
 
             {/* Team - Visível EXCLUSIVAMENTE para Admin */}
@@ -543,174 +492,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
       </div>
 
-      {/* PAINEL DE CONTROLE DE HORÁRIO: CAPTURA AUTOMÁTICA DE LEADS (LIMPO E DISCRETO) */}
-      {!isCollapsed ? (
-        <div style={{
-          marginTop: '12px',
-          marginBottom: '6px',
-          background: 'rgba(255, 255, 255, 0.02)',
-          border: '1px solid rgba(255, 255, 255, 0.06)',
-          borderRadius: '8px',
-          padding: '10px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '8px'
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Clock size={13} color="#8c93a0" />
-              <span style={{ fontSize: '0.74rem', color: '#9ca3af', fontWeight: '500' }}>
-                Captura diária
-              </span>
-            </div>
-            <span style={{
-              fontSize: '0.68rem',
-              color: scheduleFeedback ? '#10b981' : '#6b7280',
-              fontWeight: scheduleFeedback ? '600' : '400'
-            }}>
-              {scheduleFeedback || '10 leads/dia'}
-            </span>
-          </div>
-
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <input
-              type="time"
-              value={scheduledTime}
-              onChange={(e) => {
-                setScheduledTime(e.target.value);
-                handleSaveScheduleTime(e.target.value);
-              }}
-              style={{
-                background: '#121417',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                borderRadius: '6px',
-                color: '#e5e7eb',
-                fontSize: '0.78rem',
-                padding: '4px 6px',
-                fontWeight: '500',
-                outline: 'none',
-                flex: 1,
-                colorScheme: 'dark'
-              }}
-              title="Horário diário para busca automática de 10 leads"
-            />
-            <button
-              type="button"
-              onClick={handleTriggerManualCapture}
-              disabled={runningCapture}
-              style={{
-                background: '#1e2126',
-                border: '1px solid rgba(255, 255, 255, 0.08)',
-                color: '#d1d5db',
-                fontSize: '0.72rem',
-                fontWeight: '500',
-                padding: '5px 9px',
-                borderRadius: '6px',
-                cursor: runningCapture ? 'not-allowed' : 'pointer',
-                whiteSpace: 'nowrap',
-                transition: 'background 0.15s ease'
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.background = '#282c33')}
-              onMouseLeave={(e) => (e.currentTarget.style.background = '#1e2126')}
-              title="Buscar 10 novos leads agora"
-            >
-              {runningCapture ? 'Buscando...' : 'Buscar'}
-            </button>
-          </div>
-        </div>
-      ) : (
-        <div style={{ position: 'relative', marginTop: '8px', marginBottom: '6px' }}>
-          <button
-            type="button"
-            onClick={() => setIsSchedulePopoverOpen(!isSchedulePopoverOpen)}
-            style={{
-              ...getNavItemStyle(false, true),
-              color: '#8c93a0'
-            }}
-            title={`Captura diária configurada para ${scheduledTime}`}
-          >
-            <Clock size={16} color="#8c93a0" />
-          </button>
-
-          {isSchedulePopoverOpen && (
-            <>
-              <div
-                onClick={() => setIsSchedulePopoverOpen(false)}
-                style={{ position: 'fixed', inset: 0, zIndex: 9998 }}
-              />
-              <div
-                style={{
-                  position: 'absolute',
-                  left: '100%',
-                  bottom: 0,
-                  marginLeft: '8px',
-                  background: '#16181d',
-                  border: '1px solid rgba(255, 255, 255, 0.08)',
-                  borderRadius: '8px',
-                  boxShadow: '0 10px 30px rgba(0,0,0,0.8)',
-                  padding: '12px',
-                  width: '200px',
-                  zIndex: 9999,
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '8px'
-                }}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#e5e7eb' }}>Captura diária</span>
-                  <span style={{ fontSize: '0.68rem', color: '#6b7280' }}>10 leads/dia</span>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <input
-                    type="time"
-                    value={scheduledTime}
-                    onChange={(e) => {
-                      setScheduledTime(e.target.value);
-                      handleSaveScheduleTime(e.target.value);
-                    }}
-                    style={{
-                      background: '#101215',
-                      border: '1px solid rgba(255, 255, 255, 0.1)',
-                      borderRadius: '6px',
-                      color: '#ffffff',
-                      fontSize: '0.8rem',
-                      padding: '4px 6px',
-                      flex: 1,
-                      colorScheme: 'dark'
-                    }}
-                  />
-                  <button
-                    type="button"
-                    onClick={handleTriggerManualCapture}
-                    disabled={runningCapture}
-                    style={{
-                      background: '#1e2126',
-                      border: '1px solid rgba(255, 255, 255, 0.08)',
-                      color: '#d1d5db',
-                      fontSize: '0.72rem',
-                      fontWeight: '500',
-                      padding: '5px 8px',
-                      borderRadius: '6px',
-                      cursor: runningCapture ? 'not-allowed' : 'pointer',
-                      whiteSpace: 'nowrap'
-                    }}
-                  >
-                    {runningCapture ? '...' : 'Buscar'}
-                  </button>
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-      )}
-
-      {/* 4. FOOTER / SUPPORT & SETTINGS (Separados por linha divisória) */}
+      {/* 4. FOOTER / SUPPORT & SETTINGS (Separados por linha divisória fina) */}
       <div style={{
         marginTop: 'auto',
         display: 'flex',
         flexDirection: 'column',
         gap: '3px',
-        borderTop: '1px solid rgba(255, 255, 255, 0.07)',
+        borderTop: '1px solid rgba(255, 255, 255, 0.08)',
         paddingTop: '10px'
       }}>
         <button

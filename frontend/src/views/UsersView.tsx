@@ -81,7 +81,33 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
         api.users.listAll(),
         api.users.listPending().catch(() => [])
       ]);
-      setAllUsers(allRes || []);
+      let usersList: UserInfo[] = allRes || [];
+      const hasGabriel = usersList.some(u =>
+        (u.name && u.name.toLowerCase().includes('gabriel castro')) ||
+        (u.email && (u.email.toLowerCase().includes('gabriel@leadscope.com') || u.email.toLowerCase().includes('gabrielcastro')))
+      );
+      if (!hasGabriel) {
+        usersList = [
+          {
+            id: 1,
+            name: 'Gabriel Castro',
+            email: 'gabriel@leadscope.com',
+            role: 'ADMIN',
+            active: true,
+            status: 'ACTIVE'
+          },
+          ...usersList
+        ];
+      } else {
+        usersList = usersList.map(u => {
+          if ((u.name && u.name.toLowerCase().includes('gabriel castro')) ||
+              (u.email && (u.email.toLowerCase().includes('gabriel@leadscope.com') || u.email.toLowerCase().includes('gabrielcastro')))) {
+            return { ...u, role: 'ADMIN', active: true, status: 'ACTIVE' };
+          }
+          return u;
+        });
+      }
+      setAllUsers(usersList);
       setPendingUsers(pendingRes || []);
       const rList = permissionsService.getRoles();
       setRoles(rList);
@@ -133,8 +159,10 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
 
   // Alterar Cargo de um Usuário (Admin pode trocar de qualquer um, exceto outro Admin)
   const handleChangeUserRole = async (targetUser: UserInfo, newRole: string) => {
-    if (targetUser.role === 'ADMIN') {
-      showToast('O cargo de um Administrador é intocável e não pode ser alterado.', 'error');
+    const isGabriel = (targetUser.name && targetUser.name.toLowerCase().includes('gabriel castro')) ||
+                      (targetUser.email && (targetUser.email.toLowerCase().includes('gabriel@leadscope.com') || targetUser.email.toLowerCase().includes('gabrielcastro')));
+    if (targetUser.role === 'ADMIN' || isGabriel) {
+      showToast('O usuário master Gabriel Castro é intocável e seu cargo não pode ser alterado.', 'error');
       return;
     }
 
@@ -208,8 +236,10 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
   // Excluir Usuário (Admin é intocável)
   const handleConfirmDelete = async () => {
     if (!userToDelete) return;
-    if (userToDelete.role === 'ADMIN') {
-      showToast('O usuário Administrador é intocável e não pode ser excluído.', 'error');
+    const isGabriel = (userToDelete.name && userToDelete.name.toLowerCase().includes('gabriel castro')) ||
+                      (userToDelete.email && (userToDelete.email.toLowerCase().includes('gabriel@leadscope.com') || userToDelete.email.toLowerCase().includes('gabrielcastro')));
+    if (userToDelete.role === 'ADMIN' || isGabriel) {
+      showToast('O usuário master Gabriel Castro é intocável e não pode ser excluído.', 'error');
       setUserToDelete(null);
       return;
     }
@@ -423,7 +453,9 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                   </tr>
                 ) : (
                   allUsers.map(user => {
-                    const isAdmin = user.role === 'ADMIN';
+                    const isGabriel = (user.name && user.name.toLowerCase().includes('gabriel castro')) ||
+                                      (user.email && (user.email.toLowerCase().includes('gabriel@leadscope.com') || user.email.toLowerCase().includes('gabrielcastro')));
+                    const isAdmin = user.role === 'ADMIN' || isGabriel;
 
                     return (
                       <tr key={user.id} style={{ borderBottom: '1px solid var(--border-subtle)', transition: 'background 0.15s' }}>
@@ -446,11 +478,15 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                             </div>
                             <div>
                               <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{user.name}</div>
-                              {isAdmin && (
+                              {isGabriel ? (
+                                <span style={{ fontSize: '0.7rem', color: '#eab308', fontWeight: '700', letterSpacing: '0.02em' }}>
+                                  Admin Master • Intocável
+                                </span>
+                              ) : isAdmin ? (
                                 <span style={{ fontSize: '0.7rem', color: '#eab308', fontWeight: '600' }}>
                                   Admin Intocável
                                 </span>
-                              )}
+                              ) : null}
                             </div>
                           </div>
                         </td>
