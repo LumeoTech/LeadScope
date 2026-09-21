@@ -415,7 +415,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   };
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 9000);
+  // Permite até 75s para rotas de autenticação (devido a cold start do Render) e 45s para outras
+  const timeoutMs = endpoint.startsWith('/auth') ? 75000 : 45000;
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   let response: Response;
   try {
@@ -426,14 +428,14 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     });
   } catch (err: any) {
     if (err.name === 'AbortError') {
-      throw new Error(`Tempo limite de requisição excedido para ${endpoint}`);
+      throw new Error(`O servidor na nuvem demorou para responder (cold start). Por favor, tente novamente.`);
     }
     throw err;
   } finally {
     clearTimeout(timeoutId);
   }
 
-  if (response.status === 401) {
+  if (response.status === 401 && !endpoint.startsWith('/auth')) {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     window.location.reload();
