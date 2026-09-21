@@ -152,7 +152,7 @@ public class LeadController {
         ));
     }
 
-    @PostMapping("/auto-scan-daily")
+    @RequestMapping(value = "/auto-scan-daily", method = {RequestMethod.POST, RequestMethod.GET})
     @Operation(summary = "Busca diária de 10 leads", description = "Executa a rotina de prospecção autônoma que descobre e insere 10 novos leads qualificados")
     public ResponseEntity<java.util.List<LeadResponse>> autoScanDaily(@AuthenticationPrincipal User currentUser) {
         return ResponseEntity.ok(dailyAutoLeadScannerService.scanAndGenerateDailyLeads(10, currentUser));
@@ -170,7 +170,7 @@ public class LeadController {
         return ResponseEntity.ok(dailyAutoLeadScannerService.getScheduleConfig());
     }
 
-    @PostMapping("/auto-scan-schedule")
+    @RequestMapping(value = "/auto-scan-schedule", method = {RequestMethod.POST, RequestMethod.PUT})
     @Operation(summary = "Configurar horário da busca diária", description = "Atualiza o horário e status da captura automática de leads")
     public ResponseEntity<DailyAutoLeadScannerService.ScheduleConfig> updateAutoScanSchedule(
             @RequestBody java.util.Map<String, Object> body

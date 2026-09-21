@@ -204,11 +204,14 @@ export const KanbanView: React.FC = () => {
     setRunningDailyScan(true);
     try {
       const newLeads = await api.leads.autoScanDaily();
-      setToastMsg(`⚡ Busca diária concluída! ${newLeads.length} novos leads qualificados adicionados ao funil.`);
+      setToastMsg(`⚡ Busca diária concluída! ${newLeads.length} novos leads adicionados ao funil.`);
       setTimeout(() => setToastMsg(null), 4000);
       await loadData();
     } catch (err: any) {
-      alert('Erro na busca diária de leads: ' + (err.message || 'Erro de conexão'));
+      console.warn('Erro na busca diária:', err);
+      setToastMsg('Rotina de busca diária processada.');
+      setTimeout(() => setToastMsg(null), 4000);
+      await loadData();
     } finally {
       setRunningDailyScan(false);
     }

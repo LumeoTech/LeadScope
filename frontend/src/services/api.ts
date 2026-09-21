@@ -500,10 +500,21 @@ export const api = {
         method: 'POST',
         body: JSON.stringify({ targetUserId, note }),
       }),
-    autoScanDaily: () =>
-      request<Lead[]>('/leads/auto-scan-daily', {
-        method: 'POST',
-      }),
+    autoScanDaily: async () => {
+      try {
+        return await request<Lead[]>('/leads/auto-scan-daily', {
+          method: 'POST',
+        });
+      } catch (err: any) {
+        const msg = String(err?.message || '');
+        if (msg.includes('POST') || msg.includes('405')) {
+          return await request<Lead[]>('/leads/auto-scan-daily', {
+            method: 'GET',
+          });
+        }
+        throw err;
+      }
+    },
     getDailyScanStatus: () =>
       request<DailyScanStatus>('/leads/auto-scan-status'),
     getSchedule: () =>

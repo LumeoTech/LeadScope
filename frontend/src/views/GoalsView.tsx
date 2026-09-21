@@ -26,50 +26,20 @@ export interface CommercialGoal {
   deadline: string;
 }
 
-const DEFAULT_GOALS: CommercialGoal[] = [
-  {
-    id: 'goal-1',
-    title: 'Meta de Receita Mensal Q3',
-    category: 'REVENUE',
-    targetValue: 50000,
-    currentValue: 0,
-    period: 'Setembro 2026',
-    deadline: '2026-09-30'
-  },
-  {
-    id: 'goal-2',
-    title: 'Novas Oportunidades Cadastradas',
-    category: 'LEADS',
-    targetValue: 30,
-    currentValue: 0,
-    period: 'Setembro 2026',
-    deadline: '2026-09-30'
-  },
-  {
-    id: 'goal-3',
-    title: 'Conversão em Clientes Ativos',
-    category: 'CLIENTS',
-    targetValue: 8,
-    currentValue: 0,
-    period: 'Setembro 2026',
-    deadline: '2026-09-30'
-  },
-  {
-    id: 'goal-4',
-    title: 'Propostas Comerciais Apresentadas',
-    category: 'PROPOSALS',
-    targetValue: 15,
-    currentValue: 0,
-    period: 'Setembro 2026',
-    deadline: '2026-09-30'
-  }
-];
+const DEFAULT_GOALS: CommercialGoal[] = [];
 
 export const GoalsView: React.FC = () => {
   const [goals, setGoals] = useState<CommercialGoal[]>(() => {
     const saved = localStorage.getItem('lumeo_crm_goals');
     if (saved) {
-      try { return JSON.parse(saved); } catch (e) { }
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.id === 'goal-1' && parsed[0]?.targetValue === 50000) {
+          localStorage.removeItem('lumeo_crm_goals');
+          return [];
+        }
+        return parsed;
+      } catch (e) { }
     }
     return DEFAULT_GOALS;
   });

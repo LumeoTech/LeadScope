@@ -4,6 +4,7 @@ import { ActiveTab } from '../components/Sidebar';
 import {
   Flag,
   Calendar as CalendarIcon,
+  Building2,
   Crosshair,
   TrendingUp,
   TrendingDown,
@@ -85,10 +86,11 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
 
   const campaignsGrowth = leadsLastMonth > 0
     ? (((leadsThisMonth - leadsLastMonth) / leadsLastMonth) * 100).toFixed(1)
-    : (leadsThisMonth > 0 ? '100.0' : '0.0');
+    : '0.0';
+  const hasCampaignsHistory = leadsLastMonth > 0;
   const isCampaignsPositive = Number(campaignsGrowth) >= 0;
 
-  // 2. KPI: Posts Published (Total Registered Companies / Base Contacts)
+  // 2. KPI: Total Registered Companies / Base Contacts
   const contactsCount = companies.length;
   const compThisMonth = useMemo(() => {
     return companies.filter(c => new Date(c.createdAt) >= firstDayThisMonth).length;
@@ -103,7 +105,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
 
   const compGrowth = compLastMonth > 0
     ? (((compThisMonth - compLastMonth) / compLastMonth) * 100).toFixed(1)
-    : (compThisMonth > 0 ? '100.0' : '0.0');
+    : '0.0';
+  const hasCompHistory = compLastMonth > 0;
   const isCompPositive = Number(compGrowth) >= 0;
 
   // 3. KPI: Total Reach (Total Pipeline Value in R$)
@@ -127,7 +130,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
     ? ((leadsWithValueCount / leads.length) * 100).toFixed(1)
     : '0.0';
 
-  // 4. KPI: Avg. engagement (Conversion / Win Rate)
+  // 4. KPI: Conversion / Win Rate
   const wonLeadsCount = useMemo(() => {
     return leads.filter(l => {
       const name = l.statusName?.toLowerCase() || '';
@@ -201,10 +204,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
       .reduce((sum, l) => sum + (Number(l.value) || 0), 0);
   }, [leads, todayStart]);
 
-  // Today's allowance: derived from commercial goals or 0 if not defined
+  // Today's allowance: derived strictly from real user goals or 0 if not defined
   const savedGoals = useMemo(() => {
     try {
-      return JSON.parse(localStorage.getItem('lumeo_crm_goals') || '[]');
+      const parsed = JSON.parse(localStorage.getItem('lumeo_crm_goals') || '[]');
+      if (Array.isArray(parsed) && parsed.length > 0 && parsed[0]?.id === 'goal-1' && parsed[0]?.targetValue === 50000) {
+        localStorage.removeItem('lumeo_crm_goals');
+        return [];
+      }
+      return parsed;
     } catch {
       return [];
     }
@@ -215,10 +223,10 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
 
   const budgetUsedPercent = todayAllowance > 0
     ? Math.min(100, Math.round((usedTodayValue / todayAllowance) * 100))
-    : (usedTodayValue > 0 ? 100 : 0);
+    : 0;
 
   // ==================== PEAK HOURS (REAL ACTIVITY DISTRIBUTION) ====================
-  const { peakLabel, peakPct, peakBars } = useMemo(() => {
+  const { peakLabel, peakPct, peakBars, hasSignificantData } = useMemo(() => {
     const hourCounts = new Array(24).fill(0);
     
     // Count hourly occurrences across all leads and audit logs
@@ -234,7 +242,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
     const totalActions = hourCounts.reduce((a, b) => a + b, 0);
 
     let maxWindow = 0;
-    let peakStartHour = 11;
+    let peakStartHour = 9;
 
     for (let h = 0; h < 23; h++) {
       const sum = hourCounts[h] + hourCounts[h + 1];
@@ -250,11 +258,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
       return `${hour12} ${period}`;
     };
 
-    const label = totalActions > 0
-      ? `${formatHourAmPm(peakStartHour)} – ${formatHourAmPm(peakStartHour + 2)}`
-      : 'Sem dados';
+    const hasData = totalActions >= 5;
 
-    const pct = totalActions > 0
+    const label = hasData
+      ? `${formatHourAmPm(peakStartHour)} – ${formatHourAmPm(peakStartHour + 2)}`
+      : (totalActions > 0 ? 'Horário Comercial' : 'Sem registros');
+
+    const pct = hasData && totalActions > 0
       ? Math.round((maxWindow / totalActions) * 100)
       : 0;
 
@@ -262,15 +272,15 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
     const maxVal = Math.max(...hourCounts, 1);
     const bars = [];
     for (let i = 4; i < 24; i++) {
-      const val = totalActions > 0 ? hourCounts[i] : 0;
+      const val = hasData ? hourCounts[i] : 0;
       bars.push({
         hour: i,
-        height: totalActions > 0 ? (val / maxVal) * 44 : 2,
-        isPeak: i >= peakStartHour && i <= peakStartHour + 1 && val > 0
+        height: hasData ? Math.max(3, (val / maxVal) * 44) : 3,
+        isPeak: hasData && i >= peakStartHour && i <= peakStartHour + 1 && val > 0
       });
     }
 
-    return { peakLabel: label, peakPct: pct, peakBars: bars };
+    return { peakLabel: label, peakPct: pct, peakBars: bars, hasSignificantData: hasData };
   }, [leads, auditLogs]);
 
   // ==================== STATS SECTION FILTERING ====================
@@ -320,12 +330,12 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
         gap: '16px',
         marginBottom: '28px'
       }}>
-        {/* Card 1: Active Campaigns */}
+        {/* Card 1: Oportunidades Ativas */}
         <div style={cardStyle}>
           <div style={cardHeaderStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8c93a0', fontSize: '0.84rem' }}>
               <Flag size={14} color="#8c93a0" />
-              <span>Active Campaigns</span>
+              <span>Oportunidades Ativas</span>
             </div>
             <button type="button" style={iconBtnStyle} title="Opções">
               <MoreHorizontal size={15} />
@@ -337,21 +347,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
             alignItems: 'center',
             gap: '6px',
             fontSize: '0.78rem',
-            color: isCampaignsPositive ? '#10b981' : '#ef4444',
+            color: hasCampaignsHistory && isCampaignsPositive ? '#10b981' : '#8c93a0',
             fontWeight: '500'
           }}>
-            <span style={isCampaignsPositive ? greenDotStyle : redDotStyle} />
-            <span>{campaignsGrowth}%</span>
-            <span style={{ color: '#68707d', fontWeight: '400' }}>since last month</span>
+            {hasCampaignsHistory ? (
+              <>
+                <span style={isCampaignsPositive ? greenDotStyle : redDotStyle} />
+                <span>{campaignsGrowth}%</span>
+                <span style={{ color: '#68707d', fontWeight: '400' }}>vs mês anterior</span>
+              </>
+            ) : (
+              <span style={{ color: '#68707d', fontWeight: '400' }}>{leadsThisMonth} novas este mês</span>
+            )}
           </div>
         </div>
 
-        {/* Card 2: Posts Published (Empresas / Contatos) */}
+        {/* Card 2: Empresas Cadastradas (Base Real) */}
         <div style={cardStyle}>
           <div style={cardHeaderStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8c93a0', fontSize: '0.84rem' }}>
-              <CalendarIcon size={14} color="#8c93a0" />
-              <span>Posts Published</span>
+              <Building2 size={14} color="#8c93a0" />
+              <span>Empresas Cadastradas</span>
             </div>
             <button type="button" style={iconBtnStyle} title="Opções">
               <MoreHorizontal size={15} />
@@ -363,21 +379,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
             alignItems: 'center',
             gap: '6px',
             fontSize: '0.78rem',
-            color: isCompPositive ? '#10b981' : '#ef4444',
+            color: hasCompHistory && isCompPositive ? '#10b981' : '#8c93a0',
             fontWeight: '500'
           }}>
-            <span style={isCompPositive ? greenDotStyle : redDotStyle} />
-            <span>{compGrowth}%</span>
-            <span style={{ color: '#68707d', fontWeight: '400' }}>since last month</span>
+            {hasCompHistory ? (
+              <>
+                <span style={isCompPositive ? greenDotStyle : redDotStyle} />
+                <span>{compGrowth}%</span>
+                <span style={{ color: '#68707d', fontWeight: '400' }}>vs mês anterior</span>
+              </>
+            ) : (
+              <span style={{ color: '#68707d', fontWeight: '400' }}>{contactsCount} empresas ativas na base</span>
+            )}
           </div>
         </div>
 
-        {/* Card 3: Total Reach (Valor Total do Funil) */}
+        {/* Card 3: Volume em Negociação (Valor Real) */}
         <div style={cardStyle}>
           <div style={cardHeaderStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8c93a0', fontSize: '0.84rem' }}>
               <Crosshair size={14} color="#8c93a0" />
-              <span>Total Reach</span>
+              <span>Volume em Negociação</span>
             </div>
             <button type="button" style={iconBtnStyle} title="Opções">
               <MoreHorizontal size={15} />
@@ -387,16 +409,16 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem', color: '#10b981', fontWeight: '500' }}>
             <span style={greenDotStyle} />
             <span>{reachPct}%</span>
-            <span style={{ color: '#68707d', fontWeight: '400' }}>com valor definido</span>
+            <span style={{ color: '#68707d', fontWeight: '400' }}>com valor estimado</span>
           </div>
         </div>
 
-        {/* Card 4: Avg. engagement (Taxa de Conversão Real) */}
+        {/* Card 4: Taxa de Conversão */}
         <div style={cardStyle}>
           <div style={cardHeaderStyle}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8c93a0', fontSize: '0.84rem' }}>
               <TrendingUp size={14} color="#8c93a0" />
-              <span>Avg. engagement</span>
+              <span>Taxa de Conversão</span>
             </div>
             <button type="button" style={iconBtnStyle} title="Opções">
               <MoreHorizontal size={15} />
@@ -591,7 +613,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8c93a0', fontSize: '0.84rem' }}>
                   <Clock size={14} color="#8c93a0" />
-                  <span style={{ color: '#d1d5db', fontWeight: '500' }}>Today's budget</span>
+                  <span style={{ color: '#d1d5db', fontWeight: '500' }}>Orçamento & Metas</span>
                 </div>
                 <button
                   type="button"
@@ -606,13 +628,13 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
               {/* Numbers */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginBottom: '22px' }}>
                 <div>
-                  <div style={{ fontSize: '0.75rem', color: '#6f7684', marginBottom: '4px' }}>Used today</div>
+                  <div style={{ fontSize: '0.75rem', color: '#6f7684', marginBottom: '4px' }}>Produção hoje</div>
                   <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#ffffff' }}>
                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(usedTodayValue)}
                   </div>
                 </div>
                 <div>
-                  <div style={{ fontSize: '0.75rem', color: '#6f7684', marginBottom: '4px' }}>Today's allowance</div>
+                  <div style={{ fontSize: '0.75rem', color: '#6f7684', marginBottom: '4px' }}>Meta diária</div>
                   <div style={{ fontSize: '1.25rem', fontWeight: '700', color: '#ffffff' }}>
                     {todayAllowance > 0
                       ? new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(todayAllowance)
@@ -650,7 +672,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
                     fontWeight: '600',
                     color: '#e5e7eb'
                   }}>
-                    {budgetUsedPercent}% used
+                    {budgetUsedPercent}% atingido
                   </div>
                 </div>
               </div>
@@ -661,7 +683,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#8c93a0', fontSize: '0.84rem' }}>
                   <Clock size={14} color="#8c93a0" />
-                  <span style={{ color: '#d1d5db', fontWeight: '500' }}>Peak hours</span>
+                  <span style={{ color: '#d1d5db', fontWeight: '500' }}>Horário de Maior Atividade</span>
                 </div>
                 <button type="button" style={iconBtnStyle} title="Maximizar">
                   <Maximize2 size={13} />
@@ -672,9 +694,9 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
                 {peakLabel}
               </div>
               <div style={{ fontSize: '0.78rem', color: '#7a8291', marginBottom: '18px' }}>
-                {peakPct > 0
+                {hasSignificantData && peakPct > 0
                   ? `~${peakPct}% das ações no horário mais movimentado`
-                  : 'Nenhuma atividade registrada no momento'}
+                  : 'Atividades sendo mapeadas em tempo real'}
               </div>
 
               {/* Wave Histogram calculated from real hourly distribution */}
@@ -686,7 +708,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
                     style={{
                       flex: 1,
                       height: `${bar.height}px`,
-                      background: bar.isPeak ? '#646a78' : (bar.height > 2 ? '#2b2e35' : 'rgba(255,255,255,0.05)'),
+                      background: bar.isPeak ? '#646a78' : (bar.height > 3 ? '#2b2e35' : 'rgba(255,255,255,0.05)'),
                       borderRadius: '2px 2px 0 0',
                       transition: 'all 0.15s ease'
                     }}
@@ -773,7 +795,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
             }}
           >
             <ShoppingBag size={14} />
-            <span>Total Orders ({filteredLeads.length})</span>
+            <span>Oportunidades ({filteredLeads.length})</span>
           </button>
 
           <button
