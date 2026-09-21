@@ -150,14 +150,14 @@ export const ContractModal: React.FC<ContractModalProps> = ({
               width: '60px',
               height: '60px',
               borderRadius: '50%',
-              background: isSigned ? 'rgba(16, 185, 129, 0.2)' : 'rgba(99, 102, 241, 0.2)',
-              border: isSigned ? '2px solid #10b981' : '2px solid #6366f1',
+              background: isSigned ? 'rgba(16, 185, 129, 0.2)' : 'rgba(30, 58, 95, 0.35)',
+              border: isSigned ? '2px solid #10b981' : '2px solid #1e3a5f',
               display: 'inline-flex',
               alignItems: 'center',
               justifyContent: 'center',
               marginBottom: '16px'
             }}>
-              <CheckCircle2 size={32} color={isSigned ? '#10b981' : '#818cf8'} />
+              <CheckCircle2 size={32} color={isSigned ? '#10b981' : '#93c5fd'} />
             </div>
 
             <h3 style={{ fontSize: '1.35rem', fontWeight: '800', marginBottom: '8px' }}>
@@ -237,12 +237,12 @@ export const ContractModal: React.FC<ContractModalProps> = ({
                 width: '38px',
                 height: '38px',
                 borderRadius: '10px',
-                background: 'rgba(99, 102, 241, 0.15)',
+                background: 'rgba(30, 58, 95, 0.35)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
               }}>
-                <FileSignature size={20} color="#818cf8" />
+                <FileSignature size={20} color="#93c5fd" />
               </div>
               <div>
                 <h2 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0 }}>Enviar Contrato Digital</h2>
@@ -272,8 +272,8 @@ export const ContractModal: React.FC<ContractModalProps> = ({
                         gap: '10px',
                         padding: '12px 14px',
                         borderRadius: '8px',
-                        background: templateName === tmpl.name ? 'rgba(99, 102, 241, 0.12)' : 'var(--bg-surface-elevated, rgba(255,255,255,0.02))',
-                        border: templateName === tmpl.name ? '1px solid #6366f1' : '1px solid var(--border-subtle)',
+                        background: templateName === tmpl.name ? 'rgba(30, 58, 95, 0.35)' : 'var(--bg-surface-elevated, rgba(255,255,255,0.02))',
+                        border: templateName === tmpl.name ? '1.5px solid #2e558a' : '1px solid var(--border-subtle)',
                         cursor: 'pointer'
                       }}
                     >
@@ -282,7 +282,7 @@ export const ContractModal: React.FC<ContractModalProps> = ({
                         name="templateName"
                         checked={templateName === tmpl.name}
                         onChange={() => setTemplateName(tmpl.name)}
-                        style={{ marginTop: '3px', accentColor: '#6366f1' }}
+                        style={{ marginTop: '3px', accentColor: '#1e3a5f' }}
                       />
                       <div>
                         <div style={{ fontSize: '0.88rem', fontWeight: 600 }}>{tmpl.name}</div>

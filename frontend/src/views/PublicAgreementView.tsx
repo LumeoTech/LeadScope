@@ -82,7 +82,7 @@ export const PublicAgreementView: React.FC<PublicAgreementViewProps> = ({ token 
         flexDirection: 'column',
         gap: '16px'
       }}>
-        <div className="spin" style={{ width: '36px', height: '36px', border: '3px solid #7c3aed', borderTopColor: 'transparent', borderRadius: '50%' }} />
+        <div className="spin" style={{ width: '36px', height: '36px', border: '3px solid #1e3a5f', borderTopColor: 'transparent', borderRadius: '50%' }} />
         <p style={{ color: '#94a3b8', fontSize: '0.95rem' }}>Carregando acordo comercial seguro...</p>
       </div>
     );
@@ -151,16 +151,16 @@ export const PublicAgreementView: React.FC<PublicAgreementViewProps> = ({ token 
               width: '46px',
               height: '46px',
               borderRadius: '12px',
-              background: 'linear-gradient(135deg, #7c3aed 0%, #4f46e5 100%)',
+              background: 'linear-gradient(135deg, #1e3a5f 0%, #2e558a 100%)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 0 20px rgba(124, 58, 237, 0.5)'
+              boxShadow: '0 0 20px rgba(30, 58, 95, 0.5)'
             }}>
               <FileText size={24} color="#ffffff" />
             </div>
             <div>
-              <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#a78bfa', textTransform: 'uppercase', letterSpacing: '1px' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: '700', color: '#93c5fd', textTransform: 'uppercase', letterSpacing: '1px' }}>
                 Instrumento Jurídico Digital
               </div>
               <h1 style={{ fontSize: '1.25rem', fontWeight: '800', color: '#ffffff', margin: 0 }}>
@@ -339,7 +339,7 @@ export const PublicAgreementView: React.FC<PublicAgreementViewProps> = ({ token 
               borderRadius: '14px'
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '18px' }}>
-                <Lock size={18} color="#7c3aed" />
+                <Lock size={18} color="#93c5fd" />
                 <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: '#ffffff' }}>
                   Assinatura e Aceite Digital
                 </h3>
@@ -396,7 +396,7 @@ export const PublicAgreementView: React.FC<PublicAgreementViewProps> = ({ token 
                     type="checkbox"
                     checked={acceptedTerms}
                     onChange={(e) => setAcceptedTerms(e.target.checked)}
-                    style={{ marginTop: '3px', width: '16px', height: '16px', accentColor: '#7c3aed' }}
+                    style={{ marginTop: '3px', width: '16px', height: '16px', accentColor: '#1e3a5f' }}
                   />
                   <span>
                     Declaro que li, compreendi e concordo integralmente com os termos e condições deste acordo comercial, conferindo validade jurídica à assinatura eletrônica.
@@ -415,14 +415,14 @@ export const PublicAgreementView: React.FC<PublicAgreementViewProps> = ({ token 
                   style={{
                     padding: '12px 24px',
                     borderRadius: '10px',
-                    background: 'linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%)',
+                    background: '#1e3a5f',
+                    border: '1px solid #2e558a',
                     color: '#ffffff',
-                    border: 'none',
                     fontWeight: '700',
                     fontSize: '0.92rem',
                     cursor: submitting || !signerName.trim() || !acceptedTerms ? 'not-allowed' : 'pointer',
                     opacity: submitting || !signerName.trim() || !acceptedTerms ? 0.6 : 1,
-                    boxShadow: '0 4px 15px rgba(124, 58, 237, 0.4)',
+                    boxShadow: '0 4px 15px rgba(30, 58, 95, 0.4)',
                     display: 'flex',
                     alignItems: 'center',
                     gap: '8px'

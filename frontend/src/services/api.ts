@@ -93,10 +93,58 @@ export interface Lead {
   locationPotential?: string;
   scoreRationale?: string;
   websiteContentSummary?: string;
+  googleRating?: number | null;
+  googleReviewsCount?: number | null;
+  rating?: number | null;
+  regionTier?: string | null;
+  digitalPresenceTier?: string | null;
   createdById: number;
   createdByName?: string;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface AutoScanSettings {
+  id: number;
+  active: boolean;
+  scheduledTime: string;
+  leadsPerDay: number;
+  minAcceptanceScore: number;
+  locationTier: 'ALTO' | 'MEDIO' | 'QUALQUER' | string;
+  discardedLeadsCount: number;
+  updatedAt?: string;
+}
+
+export interface RegionStat {
+  region: string;
+  totalLeads: number;
+  avgScore: number;
+  socioEconomicTier: string;
+}
+
+export interface AutoScanAnalytics {
+  settings: AutoScanSettings;
+  totalLeads: number;
+  totalAccepted: number;
+  discardedCount: number;
+  averageScore: number;
+  todayAvgScore: number;
+  todayLeadsCount: number;
+  scoreDistribution: Record<string, number>;
+  topRegions: RegionStat[];
+}
+
+export interface UserSettingsDto {
+  userId?: number;
+  name?: string;
+  email?: string;
+  role?: string;
+  avatarUrl?: string;
+  theme?: string;
+  language?: string;
+  notifyNewLead?: boolean;
+  notifyNewAppointment?: boolean;
+  notifyDailySummary?: boolean;
 }
 
 export interface Site {
@@ -517,6 +565,15 @@ export const api = {
     },
     getDailyScanStatus: () =>
       request<DailyScanStatus>('/leads/auto-scan-status'),
+    getAutoScanSettings: () =>
+      request<AutoScanSettings>('/leads/auto-scan-settings'),
+    updateAutoScanSettings: (data: Partial<AutoScanSettings>) =>
+      request<AutoScanSettings>('/leads/auto-scan-settings', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    getAutoScanAnalytics: () =>
+      request<AutoScanAnalytics>('/leads/auto-scan-analytics'),
     getSchedule: () =>
       request<{ hour: number; minute: number; active: boolean; timeString: string; formattedDescription: string }>('/leads/auto-scan-schedule'),
     updateSchedule: (data: { time: string; active?: boolean }) =>
@@ -725,5 +782,23 @@ export const api = {
       }),
     listByClient: (clientId: number) => request<Agreement[]>(`/agreements/client/${clientId}`),
     listByLead: (leadId: number) => request<Agreement[]>(`/agreements/lead/${leadId}`),
+  },
+
+  settings: {
+    getMySettings: () => request<UserSettingsDto>('/settings/me'),
+    saveMySettings: (data: Partial<UserSettingsDto>) =>
+      request<UserSettingsDto>('/settings/me', {
+        method: 'PUT',
+        body: JSON.stringify(data),
+      }),
+    changePassword: (data: { currentPassword: string; newPassword: string }) =>
+      request<{ message: string }>('/settings/change-password', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
+    revokeSessions: () =>
+      request<{ message: string }>('/settings/revoke-sessions', {
+        method: 'POST',
+      }),
   },
 };

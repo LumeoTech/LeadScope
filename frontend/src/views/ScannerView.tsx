@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { api, PlaceLead } from '../services/api';
+import { SearchControlCenter } from '../components/SearchControlCenter';
 import {
   MapPin,
   Search,
@@ -125,6 +126,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
   });
   const [locationName, setLocationName] = useState<string>('São Paulo — SP (Região Central)');
   const [geocoding, setGeocoding] = useState<boolean>(false);
+  const [scannerTab, setScannerTab] = useState<'control' | 'radar'>('control');
 
   // ——————————————————————————————————————————————————————————
   // 2. Estado dos Segmentos / Nichos
@@ -211,12 +213,12 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
       className: 'kaptar-map-pin',
       html: `
         <div style="transform: translate(-50%, -100%); display: flex; flex-direction: column; align-items: center; pointer-events: none;">
-          <div style="background: linear-gradient(135deg, #8b5cf6, #6366f1); color: white; padding: 5px 12px; border-radius: 16px; font-size: 11px; font-weight: 700; box-shadow: 0 6px 18px rgba(139, 92, 246, 0.7); border: 1.5px solid rgba(255,255,255,0.4); white-space: nowrap; display: flex; align-items: center; gap: 4px;">
+          <div style="background: linear-gradient(135deg, #1e3a5f, #2563eb); color: white; padding: 5px 12px; border-radius: 16px; font-size: 11px; font-weight: 700; box-shadow: 0 6px 18px rgba(30, 58, 95, 0.7); border: 1.5px solid rgba(255,255,255,0.4); white-space: nowrap; display: flex; align-items: center; gap: 4px;">
             <span>🎯</span>
             <span>Local de Varredura</span>
           </div>
-          <div style="width: 12px; height: 12px; background: #8b5cf6; transform: rotate(45deg); margin-top: -6px; border-bottom: 2px solid white; border-right: 2px solid white;"></div>
-          <div style="width: 8px; height: 8px; border-radius: 50%; background: #6366f1; margin-top: 2px; box-shadow: 0 0 12px #8b5cf6;"></div>
+          <div style="width: 12px; height: 12px; background: #1e3a5f; transform: rotate(45deg); margin-top: -6px; border-bottom: 2px solid white; border-right: 2px solid white;"></div>
+          <div style="width: 8px; height: 8px; border-radius: 50%; background: #2563eb; margin-top: 2px; box-shadow: 0 0 12px #2563eb;"></div>
         </div>
       `,
       iconSize: [0, 0],
@@ -238,8 +240,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
     } else {
       circleRef.current = L.circle([lat, lng], {
         radius: 3000,
-        color: '#8b5cf6',
-        fillColor: '#8b5cf6',
+        color: '#1e3a5f',
+        fillColor: '#1e3a5f',
         fillOpacity: 0.14,
         weight: 2,
         dashArray: '6, 6'
@@ -546,26 +548,92 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
   return (
     <div style={{ paddingBottom: '80px', maxWidth: '1380px', margin: '0 auto' }}>
       
-      {/* HEADER PRINCIPAL */}
-      <div style={{ marginBottom: '28px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-          <div style={{
-            width: '42px',
-            height: '42px',
-            borderRadius: '12px',
-            background: 'linear-gradient(135deg, #8b5cf6, #6366f1)',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 4px 16px rgba(139, 92, 246, 0.4)'
-          }}>
-            <Compass size={24} color="#fff" />
-          </div>
-          <div>
-            <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-              Prospecção de Novos Clientes
-            </h1>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: 0 }}>
+      {/* Abas de Navegação do Módulo Analytics / Busca */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '24px',
+        flexWrap: 'wrap',
+        gap: '12px'
+      }}>
+        <div style={{
+          display: 'flex',
+          background: 'var(--bg-surface)',
+          padding: '3px',
+          borderRadius: '10px',
+          border: '1px solid var(--border-subtle)'
+        }}>
+          <button
+            type="button"
+            onClick={() => setScannerTab('control')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 18px',
+              borderRadius: '8px',
+              border: 'none',
+              background: scannerTab === 'control' ? '#1e3a5f' : 'transparent',
+              color: scannerTab === 'control' ? '#ffffff' : 'var(--text-secondary)',
+              fontWeight: '700',
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <SlidersHorizontal size={15} />
+            <span>Centro de Controle & Qualidade IA</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setScannerTab('radar')}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 18px',
+              borderRadius: '8px',
+              border: 'none',
+              background: scannerTab === 'radar' ? '#1e3a5f' : 'transparent',
+              color: scannerTab === 'radar' ? '#ffffff' : 'var(--text-secondary)',
+              fontWeight: '700',
+              fontSize: '0.85rem',
+              cursor: 'pointer',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <MapPin size={15} />
+            <span>Varredura Geográfica & Radar</span>
+          </button>
+        </div>
+      </div>
+
+      {scannerTab === 'control' ? (
+        <SearchControlCenter onNavigateToLeads={() => onNavigate && onNavigate('kanban')} />
+      ) : (
+        <>
+          {/* HEADER DO RADAR */}
+          <div style={{ marginBottom: '28px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
+              <div style={{
+                width: '42px',
+                height: '42px',
+                borderRadius: '12px',
+                background: 'linear-gradient(135deg, #1e3a5f, #2563eb)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: '0 4px 16px rgba(30, 58, 95, 0.4)'
+              }}>
+                <Compass size={24} color="#fff" />
+              </div>
+              <div>
+                <h1 style={{ fontSize: '24px', fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
+                  Prospecção de Novos Clientes
+                </h1>
+                <p style={{ color: 'var(--text-secondary)', fontSize: '13px', margin: 0 }}>
               Localize estabelecimentos e oportunidades comerciais ativas na sua área
             </p>
           </div>
@@ -580,8 +648,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
         <section className="glass-panel" style={{ padding: '24px', position: 'relative' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(99, 102, 241, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <MapPin size={18} color="#8b5cf6" />
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(30, 58, 95, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <MapPin size={18} color="#93c5fd" />
               </div>
               <div>
                 <h2 style={{ fontSize: '16px', fontWeight: 600, margin: 0, color: 'var(--text-primary)' }}>
@@ -681,13 +749,13 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
               alignItems: 'center',
               justifyContent: 'space-between',
               padding: '10px 16px',
-              background: 'rgba(139, 92, 246, 0.1)',
-              border: '1px solid rgba(139, 92, 246, 0.25)',
+              background: 'rgba(30, 58, 95, 0.25)',
+              border: '1px solid #2e558a',
               borderRadius: '8px',
               fontSize: '12px'
             }}>
               <span style={{ color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#8b5cf6', display: 'inline-block' }}></span>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#3b82f6', display: 'inline-block' }}></span>
                 <strong>Raio de Captura:</strong> 3.000m ao redor do ponto ({selectedCoords.lat.toFixed(4)}, {selectedCoords.lng.toFixed(4)})
               </span>
               <span style={{ color: 'var(--text-secondary)' }}>Clique no mapa para alterar o ponto</span>
@@ -701,8 +769,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
         <section className="glass-panel" style={{ padding: '24px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(139, 92, 246, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Layers size={18} color="#a855f7" />
+              <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(30, 58, 95, 0.45)', border: '1px solid rgba(30, 58, 95, 0.8)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Layers size={18} color="#93c5fd" />
               </div>
               <h2 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>
                 Categorias / Segmentos
@@ -711,7 +779,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px' }}>
               <span style={{ color: 'var(--text-secondary)' }}>
-                <strong style={{ color: '#a855f7' }}>{selectedNiches.length}</strong> selecionados
+                <strong style={{ color: '#93c5fd' }}>{selectedNiches.length}</strong> selecionados
               </span>
               {selectedNiches.length > 0 && (
                 <>
@@ -749,8 +817,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                     borderRadius: '20px',
                     fontSize: '12px',
                     fontWeight: 500,
-                    background: 'linear-gradient(135deg, rgba(139, 92, 246, 0.3), rgba(99, 102, 241, 0.3))',
-                    border: '1px solid rgba(139, 92, 246, 0.6)',
+                    background: 'linear-gradient(135deg, rgba(30, 58, 95, 0.6), rgba(15, 23, 42, 0.8))',
+                    border: '1px solid rgba(30, 58, 95, 0.9)',
                     color: '#fff'
                   }}
                 >
@@ -800,7 +868,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
               return (
                 <div key={group.name} style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '14px 18px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.04)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <IconComponent size={15} color="#8b5cf6" />
+                    <IconComponent size={15} color="#93c5fd" />
                     <span style={{ fontSize: '11px', fontWeight: 700, letterSpacing: '0.06em', color: 'var(--text-secondary)' }}>
                       {group.name}
                     </span>
@@ -823,13 +891,13 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                             cursor: 'pointer',
                             transition: 'all 0.15s ease',
                             border: isSelected
-                              ? '1px solid #8b5cf6'
+                              ? '1.5px solid #2e558a'
                               : '1px solid rgba(255, 255, 255, 0.08)',
                             background: isSelected
-                              ? 'linear-gradient(135deg, rgba(139, 92, 246, 0.85), rgba(99, 102, 241, 0.85))'
+                              ? '#1e3a5f'
                               : 'rgba(22, 30, 49, 0.5)',
                             color: isSelected ? '#ffffff' : 'var(--text-secondary)',
-                            boxShadow: isSelected ? '0 2px 8px rgba(139, 92, 246, 0.35)' : 'none'
+                            boxShadow: isSelected ? '0 2px 8px rgba(30, 58, 95, 0.4)' : 'none'
                           }}
                         >
                           {isSelected && <span style={{ marginRight: '4px' }}>✓</span>}
@@ -849,8 +917,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
         {/* ———————————————————————————————————————————————————— */}
         <section className="glass-panel" style={{ padding: '24px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
-            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(99, 102, 241, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              <SlidersHorizontal size={18} color="#6366f1" />
+            <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(30, 58, 95, 0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <SlidersHorizontal size={18} color="#93c5fd" />
             </div>
             <h2 style={{ fontSize: '16px', fontWeight: 600, margin: 0 }}>
               Fonte de Dados e Filtros
@@ -898,8 +966,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                   justifyContent: 'space-between',
                   padding: '12px 16px',
                   borderRadius: '10px',
-                  background: dataSource === 'GOOGLE_MAPS' ? 'rgba(99, 102, 241, 0.15)' : 'rgba(255, 255, 255, 0.03)',
-                  border: dataSource === 'GOOGLE_MAPS' ? '1px solid #6366f1' : '1px solid rgba(255, 255, 255, 0.08)',
+                  background: dataSource === 'GOOGLE_MAPS' ? 'rgba(30, 58, 95, 0.35)' : 'rgba(255, 255, 255, 0.03)',
+                  border: dataSource === 'GOOGLE_MAPS' ? '1.5px solid #2e558a' : '1px solid rgba(255, 255, 255, 0.08)',
                   cursor: 'pointer',
                   transition: 'all 0.15s ease'
                 }}>
@@ -909,14 +977,14 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                       name="dataSource"
                       checked={dataSource === 'GOOGLE_MAPS'}
                       onChange={() => setDataSource('GOOGLE_MAPS')}
-                      style={{ accentColor: '#6366f1' }}
+                      style={{ accentColor: '#1e3a5f' }}
                     />
                     <div>
                       <span style={{ fontSize: '13px', fontWeight: 500, display: 'block' }}>Google Places API</span>
                       <span style={{ fontSize: '11px', color: 'var(--text-muted)' }}>Requer chave configurada no backend</span>
                     </div>
                   </div>
-                  <span style={{ fontSize: '10px', padding: '3px 8px', borderRadius: '12px', background: '#6366f1', color: '#fff', fontWeight: 600 }}>
+                  <span style={{ fontSize: '10px', padding: '3px 8px', borderRadius: '12px', background: '#1e3a5f', border: '1px solid #2e558a', color: '#fff', fontWeight: 600 }}>
                     GOOGLE
                   </span>
                 </label>
@@ -935,8 +1003,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                     flex: 1,
                     padding: '12px 8px',
                     borderRadius: '10px',
-                    border: captureFilter === 'ALL' ? '1px solid #8b5cf6' : '1px solid rgba(255, 255, 255, 0.08)',
-                    background: captureFilter === 'ALL' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255, 255, 255, 0.03)',
+                    border: captureFilter === 'ALL' ? '1.5px solid #2e558a' : '1px solid rgba(255, 255, 255, 0.08)',
+                    background: captureFilter === 'ALL' ? '#1e3a5f' : 'rgba(255, 255, 255, 0.03)',
                     color: captureFilter === 'ALL' ? '#fff' : 'var(--text-secondary)',
                     cursor: 'pointer',
                     fontSize: '12px',
@@ -947,7 +1015,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                     gap: '6px'
                   }}
                 >
-                  <Building2 size={14} color={captureFilter === 'ALL' ? '#8b5cf6' : 'currentColor'} />
+                  <Building2 size={14} color={captureFilter === 'ALL' ? '#93c5fd' : 'currentColor'} />
                   Todos
                 </button>
 
@@ -958,8 +1026,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                     flex: 1,
                     padding: '12px 8px',
                     borderRadius: '10px',
-                    border: captureFilter === 'PHONE_ONLY' ? '1px solid #8b5cf6' : '1px solid rgba(255, 255, 255, 0.08)',
-                    background: captureFilter === 'PHONE_ONLY' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255, 255, 255, 0.03)',
+                    border: captureFilter === 'PHONE_ONLY' ? '1.5px solid #2e558a' : '1px solid rgba(255, 255, 255, 0.08)',
+                    background: captureFilter === 'PHONE_ONLY' ? '#1e3a5f' : 'rgba(255, 255, 255, 0.03)',
                     color: captureFilter === 'PHONE_ONLY' ? '#fff' : 'var(--text-secondary)',
                     cursor: 'pointer',
                     fontSize: '12px',
@@ -970,7 +1038,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                     gap: '6px'
                   }}
                 >
-                  <Phone size={14} color={captureFilter === 'PHONE_ONLY' ? '#8b5cf6' : 'currentColor'} />
+                  <Phone size={14} color={captureFilter === 'PHONE_ONLY' ? '#93c5fd' : 'currentColor'} />
                   Só fone
                 </button>
 
@@ -981,8 +1049,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                     flex: 1,
                     padding: '12px 8px',
                     borderRadius: '10px',
-                    border: captureFilter === 'PHONE_AND_WEB' ? '1px solid #8b5cf6' : '1px solid rgba(255, 255, 255, 0.08)',
-                    background: captureFilter === 'PHONE_AND_WEB' ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255, 255, 255, 0.03)',
+                    border: captureFilter === 'PHONE_AND_WEB' ? '1.5px solid #2e558a' : '1px solid rgba(255, 255, 255, 0.08)',
+                    background: captureFilter === 'PHONE_AND_WEB' ? '#1e3a5f' : 'rgba(255, 255, 255, 0.03)',
                     color: captureFilter === 'PHONE_AND_WEB' ? '#fff' : 'var(--text-secondary)',
                     cursor: 'pointer',
                     fontSize: '12px',
@@ -993,7 +1061,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                     gap: '6px'
                   }}
                 >
-                  <Globe size={14} color={captureFilter === 'PHONE_AND_WEB' ? '#8b5cf6' : 'currentColor'} />
+                  <Globe size={14} color={captureFilter === 'PHONE_AND_WEB' ? '#93c5fd' : 'currentColor'} />
                   Fone + Site
                 </button>
               </div>
@@ -1012,13 +1080,13 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
             style={{
               padding: '16px 48px',
               borderRadius: '12px',
-              border: 'none',
-              background: 'linear-gradient(135deg, #7c3aed 0%, #6366f1 50%, #8b5cf6 100%)',
+              border: '1px solid #2e558a',
+              background: '#1e3a5f',
               color: '#ffffff',
               fontSize: '16px',
               fontWeight: 700,
               cursor: isSearching ? 'wait' : 'pointer',
-              boxShadow: '0 8px 32px rgba(124, 58, 237, 0.55), 0 0 15px rgba(99, 102, 241, 0.4)',
+              boxShadow: '0 8px 32px rgba(30, 58, 95, 0.65)',
               transition: 'all 0.25s ease',
               display: 'inline-flex',
               alignItems: 'center',
@@ -1141,8 +1209,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                           borderRadius: '8px',
                           fontSize: '12px',
                           fontWeight: isCurrent ? 600 : 400,
-                          border: isCurrent ? '1px solid #8b5cf6' : '1px solid var(--border-subtle)',
-                          background: isCurrent ? 'rgba(139, 92, 246, 0.2)' : 'rgba(255, 255, 255, 0.02)',
+                          border: isCurrent ? '1.5px solid #2e558a' : '1px solid var(--border-subtle)',
+                          background: isCurrent ? '#1e3a5f' : 'rgba(255, 255, 255, 0.02)',
                           color: isCurrent ? '#fff' : 'var(--text-secondary)',
                           cursor: 'pointer'
                         }}
@@ -1160,8 +1228,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     padding: '12px 18px',
-                    background: 'rgba(99, 102, 241, 0.15)',
-                    border: '1px solid rgba(99, 102, 241, 0.35)',
+                    background: 'rgba(30, 58, 95, 0.3)',
+                    border: '1px solid #2e558a',
                     borderRadius: '10px',
                     marginBottom: '20px'
                   }}>
@@ -1170,7 +1238,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                         type="checkbox"
                         checked={paginatedLeads.every(l => selectedLeadIds.includes(l.id))}
                         onChange={() => toggleSelectAllPage(paginatedLeads)}
-                        style={{ accentColor: '#8b5cf6', width: '16px', height: '16px' }}
+                        style={{ accentColor: '#1e3a5f', width: '16px', height: '16px' }}
                       />
                       <span>
                         <strong>{selectedLeadIds.length}</strong> {selectedLeadIds.length === 1 ? 'lead selecionado' : 'leads selecionados'}
@@ -1232,7 +1300,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                             border: lead.addedToCrm
                               ? '1px solid rgba(16, 185, 129, 0.5)'
                               : isSelected
-                                ? '1px solid rgba(139, 92, 246, 0.6)'
+                                ? '1px solid #1e3a5f'
                                 : '1px solid rgba(255, 255, 255, 0.08)',
                             background: lead.addedToCrm
                               ? 'linear-gradient(180deg, rgba(16, 185, 129, 0.05) 0%, rgba(15, 21, 35, 0.7) 100%)'
@@ -1251,7 +1319,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                                   type="checkbox"
                                   checked={isSelected}
                                   onChange={() => toggleSelectLead(lead.id)}
-                                  style={{ accentColor: '#8b5cf6', width: '16px', height: '16px', marginTop: '3px' }}
+                                  style={{ accentColor: '#1e3a5f', width: '16px', height: '16px', marginTop: '3px' }}
                                 />
                                 <div>
                                   <h4 style={{ fontSize: '15px', fontWeight: 700, margin: 0, color: 'var(--text-primary)' }}>
@@ -1262,8 +1330,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                                       fontSize: '11px',
                                       padding: '2px 8px',
                                       borderRadius: '12px',
-                                      background: 'rgba(139, 92, 246, 0.15)',
-                                      color: '#a855f7',
+                                      background: 'rgba(30, 58, 95, 0.35)',
+                                      color: '#93c5fd',
                                       fontWeight: 600
                                     }}>
                                       {lead.category}
@@ -1386,7 +1454,7 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                                     display: 'inline-flex',
                                     alignItems: 'center',
                                     gap: '6px',
-                                    color: '#a855f7',
+                                    color: '#38bdf8',
                                     textDecoration: 'none',
                                     fontWeight: 500
                                   }}
@@ -1446,8 +1514,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
                                     fontSize: '11px',
                                     padding: '6px 12px',
                                     borderRadius: '6px',
-                                    background: '#8b5cf6',
-                                    border: 'none',
+                                    background: '#1e3a5f',
+                                    border: '1px solid #2e558a',
                                     color: '#fff',
                                     fontWeight: 600,
                                     cursor: 'pointer',
@@ -1559,6 +1627,8 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
         )}
 
       </div>
+        </>
+      )}
     </div>
   );
 };

@@ -102,7 +102,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
           </>
         ) : (
           <>
-            <Moon size={15} color="#6366f1" />
+            <Moon size={15} color="#1e3a5f" />
             <span style={{ fontSize: '0.8rem', fontWeight: '600' }}>Modo Escuro</span>
           </>
         )}
@@ -267,7 +267,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: '#a78bfa',
+                color: '#38bdf8',
                 fontSize: '0.85rem',
                 cursor: 'pointer',
                 textDecoration: 'underline'
@@ -286,7 +286,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               style={{
                 background: 'transparent',
                 border: 'none',
-                color: '#a78bfa',
+                color: '#38bdf8',
                 fontSize: '0.85rem',
                 cursor: 'pointer',
                 display: 'inline-flex',

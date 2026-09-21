@@ -97,11 +97,6 @@ export const App: React.FC = () => {
       return;
     }
 
-    if (activeTab === 'audit' && role !== 'ADMIN') {
-      setActiveTab('kanban');
-      return;
-    }
-
     // Verificação de permissões em tempo real por tela
     if (activeTab === 'kanban' && !permissionsService.hasPermission(role, 'can_view_leads')) {
       setActiveTab('dashboard');

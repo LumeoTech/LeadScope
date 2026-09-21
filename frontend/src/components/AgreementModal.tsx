@@ -146,11 +146,12 @@ As partes reconhecem a plena validade jurídica do aceite por meio digital deste
               width: '38px',
               height: '38px',
               borderRadius: '10px',
-              background: 'rgba(124, 58, 237, 0.15)',
+              background: 'rgba(30, 58, 95, 0.4)',
+              border: '1px solid rgba(30, 58, 95, 0.7)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'var(--accent-primary)'
+              color: '#93c5fd'
             }}>
               <FileText size={20} />
             </div>

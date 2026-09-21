@@ -166,7 +166,7 @@ export const ProposalsView: React.FC = () => {
                   </td>
                   <td style={{ padding: '16px 20px' }}>
                     <div style={{ fontWeight: '600' }}>{prop.companyRazaoSocial}</div>
-                    <div style={{ fontSize: '0.78rem', color: '#818cf8' }}>{prop.leadTitle}</div>
+                    <div style={{ fontSize: '0.78rem', color: '#60a5fa' }}>{prop.leadTitle}</div>
                   </td>
                   <td style={{ padding: '16px 20px', fontWeight: '800', color: '#34d399', fontSize: '1rem' }}>
                     {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(prop.value)}

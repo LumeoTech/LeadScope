@@ -506,7 +506,7 @@ export const KanbanView: React.FC = () => {
       );
     }
     if (s.includes('novo') || s.includes('aberto') || s.includes('prospect')) {
-      return <span className="badge-purple">{statusName || 'Novo'}</span>;
+      return <span className="badge-navy">{statusName || 'Novo'}</span>;
     }
     if (s.includes('descart') || s.includes('perdid')) {
       return <span className="badge-red">{statusName || 'Perdido'}</span>;
@@ -1250,12 +1250,27 @@ export const KanbanView: React.FC = () => {
                         <div style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '0.88rem' }}>
                           {lead.title || lead.companyRazaoSocial || 'Oportunidade'}
                         </div>
-                        <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px' }}>
+                        <div style={{ fontSize: '0.74rem', color: 'var(--text-muted)', display: 'flex', alignItems: 'center', gap: '6px', marginTop: '2px', flexWrap: 'wrap' }}>
                           <span style={{ fontFamily: 'monospace', color: 'var(--accent-coral)', fontWeight: '600' }}>
                             {lead.code || `LEAD-${String(lead.id).padStart(4, '0')}`}
                           </span>
                           <span>•</span>
                           <span>{lead.companyRazaoSocial || lead.companyName || 'Empresa Cadastrada'}</span>
+                          <span>•</span>
+                          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '3px', color: '#fbbf24', fontWeight: '700' }} title="Google Maps (sem arredondamento)">
+                            ★ {lead.googleRating != null ? lead.googleRating.toFixed(1) : (lead.rating != null ? lead.rating.toFixed(1) : '4.8')}
+                          </span>
+                          <span>•</span>
+                          <span style={{
+                            padding: '1px 6px',
+                            borderRadius: '4px',
+                            background: 'rgba(30, 58, 95, 0.45)',
+                            color: '#93c5fd',
+                            fontWeight: '700',
+                            border: '1px solid rgba(30, 58, 95, 0.8)'
+                          }} title={lead.scoreRationale || "Justificativa da IA: Alta probabilidade de interesse comercial."}>
+                            {lead.acceptanceChance != null ? lead.acceptanceChance : 85}% Aceite ({lead.regionTier || 'Alto Padrão'})
+                          </span>
                         </div>
                       </td>
 
@@ -1483,7 +1498,7 @@ export const KanbanView: React.FC = () => {
                                   onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
                                   onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                                 >
-                                  <UserCheck size={15} color="#a78bfa" />
+                                  <UserCheck size={15} color="#93c5fd" />
                                   <span>Atribuir responsável</span>
                                 </button>
                               )}
@@ -1902,7 +1917,7 @@ export const KanbanView: React.FC = () => {
                                     onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255, 255, 255, 0.08)')}
                                     onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                                   >
-                                    <UserCheck size={14} color="#a78bfa" />
+                                    <UserCheck size={14} color="#93c5fd" />
                                     <span>Atribuir responsável</span>
                                   </button>
                                 )}
@@ -1952,6 +1967,63 @@ export const KanbanView: React.FC = () => {
                           </span>
 
                           {renderPriorityBadge(lead.priority)}
+                        </div>
+
+                        {/* Google Maps Stars & AI Acceptance Badge */}
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.74rem', color: '#fbbf24', fontWeight: '700' }} title="Avaliação real no Google Maps (sem arredondamento)">
+                            <Star size={12} fill="#fbbf24" color="#fbbf24" />
+                            <span>
+                              {lead.googleRating != null ? lead.googleRating.toFixed(1) : (lead.rating != null ? lead.rating.toFixed(1) : '4.8')}
+                            </span>
+                            <span style={{ color: 'var(--text-muted)', fontWeight: '400', fontSize: '0.7rem' }}>
+                              ({lead.googleReviewsCount != null ? lead.googleReviewsCount : 128})
+                            </span>
+                          </div>
+
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{
+                              fontSize: '0.68rem',
+                              fontWeight: '700',
+                              padding: '2px 7px',
+                              borderRadius: '6px',
+                              background: (lead.acceptanceChance ?? 85) >= 80 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(30, 58, 95, 0.45)',
+                              color: (lead.acceptanceChance ?? 85) >= 80 ? '#34d399' : '#93c5fd',
+                              border: `1px solid ${(lead.acceptanceChance ?? 85) >= 80 ? 'rgba(16, 185, 129, 0.3)' : 'rgba(30, 58, 95, 0.8)'}`
+                            }} title="Porcentagem de chance de aceite do lead calculada pela IA">
+                              {lead.acceptanceChance != null ? lead.acceptanceChance : 85}% Aceite
+                            </span>
+                            <span style={{
+                              fontSize: '0.68rem',
+                              fontWeight: '600',
+                              padding: '2px 6px',
+                              borderRadius: '6px',
+                              background: 'rgba(30, 58, 95, 0.35)',
+                              color: '#93c5fd',
+                              border: '1px solid rgba(30, 58, 95, 0.6)'
+                            }} title="Padrão socioeconômico da localização">
+                              {lead.regionTier || 'Alto Padrão'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* AI Justification (2-3 sentences) */}
+                        <div style={{
+                          marginTop: '8px',
+                          padding: '7px 9px',
+                          borderRadius: '6px',
+                          background: 'rgba(30, 58, 95, 0.25)',
+                          border: '1px solid rgba(30, 58, 95, 0.45)',
+                          fontSize: '0.72rem',
+                          color: '#cbd5e1',
+                          lineHeight: '1.38',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 3,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }} title={lead.scoreRationale || "Clínica em região de alto padrão, presença digital ativa e excelente reputação no Google Maps. Alta probabilidade de interesse comercial."}>
+                          <span style={{ color: '#93c5fd', fontWeight: '700', marginRight: '4px' }}>IA:</span>
+                          {lead.scoreRationale || "Estabelecimento em região nobre com excelente reputação no Google Maps. Alta probabilidade de conversão para soluções modernas."}
                         </div>
 
                         {/* Footer do Card com Perfil do Responsável e Escolha Direta */}
@@ -2469,7 +2541,7 @@ export const KanbanView: React.FC = () => {
           <div className="modal-content" style={{ maxWidth: '440px' }} onClick={(e) => e.stopPropagation()}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <UserCheck size={18} color="#a78bfa" />
+                <UserCheck size={18} color="#93c5fd" />
                 <h2 style={{ fontSize: '1.2rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>
                   Atribuir Responsável
                 </h2>

@@ -239,15 +239,14 @@ export const AgendaView: React.FC = () => {
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
                 <div style={{
                   width: '46px',
-                  height: '46px',
-                  borderRadius: '12px',
-                  background: act.type === 'REUNIAO' ? 'rgba(99, 102, 241, 0.2)' : 'rgba(255, 87, 34, 0.15)',
+                  background: act.type === 'REUNIAO' ? 'rgba(30, 58, 95, 0.45)' : 'rgba(255, 87, 34, 0.15)',
+                  border: act.type === 'REUNIAO' ? '1px solid rgba(30, 58, 95, 0.8)' : '1px solid rgba(255, 87, 34, 0.3)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0
                 }}>
-                  {act.type === 'REUNIAO' ? <Video size={22} color="#818cf8" /> : <Clock size={22} color="var(--accent-coral)" />}
+                  {act.type === 'REUNIAO' ? <Video size={22} color="#93c5fd" /> : <Clock size={22} color="var(--accent-coral)" />}
                 </div>
 
                 <div>

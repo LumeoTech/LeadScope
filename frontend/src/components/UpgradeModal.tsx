@@ -60,8 +60,8 @@ export const UpgradeModal: React.FC<UpgradeModalProps> = ({ isOpen, onClose }) =
         <div style={{
           padding: '16px 20px',
           borderRadius: '12px',
-          background: 'linear-gradient(135deg, rgba(255, 87, 34, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%)',
-          border: '1px solid var(--accent-coral)',
+          background: 'linear-gradient(135deg, rgba(30, 58, 95, 0.3) 0%, rgba(15, 23, 42, 0.7) 100%)',
+          border: '1px solid #1e3a5f',
           marginBottom: '20px',
           display: 'flex',
           justifyContent: 'space-between',

@@ -24,16 +24,16 @@ export const LumeoLogo: React.FC<LumeoLogoProps> = ({
       >
         <defs>
           <linearGradient id="lumeoBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#6366f1" />
-            <stop offset="60%" stopColor="#4f46e5" />
-            <stop offset="100%" stopColor="#3b82f6" />
+            <stop offset="0%" stopColor="#1e3a5f" />
+            <stop offset="60%" stopColor="#2e558a" />
+            <stop offset="100%" stopColor="#1d4ed8" />
           </linearGradient>
           <linearGradient id="lumeoMarkGrad" x1="20%" y1="20%" x2="80%" y2="90%">
             <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="100%" stopColor="#e0e7ff" />
+            <stop offset="100%" stopColor="#e2e8f0" />
           </linearGradient>
           <filter id="lumeoGlow" x="-10%" y="-10%" width="120%" height="120%" filterUnits="userSpaceOnUse">
-            <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#4f46e5" floodOpacity="0.3" />
+            <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#1e3a5f" floodOpacity="0.3" />
           </filter>
         </defs>
 

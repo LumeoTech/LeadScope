@@ -219,11 +219,7 @@ public class UserService {
         User user = getUserEntity(id);
 
         if (isMasterAdmin(user)) {
-            throw new BusinessException("O usuário master Gabriel Castro é intocável e não pode ser excluído.");
-        }
-
-        if (currentUser != null && user.getId().equals(currentUser.getId())) {
-            throw new BusinessException("Você não pode excluir o seu próprio usuário de administrador.");
+            throw new BusinessException("O usuário master Gabriel Castro (gabrielcastro.dev01@gmail.com) é intocável e não pode ser excluído.");
         }
 
         // Revoga e remove tokens de autenticação
@@ -317,8 +313,9 @@ public class UserService {
 
     private boolean isMasterAdmin(User user) {
         if (user == null) return false;
-        String name = user.getName() != null ? user.getName().toLowerCase().trim() : "";
         String email = user.getEmail() != null ? user.getEmail().toLowerCase().trim() : "";
-        return name.contains("gabriel castro") || email.contains("gabriel@leadscope.com") || email.contains("gabrielcastro");
+        String name = user.getName() != null ? user.getName().toLowerCase().trim() : "";
+        return email.equals("gabrielcastro.dev01@gmail.com")
+                || (name.contains("gabriel castro") && email.contains("gabrielcastro"));
     }
 }

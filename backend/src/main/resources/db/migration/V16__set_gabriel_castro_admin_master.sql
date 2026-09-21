@@ -19,6 +19,7 @@ BEGIN
     WHERE LOWER(name) LIKE '%gabriel castro%' 
        OR LOWER(email) LIKE '%gabriel%castro%' 
        OR LOWER(email) = 'gabriel@leadscope.com'
+       OR LOWER(email) = 'gabrielcastro.dev01@gmail.com'
     LIMIT 1;
 
     IF v_user_id IS NOT NULL THEN
@@ -26,6 +27,7 @@ BEGIN
         UPDATE users 
         SET role_id = v_admin_role_id,
             name = 'Gabriel Castro',
+            email = 'gabrielcastro.dev01@gmail.com',
             active = TRUE,
             status = 'ACTIVE',
             updated_at = NOW()
@@ -35,7 +37,7 @@ BEGIN
         INSERT INTO users (name, email, password, active, role_id, status, created_at, updated_at)
         VALUES (
             'Gabriel Castro',
-            'gabriel@leadscope.com',
+            'gabrielcastro.dev01@gmail.com',
             '$2a$12$KIXjJXvFCe9lLoGPYYnFmOWJLNEMJL6EFw3Bq4EWxA7cIGwF4qbG',
             TRUE,
             v_admin_role_id,
@@ -54,7 +56,7 @@ BEGIN
                OR LOWER(email) LIKE '%gabriel%';
         EXCEPTION WHEN OTHERS THEN
             NULL;
-        END IF;
+        END;
     END IF;
 
     -- 4. Se existir tabela user_roles no schema public (Supabase)
@@ -65,6 +67,6 @@ BEGIN
             WHERE user_id = v_user_id;
         EXCEPTION WHEN OTHERS THEN
             NULL;
-        END IF;
+        END;
     END IF;
 END $$;

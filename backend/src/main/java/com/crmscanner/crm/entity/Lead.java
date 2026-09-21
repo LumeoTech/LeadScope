@@ -76,6 +76,18 @@ public class Lead {
     @Column(name = "website_content_summary", columnDefinition = "TEXT")
     private String websiteContentSummary;
 
+    @Column(name = "google_rating", precision = 3, scale = 1)
+    private BigDecimal googleRating;
+
+    @Column(name = "google_reviews_count")
+    private Integer googleReviewsCount;
+
+    @Column(name = "region_tier", length = 100)
+    private String regionTier;
+
+    @Column(name = "digital_presence_tier", length = 100)
+    private String digitalPresenceTier;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "created_by", nullable = false)
     private User createdBy;

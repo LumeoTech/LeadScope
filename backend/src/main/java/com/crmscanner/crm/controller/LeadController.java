@@ -152,31 +152,36 @@ public class LeadController {
         ));
     }
 
-    @RequestMapping(value = "/auto-scan-daily", method = {RequestMethod.POST, RequestMethod.GET})
-    @Operation(summary = "Busca diária de 10 leads", description = "Executa a rotina de prospecção autônoma que descobre e insere 10 novos leads qualificados")
+    @RequestMapping(value = {"/auto-scan-daily", "/auto-scan/daily"}, method = {RequestMethod.POST, RequestMethod.GET})
+    @Operation(summary = "Busca diária de leads", description = "Executa a rotina de prospecção autônoma respeitando filtros de score e localização")
     public ResponseEntity<java.util.List<LeadResponse>> autoScanDaily(@AuthenticationPrincipal User currentUser) {
-        return ResponseEntity.ok(dailyAutoLeadScannerService.scanAndGenerateDailyLeads(10, currentUser));
+        int target = dailyAutoLeadScannerService.getSettings().getLeadsPerDay();
+        return ResponseEntity.ok(dailyAutoLeadScannerService.scanAndGenerateDailyLeads(target, currentUser));
     }
 
-    @GetMapping("/auto-scan-status")
-    @Operation(summary = "Status da busca diária", description = "Retorna o status atual da rotina de 10 leads por dia")
+    @GetMapping({"/auto-scan-status", "/auto-scan/status"})
+    @Operation(summary = "Status da busca diária", description = "Retorna o status atual da rotina de busca de leads")
     public ResponseEntity<DailyAutoLeadScannerService.DailyScanStatus> getDailyScanStatus() {
         return ResponseEntity.ok(dailyAutoLeadScannerService.getDailyScanStatus());
     }
 
-    @GetMapping("/auto-scan-schedule")
-    @Operation(summary = "Obter agendamento da busca diária", description = "Retorna horário configurado para captura de leads")
-    public ResponseEntity<DailyAutoLeadScannerService.ScheduleConfig> getAutoScanSchedule() {
-        return ResponseEntity.ok(dailyAutoLeadScannerService.getScheduleConfig());
+    @GetMapping({"/auto-scan-settings", "/auto-scan/settings"})
+    @Operation(summary = "Obter configurações da busca", description = "Retorna horário, cota diária, score mínimo e filtro de região")
+    public ResponseEntity<com.crmscanner.crm.entity.AutoScanSettings> getAutoScanSettings() {
+        return ResponseEntity.ok(dailyAutoLeadScannerService.getSettings());
     }
 
-    @RequestMapping(value = "/auto-scan-schedule", method = {RequestMethod.POST, RequestMethod.PUT})
-    @Operation(summary = "Configurar horário da busca diária", description = "Atualiza o horário e status da captura automática de leads")
-    public ResponseEntity<DailyAutoLeadScannerService.ScheduleConfig> updateAutoScanSchedule(
+    @RequestMapping(value = {"/auto-scan-settings", "/auto-scan/settings"}, method = {RequestMethod.POST, RequestMethod.PUT})
+    @Operation(summary = "Salvar configurações da busca", description = "Persiste horário, cota diária, score mínimo e filtro de região no Supabase")
+    public ResponseEntity<com.crmscanner.crm.entity.AutoScanSettings> updateAutoScanSettings(
             @RequestBody java.util.Map<String, Object> body
     ) {
-        String time = (String) body.get("time");
-        Boolean active = body.get("active") != null ? (Boolean) body.get("active") : null;
-        return ResponseEntity.ok(dailyAutoLeadScannerService.updateScheduleConfig(time, active));
+        return ResponseEntity.ok(dailyAutoLeadScannerService.updateSettings(body));
+    }
+
+    @GetMapping({"/auto-scan-analytics", "/auto-scan/analytics"})
+    @Operation(summary = "Métricas de qualidade e analytics da busca", description = "Retorna distribuição de score, taxa de aceite e rankings regionais")
+    public ResponseEntity<DailyAutoLeadScannerService.AutoScanAnalytics> getAutoScanAnalytics() {
+        return ResponseEntity.ok(dailyAutoLeadScannerService.getAnalytics());
     }
 }

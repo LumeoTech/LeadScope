@@ -128,7 +128,7 @@ export const CampaignsView: React.FC = () => {
         return <Phone size={16} color="#f59e0b" />;
       case 'SCANNER':
       default:
-        return <Radar size={16} color="#8b5cf6" />;
+        return <Radar size={16} color="#38bdf8" />;
     }
   };
 

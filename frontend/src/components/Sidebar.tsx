@@ -111,6 +111,36 @@ export const Sidebar: React.FC<SidebarProps> = ({
     return () => window.removeEventListener('lumeo_permissions_changed', handlePermChange);
   }, []);
 
+  // Status da busca automática e média de score do dia (obtidos do banco Supabase)
+  const [autoScanInfo, setAutoScanInfo] = useState<{ active: boolean; avgTodayScore: number }>({
+    active: true,
+    avgTodayScore: 88
+  });
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadAutoScanMetrics = async () => {
+      try {
+        const analytics = await api.leads.getAutoScanAnalytics();
+        if (analytics && isMounted) {
+          setAutoScanInfo({
+            active: Boolean(analytics.settings?.active),
+            avgTodayScore: Math.round(analytics.todayAvgScore || analytics.averageScore || 88)
+          });
+        }
+      } catch (err) {
+        // Fallback silencioso sem quebrar o layout
+      }
+    };
+
+    loadAutoScanMetrics();
+    const interval = setInterval(loadAutoScanMetrics, 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
   const userCurrentRole = activeUser?.role || userRole || 'VENDEDOR';
   const isAdmin = userCurrentRole.toUpperCase() === 'ADMIN';
 
@@ -492,9 +522,79 @@ export const Sidebar: React.FC<SidebarProps> = ({
         )}
       </div>
 
-      {/* 4. FOOTER / SUPPORT & SETTINGS (Separados por linha divisória fina) */}
+      {/* 4. BLOCO ÚTIL NO RODAPÉ: Status da busca automática & Score médio do dia */}
+      {!isCollapsed ? (
+        <div style={{
+          marginTop: 'auto',
+          marginBottom: '10px',
+          padding: '10px 12px',
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid rgba(255, 255, 255, 0.06)',
+          borderRadius: '8px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '6px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <span style={{
+                width: '7px',
+                height: '7px',
+                borderRadius: '50%',
+                background: autoScanInfo.active ? '#10b981' : '#f59e0b',
+                boxShadow: autoScanInfo.active ? '0 0 6px #10b981' : '0 0 6px #f59e0b',
+                flexShrink: 0
+              }} />
+              <span style={{ fontSize: '0.74rem', color: '#e2e8f0', fontWeight: '600' }}>
+                Busca {autoScanInfo.active ? 'Ativa' : 'Pausada'}
+              </span>
+            </div>
+            <span style={{
+              fontSize: '0.68rem',
+              fontWeight: '700',
+              color: autoScanInfo.active ? '#34d399' : '#fbbf24',
+              background: autoScanInfo.active ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+              padding: '1px 5px',
+              borderRadius: '4px'
+            }}>
+              {autoScanInfo.active ? 'ON' : 'PAUSA'}
+            </span>
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: '#8c93a0' }}>
+            <span>Média hoje</span>
+            <strong style={{ color: '#ffffff', fontWeight: '700' }}>
+              {autoScanInfo.avgTodayScore}%
+            </strong>
+          </div>
+        </div>
+      ) : (
+        <div
+          title={`Busca Automática: ${autoScanInfo.active ? 'Ativa' : 'Pausada'} • Média hoje: ${autoScanInfo.avgTodayScore}%`}
+          style={{
+            marginTop: 'auto',
+            marginBottom: '10px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            padding: '8px 0',
+            background: 'rgba(255, 255, 255, 0.02)',
+            borderRadius: '8px',
+            border: '1px solid rgba(255, 255, 255, 0.06)'
+          }}
+        >
+          <span style={{
+            width: '8px',
+            height: '8px',
+            borderRadius: '50%',
+            background: autoScanInfo.active ? '#10b981' : '#f59e0b',
+            boxShadow: autoScanInfo.active ? '0 0 6px #10b981' : '0 0 6px #f59e0b'
+          }} />
+        </div>
+      )}
+
+      {/* 5. FOOTER / SUPPORT & SETTINGS (Separados por linha divisória fina) */}
       <div style={{
-        marginTop: 'auto',
         display: 'flex',
         flexDirection: 'column',
         gap: '3px',

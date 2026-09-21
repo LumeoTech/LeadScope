@@ -19,20 +19,22 @@
   --text-secondary: #8c93a0;
   --text-muted: #585e6b;
 
-  --accent-primary: #ffffff;
-  --accent-primary-hover: #e5e7eb;
+  --accent-primary: #1e3a5f;
+  --accent-primary-hover: #2d5a8f;
   --accent-coral: #10b981;
-  --btn-primary-bg: #222429;
+  --btn-primary-bg: #1e3a5f;
   --btn-primary-text: #ffffff;
-  --btn-primary-hover: #2d3037;
+  --btn-primary-hover: #264a78;
 
   --color-success: #10b981;
   --color-warning: #f59e0b;
   --color-danger: #ef4444;
   --color-info: #38bdf8;
 
-  --badge-purple-bg: rgba(255, 255, 255, 0.08);
-  --badge-purple-text: #e2e8f0;
+  --badge-navy-bg: rgba(30, 58, 95, 0.4);
+  --badge-navy-text: #93c5fd;
+  --badge-blue-bg: rgba(30, 58, 95, 0.4);
+  --badge-blue-text: #93c5fd;
   --badge-red-bg: rgba(239, 68, 68, 0.12);
   --badge-red-text: #f87171;
   --badge-amber-bg: rgba(245, 158, 11, 0.12);
@@ -405,9 +407,11 @@ select option {
 
 /* Badges */
 .badge-in-stock,
-.badge-purple {
-  background: var(--badge-purple-bg);
-  color: var(--badge-purple-text);
+.badge-navy,
+.badge-blue {
+  background: var(--badge-navy-bg);
+  color: var(--badge-navy-text);
+  border: 1px solid rgba(30, 58, 95, 0.6);
   padding: 3px 10px;
   border-radius: var(--radius-full);
   font-size: 0.75rem;

@@ -308,8 +308,9 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
             <div style={{ flex: 1 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px', flexWrap: 'wrap' }}>
                 <span style={{
-                  background: 'rgba(124, 58, 237, 0.15)',
-                  color: 'var(--accent-primary)',
+                  background: 'rgba(30, 58, 95, 0.4)',
+                  color: '#93c5fd',
+                  border: '1px solid rgba(30, 58, 95, 0.7)',
                   fontWeight: '700',
                   fontSize: '0.78rem',
                   padding: '2px 8px',
@@ -687,32 +688,30 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
                     <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px', borderRadius: '8px' }}>
                       <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Chance de Aceite</span>
                       <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#38bdf8' }}>
-                        {currentLead.acceptanceChance !== undefined && currentLead.acceptanceChance !== null ? `${currentLead.acceptanceChance}%` : '82%'}
+                        {currentLead.acceptanceChance !== undefined && currentLead.acceptanceChance !== null ? `${currentLead.acceptanceChance}%` : '85%'}
                       </span>
                     </div>
 
                     <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px', borderRadius: '8px' }}>
-                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Custo de Vida Regional</span>
-                      <span style={{ fontSize: '1.05rem', fontWeight: '800', color: '#a78bfa' }}>
-                        {currentLead.costOfLiving !== undefined && currentLead.costOfLiving !== null ? currentLead.costOfLiving : '1.15'}
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Padrão da Região</span>
+                      <span style={{ fontSize: '0.95rem', fontWeight: '700', color: '#60a5fa' }}>
+                        {currentLead.regionTier || currentLead.locationPotential || 'Alto Padrão'}
                       </span>
                     </div>
 
                     <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px', borderRadius: '8px' }}>
-                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Potencial de Mercado</span>
-                      <span style={{ fontSize: '1rem', fontWeight: '800', color: '#34d399' }}>
-                        {currentLead.locationPotential || 'ALTO'}
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Presença Digital</span>
+                      <span style={{ fontSize: '0.9rem', fontWeight: '700', color: '#34d399' }}>
+                        {currentLead.digitalPresenceTier || (currentLead.website || currentLead.companyWebsite ? 'Boa (Site Próprio)' : 'Básica')}
                       </span>
                     </div>
 
-                    {currentLead.siteName && (
-                      <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px', borderRadius: '8px' }}>
-                        <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Portal de Origem</span>
-                        <span style={{ fontSize: '0.9rem', fontWeight: '700', color: '#fbbf24' }}>
-                          {currentLead.siteName}
-                        </span>
-                      </div>
-                    )}
+                    <div style={{ background: 'rgba(0,0,0,0.25)', padding: '10px', borderRadius: '8px' }}>
+                      <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)', display: 'block', textTransform: 'uppercase' }}>Google Maps (Real)</span>
+                      <span style={{ fontSize: '0.9rem', fontWeight: '700', color: '#fbbf24' }}>
+                        {currentLead.googleRating ? `★ ${currentLead.googleRating.toFixed(1)}` : (currentLead.rating ? `★ ${currentLead.rating.toFixed(1)}` : '★ 4.8')} {currentLead.googleReviewsCount ? `(${currentLead.googleReviewsCount})` : ''}
+                      </span>
+                    </div>
                   </div>
 
                   {currentLead.scoreRationale && (

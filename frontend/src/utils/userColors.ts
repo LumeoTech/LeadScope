@@ -19,13 +19,13 @@ const PALETTES: UserColorTheme[] = [
     badgeBg: 'rgba(59, 130, 246, 0.2)'
   },
   {
-    primary: '#8b5cf6', // Violet
-    border: '#8b5cf6',
-    bg: 'rgba(139, 92, 246, 0.15)',
-    bgSubtle: 'rgba(139, 92, 246, 0.08)',
-    text: '#a78bfa',
-    glow: 'rgba(139, 92, 246, 0.35)',
-    badgeBg: 'rgba(139, 92, 246, 0.2)'
+    primary: '#1e3a5f', // Navy Blue
+    border: '#2e558a',
+    bg: 'rgba(30, 58, 95, 0.35)',
+    bgSubtle: 'rgba(30, 58, 95, 0.15)',
+    text: '#93c5fd',
+    glow: 'rgba(30, 58, 95, 0.5)',
+    badgeBg: 'rgba(30, 58, 95, 0.4)'
   },
   {
     primary: '#10b981', // Emerald
@@ -73,13 +73,13 @@ const PALETTES: UserColorTheme[] = [
     badgeBg: 'rgba(249, 115, 22, 0.2)'
   },
   {
-    primary: '#a855f7', // Purple
-    border: '#a855f7',
-    bg: 'rgba(168, 85, 247, 0.15)',
-    bgSubtle: 'rgba(168, 85, 247, 0.08)',
-    text: '#c084fc',
-    glow: 'rgba(168, 85, 247, 0.35)',
-    badgeBg: 'rgba(168, 85, 247, 0.2)'
+    primary: '#2563eb', // Royal Blue
+    border: '#3b82f6',
+    bg: 'rgba(37, 99, 235, 0.15)',
+    bgSubtle: 'rgba(37, 99, 235, 0.08)',
+    text: '#60a5fa',
+    glow: 'rgba(37, 99, 235, 0.35)',
+    badgeBg: 'rgba(37, 99, 235, 0.2)'
   }
 ];
 

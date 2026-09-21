@@ -84,14 +84,14 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
       let usersList: UserInfo[] = allRes || [];
       const hasGabriel = usersList.some(u =>
         (u.name && u.name.toLowerCase().includes('gabriel castro')) ||
-        (u.email && (u.email.toLowerCase().includes('gabriel@leadscope.com') || u.email.toLowerCase().includes('gabrielcastro')))
+        (u.email && u.email.toLowerCase().trim() === 'gabrielcastro.dev01@gmail.com')
       );
       if (!hasGabriel) {
         usersList = [
           {
             id: 1,
             name: 'Gabriel Castro',
-            email: 'gabriel@leadscope.com',
+            email: 'gabrielcastro.dev01@gmail.com',
             role: 'ADMIN',
             active: true,
             status: 'ACTIVE'
@@ -101,7 +101,7 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
       } else {
         usersList = usersList.map(u => {
           if ((u.name && u.name.toLowerCase().includes('gabriel castro')) ||
-              (u.email && (u.email.toLowerCase().includes('gabriel@leadscope.com') || u.email.toLowerCase().includes('gabrielcastro')))) {
+              (u.email && u.email.toLowerCase().trim() === 'gabrielcastro.dev01@gmail.com')) {
             return { ...u, role: 'ADMIN', active: true, status: 'ACTIVE' };
           }
           return u;
@@ -157,11 +157,18 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
     return email;
   };
 
-  // Alterar Cargo de um Usuário (Admin pode trocar de qualquer um, exceto outro Admin)
+  // Função para verificar se é o usuário master intocável Gabriel Castro
+  const isGabrielCastro = (u?: { name?: string; email?: string } | null) => {
+    if (!u) return false;
+    const email = (u.email || '').toLowerCase().trim();
+    const name = (u.name || '').toLowerCase().trim();
+    return email === 'gabrielcastro.dev01@gmail.com' ||
+           (name.includes('gabriel castro') && (email.includes('gabrielcastro') || email.includes('gabriel@')));
+  };
+
+  // Alterar Cargo de um Usuário (Admin pode trocar de qualquer um, exceto Gabriel Castro)
   const handleChangeUserRole = async (targetUser: UserInfo, newRole: string) => {
-    const isGabriel = (targetUser.name && targetUser.name.toLowerCase().includes('gabriel castro')) ||
-                      (targetUser.email && (targetUser.email.toLowerCase().includes('gabriel@leadscope.com') || targetUser.email.toLowerCase().includes('gabrielcastro')));
-    if (targetUser.role === 'ADMIN' || isGabriel) {
+    if (isGabrielCastro(targetUser)) {
       showToast('O usuário master Gabriel Castro é intocável e seu cargo não pode ser alterado.', 'error');
       return;
     }
@@ -233,12 +240,10 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
     }
   };
 
-  // Excluir Usuário (Admin é intocável)
+  // Excluir Usuário (Apenas Gabriel Castro é intocável. admin@empresa.com pode ser excluído)
   const handleConfirmDelete = async () => {
     if (!userToDelete) return;
-    const isGabriel = (userToDelete.name && userToDelete.name.toLowerCase().includes('gabriel castro')) ||
-                      (userToDelete.email && (userToDelete.email.toLowerCase().includes('gabriel@leadscope.com') || userToDelete.email.toLowerCase().includes('gabrielcastro')));
-    if (userToDelete.role === 'ADMIN' || isGabriel) {
+    if (isGabrielCastro(userToDelete)) {
       showToast('O usuário master Gabriel Castro é intocável e não pode ser excluído.', 'error');
       setUserToDelete(null);
       return;
@@ -304,11 +309,12 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
               width: '40px',
               height: '40px',
               borderRadius: '12px',
-              background: 'rgba(99, 102, 241, 0.12)',
+              background: 'rgba(30, 58, 95, 0.45)',
+              border: '1px solid rgba(30, 58, 95, 0.8)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: 'var(--accent-coral)'
+              color: '#93c5fd'
             }}>
               <Users size={22} />
             </div>
@@ -453,9 +459,7 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                   </tr>
                 ) : (
                   allUsers.map(user => {
-                    const isGabriel = (user.name && user.name.toLowerCase().includes('gabriel castro')) ||
-                                      (user.email && (user.email.toLowerCase().includes('gabriel@leadscope.com') || user.email.toLowerCase().includes('gabrielcastro')));
-                    const isAdmin = user.role === 'ADMIN' || isGabriel;
+                    const isUntouchable = isGabrielCastro(user);
 
                     return (
                       <tr key={user.id} style={{ borderBottom: '1px solid var(--border-subtle)', transition: 'background 0.15s' }}>
@@ -465,9 +469,9 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                               width: '32px',
                               height: '32px',
                               borderRadius: '50%',
-                              background: isAdmin ? 'rgba(234, 179, 8, 0.2)' : 'rgba(99, 102, 241, 0.2)',
-                              border: `1px solid ${isAdmin ? '#eab308' : '#818cf8'}`,
-                              color: isAdmin ? '#eab308' : '#818cf8',
+                              background: isUntouchable ? 'rgba(234, 179, 8, 0.2)' : 'rgba(30, 58, 95, 0.35)',
+                              border: `1px solid ${isUntouchable ? '#eab308' : '#1e3a5f'}`,
+                              color: isUntouchable ? '#eab308' : '#93c5fd',
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'center',
@@ -478,13 +482,13 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                             </div>
                             <div>
                               <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{user.name}</div>
-                              {isGabriel ? (
+                              {isUntouchable ? (
                                 <span style={{ fontSize: '0.7rem', color: '#eab308', fontWeight: '700', letterSpacing: '0.02em' }}>
                                   Admin Master • Intocável
                                 </span>
-                              ) : isAdmin ? (
-                                <span style={{ fontSize: '0.7rem', color: '#eab308', fontWeight: '600' }}>
-                                  Admin Intocável
+                              ) : user.role === 'ADMIN' ? (
+                                <span style={{ fontSize: '0.7rem', color: '#93c5fd', fontWeight: '600' }}>
+                                  Administrador
                                 </span>
                               ) : null}
                             </div>
@@ -497,7 +501,7 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
 
                         {/* Seletor de Cargo Dinâmico */}
                         <td style={{ padding: '14px 20px' }}>
-                          {isAdmin ? (
+                          {isUntouchable ? (
                             <span style={{
                               display: 'inline-flex',
                               alignItems: 'center',
@@ -511,7 +515,7 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                               fontWeight: '700'
                             }}>
                               <Lock size={12} />
-                              <span>ADMIN</span>
+                              <span>ADMIN MASTER</span>
                             </span>
                           ) : (
                             <select
@@ -548,9 +552,9 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
 
                         {/* Ações */}
                         <td style={{ padding: '14px 20px', textAlign: 'right' }}>
-                          {isAdmin ? (
-                            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontStyle: 'italic' }}>
-                              Protegido
+                          {isUntouchable ? (
+                            <span style={{ fontSize: '0.75rem', color: '#eab308', fontStyle: 'italic', fontWeight: '600' }}>
+                              Intocável
                             </span>
                           ) : (
                             <button
