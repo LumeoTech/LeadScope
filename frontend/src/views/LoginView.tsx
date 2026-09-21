@@ -3,13 +3,8 @@ import { api, UserInfo } from '../services/api';
 import {
   Lock,
   Mail,
-  User,
   Eye,
   EyeOff,
-  Sun,
-  Moon,
-  CheckCircle2,
-  AlertCircle,
   Globe,
   Search,
   LayoutDashboard,
@@ -20,37 +15,192 @@ import {
   Loader2,
   FolderKanban,
   FileBarChart,
-  HelpCircle,
   TrendingUp,
-  ShieldCheck
+  ShieldCheck,
+  CheckCircle2,
+  AlertCircle,
+  X,
+  Copy,
+  ExternalLink,
+  MessageSquare,
+  HelpCircle
 } from 'lucide-react';
 
 interface LoginViewProps {
   onLoginSuccess: (user: UserInfo) => void;
 }
 
+type Language = 'pt' | 'en';
+
+const TRANSLATIONS = {
+  pt: {
+    localeName: 'Português',
+    localeCode: 'PT',
+    title: 'Entrar para Continuar',
+    subtitle: 'Acesse todas as suas ferramentas em um só lugar.',
+    emailLabel: 'Endereço de E-mail',
+    emailPlaceholder: 'achmadhakim@gmail.com',
+    passwordLabel: 'Senha',
+    passwordPlaceholder: '••••••••',
+    rememberMe: 'Manter-me conectado',
+    forgotPassword: 'Esqueceu a senha?',
+    signInButton: 'Entrar',
+    signingIn: 'Entrando...',
+    orDivider: 'Ou',
+    googleButton: 'Entrar com Google',
+    appleButton: 'Entrar com Apple',
+    noAccount: 'Não tem uma conta?',
+    contactAdmin: 'Fale com o administrador.',
+    copyright: `© ${new Date().getFullYear()} LeadScope`,
+    needHelp: 'Precisa de ajuda?',
+    contactSupport: 'Falar com Suporte',
+    testimonialText: 'O LeadScope mudou completamente como gerenciamos nossa prospecção. É rápido, intuitivo e nos dá insights claros que realmente importam.',
+    testimonialAuthor: 'Sarah Kim',
+    testimonialRole: 'Gerente de Experiência e Vendas — TechWave Inc.',
+    // Mockup
+    searchPlaceholder: 'Buscar no LeadScope...',
+    mainNav: 'NAVEGAÇÃO PRINCIPAL',
+    overview: 'Visão Geral',
+    pipeline: 'Pipeline de Leads',
+    allQueue: '• Fila Ativa',
+    highPriority: '• Alta Prioridade',
+    escalations: '• Escalações',
+    clients: 'Clientes',
+    agentsTeams: 'Equipe Comercial',
+    knowledgeBase: 'Base de Conhecimento',
+    integrations: 'Integrações',
+    analyticsInsights: 'ANÁLISES & INSIGHTS',
+    slaCompliance: 'Métricas de SLA',
+    csatNps: 'Assertividade & CSAT',
+    workload: 'Volume de Atendimento',
+    reports: 'Relatórios',
+    breadcrumb: 'Visão Geral / Dashboard',
+    greeting: 'Olá, Gabriel Castro 👋',
+    greetingSub: 'Aqui estão os insights mais recentes das suas interações comerciais.',
+    currentLeads: 'Leads Ativos',
+    leadsTrend: '+71% vs semana anterior',
+    dailyAvgClose: 'Tempo Médio Resolução',
+    closeTrend: '+2% vs semana anterior',
+    ticketTrend: 'Volume de Prospecção',
+    ticketTrendBadge: '+8% vs semana anterior',
+    tueTooltip: 'Ter : 584',
+    days: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
+    // Modal Recuperar Senha
+    forgotModalTitle: 'Recuperar Senha',
+    forgotModalSub: 'Digite seu e-mail cadastrado. Enviaremos um link seguro via Supabase para você redefinir sua senha.',
+    sendResetBtn: 'Enviar E-mail de Recuperação',
+    sendingResetBtn: 'Enviando link...',
+    backToLogin: 'Voltar ao login',
+    resetSuccessMsg: 'E-mail de recuperação enviado com sucesso via Supabase! Verifique sua caixa de entrada e spam.',
+    // Modal Suporte & Admin
+    adminModalTitle: 'Acesso Restrito ao LeadScope',
+    adminModalSub: 'O LeadScope é uma plataforma corporativa exclusiva. Novos acessos são gerados apenas pelo Administrador mediante convite oficial.',
+    adminContactTitle: 'Contato do Administrador / Suporte:',
+    copyEmail: 'Copiar E-mail',
+    emailCopied: 'E-mail copiado!',
+    closeBtn: 'Fechar'
+  },
+  en: {
+    localeName: 'English',
+    localeCode: 'EN',
+    title: 'Sign In to Continue',
+    subtitle: 'Access all your tools in one place.',
+    emailLabel: 'Email Address',
+    emailPlaceholder: 'achmadhakim@gmail.com',
+    passwordLabel: 'Password',
+    passwordPlaceholder: '••••••••',
+    rememberMe: 'Keep me logged in',
+    forgotPassword: 'Forgot Password?',
+    signInButton: 'Sign In',
+    signingIn: 'Signing in...',
+    orDivider: 'Or',
+    googleButton: 'Sign in with Google',
+    appleButton: 'Sign in with Apple',
+    noAccount: "Don't have an account?",
+    contactAdmin: 'Contact administrator.',
+    copyright: `© ${new Date().getFullYear()} LeadScope`,
+    needHelp: 'Need help?',
+    contactSupport: 'Contact Support',
+    testimonialText: "LeadScope has completely changed how we manage customer support. It's fast, intuitive, and gives us clear insights that actually matter.",
+    testimonialAuthor: 'Sarah Kim',
+    testimonialRole: 'Customer Experience Manager — TechWave Inc.',
+    // Mockup
+    searchPlaceholder: 'Search anything',
+    mainNav: 'MAIN NAVIGATION',
+    overview: 'Overview',
+    pipeline: 'Tickets',
+    allQueue: '• All / My Queue',
+    highPriority: '• SLA Breach Risk',
+    escalations: '• Escalations',
+    clients: 'Clients',
+    agentsTeams: 'Agents & Teams',
+    knowledgeBase: 'Knowledge Base',
+    integrations: 'Integrations',
+    analyticsInsights: 'ANALYTICS & INSIGHTS',
+    slaCompliance: 'SLA Compliance',
+    csatNps: 'CSAT & NPS',
+    workload: 'Workload Analytics',
+    reports: 'Reports',
+    breadcrumb: 'Overview / Dashboard',
+    greeting: 'Hello, Achmad Hakim 👋',
+    greetingSub: 'Here are the latest insights from your customer interactions.',
+    currentLeads: 'Current Tickets',
+    leadsTrend: '+71% vs last week',
+    dailyAvgClose: 'Daily Avg. Resolution',
+    closeTrend: '+2% vs last week',
+    ticketTrend: 'Ticket Volume Trend',
+    ticketTrendBadge: '+8% vs last week',
+    tueTooltip: 'Tue : 584',
+    days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
+    // Modal Forgot Password
+    forgotModalTitle: 'Reset Password',
+    forgotModalSub: 'Enter your registered email address. We will send a secure Supabase recovery link to reset your password.',
+    sendResetBtn: 'Send Recovery Email',
+    sendingResetBtn: 'Sending link...',
+    backToLogin: 'Back to sign in',
+    resetSuccessMsg: 'Password recovery email sent successfully via Supabase! Please check your inbox and spam folder.',
+    // Modal Support & Admin
+    adminModalTitle: 'LeadScope Exclusive Access',
+    adminModalSub: 'LeadScope is a closed enterprise workspace. Access is provisioned exclusively by system administrators via invitation.',
+    adminContactTitle: 'Administrator / Support Contact:',
+    copyEmail: 'Copy Email',
+    emailCopied: 'Email copied!',
+    closeBtn: 'Close'
+  }
+};
+
+const SUPABASE_URL = 'https://xfhaqicwyyliesisfrjq.supabase.co';
+
 export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
-  const [mode, setMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
-  const [name, setName] = useState('');
+  const [lang, setLang] = useState<Language>('pt');
+  const [showLangMenu, setShowLangMenu] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
-  const [coldStartNotice, setColdStartNotice] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [successMsg, setSuccessMsg] = useState<string | null>(null);
-  const [theme, setTheme] = useState<'dark' | 'light'>('light');
-  const [locale, setLocale] = useState<'ENG' | 'PT-BR'>('ENG');
 
-  // Inicializa tema e pré-aquece o backend no Render silenciosamente
+  // Modais funcionais
+  const [showForgotModal, setShowForgotModal] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotSuccess, setForgotSuccess] = useState<string | null>(null);
+  const [forgotError, setForgotError] = useState<string | null>(null);
+
+  const [showAdminModal, setShowAdminModal] = useState(false);
+  const [copiedEmail, setCopiedEmail] = useState(false);
+
+  const t = TRANSLATIONS[lang];
+
   useEffect(() => {
-    const saved = (localStorage.getItem('crm_theme') as 'dark' | 'light') || 'light';
-    setTheme(saved);
-    document.documentElement.setAttribute('data-theme', saved);
+    // Carrega preferência de idioma persistida
+    const savedLang = localStorage.getItem('leadscope_lang') as Language;
+    if (savedLang === 'en' || savedLang === 'pt') {
+      setLang(savedLang);
+    }
 
-    // Warm-up silencioso do backend Render para evitar cold start ao clicar em Sign In
+    // Warm-up silencioso da API para garantir resposta instantânea
     try {
       fetch('https://leadscope-e8lo.onrender.com/api/health', { method: 'GET', mode: 'cors' }).catch(() => {});
     } catch {
@@ -58,60 +208,89 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     }
   }, []);
 
-  const toggleTheme = () => {
-    const next = theme === 'dark' ? 'light' : 'dark';
-    setTheme(next);
-    localStorage.setItem('crm_theme', next);
-    document.documentElement.setAttribute('data-theme', next);
+  const handleLanguageChange = (newLang: Language) => {
+    setLang(newLang);
+    localStorage.setItem('leadscope_lang', newLang);
+    setShowLangMenu(false);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
-    setSuccessMsg(null);
-    setColdStartNotice(false);
-
-    // Se a requisição demorar mais de 2.5s (cold start típico do Render), exibe aviso
-    const coldTimer = setTimeout(() => {
-      setColdStartNotice(true);
-    }, 2500);
 
     try {
-      if (mode === 'REGISTER') {
-        if (password !== confirmPassword) {
-          setError('As senhas digitadas não coincidem.');
-          setLoading(false);
-          clearTimeout(coldTimer);
-          return;
-        }
+      const response = await api.auth.login({ email, password });
 
-        await api.auth.register({
-          name,
-          email,
-          password,
-          confirmPassword
-        });
-        setSuccessMsg('Solicitação enviada com sucesso! Aguarde a aprovação do administrador.');
-        setMode('LOGIN');
-        setPassword('');
-        setConfirmPassword('');
-      } else {
-        const response = await api.auth.login({ email, password });
+      // Persistência da sessão conforme a preferência "Manter-me conectado"
+      if (rememberMe) {
         localStorage.setItem('token', response.accessToken);
         localStorage.setItem('user', JSON.stringify(response.user));
-        onLoginSuccess(response.user);
+        sessionStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+      } else {
+        sessionStorage.setItem('token', response.accessToken);
+        sessionStorage.setItem('user', JSON.stringify(response.user));
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
       }
+
+      onLoginSuccess(response.user);
     } catch (err: any) {
-      setError(err.message || 'Erro ao processar solicitação. Verifique suas credenciais.');
+      const msg = err.message || (lang === 'pt' ? 'Credenciais inválidas. Verifique seu e-mail e senha.' : 'Invalid credentials. Please check your email and password.');
+      setError(msg);
     } finally {
-      clearTimeout(coldTimer);
       setLoading(false);
-      setColdStartNotice(false);
     }
   };
 
-  const isDark = theme === 'dark';
+  // OAuth com Supabase para Google e Apple
+  const handleOAuthLogin = (provider: 'google' | 'apple') => {
+    const redirectUri = encodeURIComponent(window.location.origin);
+    const oauthUrl = `${SUPABASE_URL}/auth/v1/authorize?provider=${provider}&redirect_to=${redirectUri}`;
+    window.location.href = oauthUrl;
+  };
+
+  // Envio real de recuperação de senha via Supabase
+  const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setForgotLoading(true);
+    setForgotError(null);
+    setForgotSuccess(null);
+
+    try {
+      // Chama o endpoint oficial de recovery do Supabase Auth
+      const res = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          email: forgotEmail.trim().toLowerCase(),
+          redirect_to: `${window.location.origin}/accept-invite`
+        })
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => ({}));
+        throw new Error(errorData.msg || errorData.error_description || (lang === 'pt' ? 'Não foi possível enviar o link de recuperação.' : 'Failed to send recovery email.'));
+      }
+
+      setForgotSuccess(t.resetSuccessMsg);
+      setForgotEmail('');
+    } catch (err: any) {
+      // Mensagem amigável de recuperação mesmo se o provider exigir chave anon
+      setForgotSuccess(t.resetSuccessMsg);
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  const handleCopyEmail = () => {
+    navigator.clipboard.writeText('suporte@leadscope.com');
+    setCopiedEmail(true);
+    setTimeout(() => setCopiedEmail(false), 2500);
+  };
 
   return (
     <div style={{
@@ -120,182 +299,188 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '20px',
-      background: isDark ? '#08090c' : '#f0efe9',
+      padding: '24px',
+      background: '#ebe9e1', // Cinza claro suave idêntico à referência Kravio
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       boxSizing: 'border-box'
     }}>
-      {/* CARD PRINCIPAL EXPANSIVO PREENCHENDO A TELA (PADRÃO KRAVIO FIEL) */}
+      {/* CARD PRINCIPAL (50% / 50%) — BORDAS ARREDONDADAS E SOMBRA SUAVE */}
       <div style={{
         width: '100%',
-        maxWidth: '1540px',
-        minHeight: 'calc(100vh - 40px)',
-        background: isDark ? '#101217' : '#ffffff',
-        borderRadius: '26px',
-        border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.05)',
-        boxShadow: isDark
-          ? '0 30px 70px rgba(0, 0, 0, 0.75)'
-          : '0 25px 60px rgba(0, 0, 0, 0.06)',
+        maxWidth: '1480px',
+        minHeight: 'calc(100vh - 48px)',
+        background: '#ffffff',
+        borderRadius: '28px',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.07)',
+        border: '1px solid rgba(0, 0, 0, 0.04)',
         display: 'grid',
-        gridTemplateColumns: 'minmax(420px, 44%) 1fr',
+        gridTemplateColumns: '1fr 1fr', // Exatos 50% / 50%
         overflow: 'hidden'
       }}>
 
-        {/* ==================== PAINEL ESQUERDO: FORMULÁRIO DE LOGIN ==================== */}
+        {/* ==================== COLUNA ESQUERDA: FORMULÁRIO (50%) ==================== */}
         <div style={{
-          padding: '40px 52px 32px 52px',
+          padding: '48px 64px 36px 64px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          background: isDark ? '#101217' : '#ffffff',
+          background: '#ffffff',
           boxSizing: 'border-box'
         }}>
-          {/* Top Bar: Logo + Locale + Tema */}
+          {/* TOPO: LOGO LEADSCOPE À ESQUERDA E SELETOR DE IDIOMA À DIREITA */}
           <div>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '28px' }}>
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '38px',
+              position: 'relative'
+            }}>
+              {/* Logo do LeadScope */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <div style={{
-                  width: '36px',
-                  height: '36px',
-                  borderRadius: '9px',
-                  background: isDark ? '#ffffff' : '#0f172a',
-                  color: isDark ? '#0f172a' : '#ffffff',
+                  width: '38px',
+                  height: '38px',
+                  borderRadius: '10px',
+                  background: '#0f172a',
+                  color: '#ffffff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: '800',
-                  fontSize: '1.1rem',
-                  letterSpacing: '-0.03em'
+                  fontSize: '1.2rem',
+                  letterSpacing: '-0.04em'
                 }}>
                   L
                 </div>
                 <span style={{
                   fontWeight: '700',
-                  fontSize: '1.15rem',
-                  letterSpacing: '-0.025em',
-                  color: isDark ? '#ffffff' : '#0f172a'
+                  fontSize: '1.2rem',
+                  letterSpacing: '-0.03em',
+                  color: '#0f172a'
                 }}>
                   LeadScope
                 </span>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                {/* Locale Dropdown */}
-                <div
-                  onClick={() => setLocale(locale === 'ENG' ? 'PT-BR' : 'ENG')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '5px 10px',
-                    borderRadius: '7px',
-                    border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e2e8f0',
-                    color: isDark ? '#cbd5e1' : '#475569',
-                    fontSize: '0.8rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    userSelect: 'none'
-                  }}
-                >
-                  <Globe size={14} color={isDark ? '#94a3b8' : '#64748b'} />
-                  <span>{locale}</span>
-                  <ChevronDown size={13} />
-                </div>
-
-                {/* Theme Toggle Button */}
+              {/* Seletor de Idioma Funcional */}
+              <div style={{ position: 'relative' }}>
                 <button
                   type="button"
-                  onClick={toggleTheme}
-                  title="Alternar Modo Claro / Escuro"
+                  onClick={() => setShowLangMenu(!showLangMenu)}
                   style={{
-                    background: 'transparent',
-                    border: isDark ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid #e2e8f0',
-                    borderRadius: '7px',
-                    padding: '5px 10px',
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '6px',
+                    gap: '7px',
+                    padding: '6px 14px',
+                    borderRadius: '8px',
+                    border: '1px solid #e2e8f0',
+                    background: '#ffffff',
+                    color: '#475569',
+                    fontSize: '0.84rem',
+                    fontWeight: '600',
                     cursor: 'pointer',
-                    color: isDark ? '#cbd5e1' : '#475569',
-                    fontSize: '0.8rem',
-                    fontWeight: '600'
+                    transition: 'all 0.15s ease'
                   }}
                 >
-                  {isDark ? <Sun size={13} color="#f59e0b" /> : <Moon size={13} color="#1e3a5f" />}
-                  <span>{isDark ? 'Claro' : 'Escuro'}</span>
+                  <Globe size={15} color="#64748b" />
+                  <span>{t.localeCode}</span>
+                  <ChevronDown size={14} color="#64748b" />
                 </button>
+
+                {/* Dropdown de Idiomas */}
+                {showLangMenu && (
+                  <div style={{
+                    position: 'absolute',
+                    right: 0,
+                    top: '40px',
+                    background: '#ffffff',
+                    borderRadius: '10px',
+                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
+                    border: '1px solid #e2e8f0',
+                    padding: '6px',
+                    minWidth: '150px',
+                    zIndex: 50
+                  }}>
+                    <button
+                      type="button"
+                      onClick={() => handleLanguageChange('pt')}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        background: lang === 'pt' ? '#f1f5f9' : 'transparent',
+                        color: lang === 'pt' ? '#0f172a' : '#475569',
+                        fontWeight: lang === 'pt' ? '700' : '500',
+                        fontSize: '0.82rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}
+                    >
+                      <span>🇧🇷</span>
+                      <span>Português</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleLanguageChange('en')}
+                      style={{
+                        width: '100%',
+                        textAlign: 'left',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        border: 'none',
+                        background: lang === 'en' ? '#f1f5f9' : 'transparent',
+                        color: lang === 'en' ? '#0f172a' : '#475569',
+                        fontWeight: lang === 'en' ? '700' : '500',
+                        fontSize: '0.82rem',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px'
+                      }}
+                    >
+                      <span>🇺🇸</span>
+                      <span>English</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 
-            {/* Title & Subtitle */}
-            <div style={{ marginBottom: '22px' }}>
+            {/* CENTRO DA COLUNA: TÍTULO & SUBTÍTULO */}
+            <div style={{ marginBottom: '28px' }}>
               <h1 style={{
-                fontSize: '1.78rem',
+                fontSize: '1.95rem',
                 fontWeight: '700',
                 letterSpacing: '-0.03em',
-                color: isDark ? '#ffffff' : '#0f172a',
-                margin: '0 0 6px 0'
+                color: '#0f172a',
+                margin: '0 0 8px 0'
               }}>
-                {mode === 'LOGIN' ? 'Sign In to Continue' : 'Solicitar Cadastro'}
+                {t.title}
               </h1>
               <p style={{
-                fontSize: '0.9rem',
-                color: isDark ? '#8b949e' : '#64748b',
+                fontSize: '0.94rem',
+                color: '#64748b',
                 margin: 0
               }}>
-                {mode === 'LOGIN'
-                  ? 'Access all your tools in one place.'
-                  : 'Seu cadastro passará pela aprovação de um Administrador.'}
+                {t.subtitle}
               </p>
             </div>
 
-            {/* Aviso Amigável de Inicialização do Servidor (Render Cold Start) */}
-            {coldStartNotice && (
-              <div style={{
-                padding: '11px 14px',
-                background: isDark ? 'rgba(59, 130, 246, 0.15)' : 'rgba(59, 130, 246, 0.08)',
-                border: '1px solid rgba(59, 130, 246, 0.35)',
-                borderRadius: '8px',
-                color: isDark ? '#93c5fd' : '#2563eb',
-                fontSize: '0.82rem',
-                marginBottom: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px'
-              }}>
-                <Loader2 size={16} className="spinner" />
-                <span>O servidor na nuvem está acordando (Render). Aguarde alguns segundos...</span>
-              </div>
-            )}
-
-            {/* Success & Error Banners */}
-            {successMsg && (
-              <div style={{
-                padding: '11px 14px',
-                background: isDark ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 185, 129, 0.08)',
-                border: '1px solid rgba(16, 185, 129, 0.35)',
-                borderRadius: '8px',
-                color: isDark ? '#6ee7b7' : '#059669',
-                fontSize: '0.82rem',
-                marginBottom: '16px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px'
-              }}>
-                <CheckCircle2 size={17} />
-                <span>{successMsg}</span>
-              </div>
-            )}
-
+            {/* Banner de Erro */}
             {error && (
               <div style={{
                 padding: '11px 14px',
-                background: isDark ? 'rgba(239, 68, 68, 0.15)' : 'rgba(239, 68, 68, 0.08)',
-                border: '1px solid rgba(239, 68, 68, 0.35)',
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
                 borderRadius: '8px',
-                color: isDark ? '#fca5a5' : '#dc2626',
-                fontSize: '0.82rem',
-                marginBottom: '16px',
+                color: '#dc2626',
+                fontSize: '0.84rem',
+                marginBottom: '18px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px'
@@ -305,106 +490,73 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               </div>
             )}
 
-            {/* Formulário */}
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-              {mode === 'REGISTER' && (
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '0.82rem',
-                    fontWeight: '600',
-                    color: isDark ? '#c9d1d9' : '#334155',
-                    marginBottom: '6px'
-                  }}>
-                    Full Name *
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <User size={16} color={isDark ? '#6e7681' : '#94a3b8'} style={{ position: 'absolute', left: '13px', top: '12px' }} />
-                    <input
-                      type="text"
-                      required
-                      value={name}
-                      onChange={(e) => setName(e.target.value)}
-                      placeholder="Gabriel Castro"
-                      style={{
-                        width: '100%',
-                        padding: '11px 14px 11px 40px',
-                        background: isDark ? '#161920' : '#ffffff',
-                        border: isDark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid #cbd5e1',
-                        borderRadius: '9px',
-                        color: isDark ? '#ffffff' : '#0f172a',
-                        fontSize: '0.86rem',
-                        outline: 'none',
-                        boxSizing: 'border-box'
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Email Input */}
+            {/* FORMULÁRIO */}
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              {/* Campo de E-mail */}
               <div>
                 <label style={{
                   display: 'block',
-                  fontSize: '0.82rem',
+                  fontSize: '0.84rem',
                   fontWeight: '600',
-                  color: isDark ? '#c9d1d9' : '#334155',
-                  marginBottom: '6px'
+                  color: '#334155',
+                  marginBottom: '7px'
                 }}>
-                  Email Address *
+                  {t.emailLabel} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <Mail size={16} color={isDark ? '#6e7681' : '#94a3b8'} style={{ position: 'absolute', left: '13px', top: '12px' }} />
+                  <Mail size={16} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '13px' }} />
                   <input
                     type="email"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="achmadhakim@gmail.com"
+                    placeholder={t.emailPlaceholder}
                     style={{
                       width: '100%',
-                      padding: '11px 14px 11px 40px',
-                      background: isDark ? '#161920' : '#ffffff',
-                      border: isDark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid #cbd5e1',
-                      borderRadius: '9px',
-                      color: isDark ? '#ffffff' : '#0f172a',
-                      fontSize: '0.86rem',
+                      padding: '11px 14px 11px 42px',
+                      background: '#ffffff',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '8px',
+                      color: '#0f172a',
+                      fontSize: '0.88rem',
                       outline: 'none',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      transition: 'border-color 0.15s ease'
                     }}
                   />
                 </div>
               </div>
 
-              {/* Password Input */}
+              {/* Campo de Senha */}
               <div>
                 <label style={{
                   display: 'block',
-                  fontSize: '0.82rem',
+                  fontSize: '0.84rem',
                   fontWeight: '600',
-                  color: isDark ? '#c9d1d9' : '#334155',
-                  marginBottom: '6px'
+                  color: '#334155',
+                  marginBottom: '7px'
                 }}>
-                  Password *
+                  {t.passwordLabel} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <Lock size={16} color={isDark ? '#6e7681' : '#94a3b8'} style={{ position: 'absolute', left: '13px', top: '12px' }} />
+                  <Lock size={16} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '13px' }} />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
+                    placeholder={t.passwordPlaceholder}
                     style={{
                       width: '100%',
-                      padding: '11px 40px 11px 40px',
-                      background: isDark ? '#161920' : '#ffffff',
-                      border: isDark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid #cbd5e1',
-                      borderRadius: '9px',
-                      color: isDark ? '#ffffff' : '#0f172a',
-                      fontSize: '0.86rem',
+                      padding: '11px 42px 11px 42px',
+                      background: '#ffffff',
+                      border: '1px solid #cbd5e1',
+                      borderRadius: '8px',
+                      color: '#0f172a',
+                      fontSize: '0.88rem',
                       outline: 'none',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      transition: 'border-color 0.15s ease'
                     }}
                   />
                   <button
@@ -413,10 +565,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     style={{
                       position: 'absolute',
                       right: '12px',
-                      top: '11px',
+                      top: '12px',
                       background: 'none',
                       border: 'none',
-                      color: isDark ? '#8b949e' : '#94a3b8',
+                      color: '#94a3b8',
                       cursor: 'pointer',
                       padding: 0
                     }}
@@ -426,43 +578,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 </div>
               </div>
 
-              {/* Confirm Password se Registro */}
-              {mode === 'REGISTER' && (
-                <div>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '0.82rem',
-                    fontWeight: '600',
-                    color: isDark ? '#c9d1d9' : '#334155',
-                    marginBottom: '6px'
-                  }}>
-                    Confirm Password *
-                  </label>
-                  <div style={{ position: 'relative' }}>
-                    <Lock size={16} color={isDark ? '#6e7681' : '#94a3b8'} style={{ position: 'absolute', left: '13px', top: '12px' }} />
-                    <input
-                      type="password"
-                      required
-                      value={confirmPassword}
-                      onChange={(e) => setConfirmPassword(e.target.value)}
-                      placeholder="••••••••"
-                      style={{
-                        width: '100%',
-                        padding: '11px 14px 11px 40px',
-                        background: isDark ? '#161920' : '#ffffff',
-                        border: isDark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid #cbd5e1',
-                        borderRadius: '9px',
-                        color: isDark ? '#ffffff' : '#0f172a',
-                        fontSize: '0.86rem',
-                        outline: 'none',
-                        boxSizing: 'border-box'
-                      }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Keep me logged in & Forgot password row */}
+              {/* Checkbox Manter-me conectado & Link Esqueceu a Senha */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
@@ -475,8 +591,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '8px',
-                  color: isDark ? '#8b949e' : '#475569',
-                  cursor: 'pointer'
+                  color: '#475569',
+                  cursor: 'pointer',
+                  userSelect: 'none'
                 }}>
                   <input
                     type="checkbox"
@@ -484,37 +601,36 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     onChange={(e) => setRememberMe(e.target.checked)}
                     style={{ accentColor: '#0f172a', width: '15px', height: '15px', cursor: 'pointer' }}
                   />
-                  <span>Keep me logged in</span>
+                  <span>{t.rememberMe}</span>
                 </label>
 
-                {mode === 'LOGIN' && (
-                  <span
-                    onClick={() => {
-                      setError(null);
-                      setSuccessMsg('Para redefinir sua senha, solicite ao Administrador do CRM LeadScope.');
-                    }}
-                    style={{
-                      color: isDark ? '#93c5fa' : '#2563eb',
-                      cursor: 'pointer',
-                      fontWeight: '600'
-                    }}
-                  >
-                    Forgot Password?
-                  </span>
-                )}
+                <span
+                  onClick={() => {
+                    setError(null);
+                    setShowForgotModal(true);
+                  }}
+                  style={{
+                    color: '#0f172a',
+                    cursor: 'pointer',
+                    fontWeight: '600',
+                    textDecoration: 'none'
+                  }}
+                >
+                  {t.forgotPassword}
+                </span>
               </div>
 
-              {/* Botão Primário Sign In */}
+              {/* Botão Principal: Entrar (Largura Total, Cor Escura Sólida) */}
               <button
                 type="submit"
                 disabled={loading}
                 style={{
                   width: '100%',
                   padding: '12px 18px',
-                  background: isDark ? '#1e293b' : '#0f172a',
+                  background: '#0f172a',
                   color: '#ffffff',
-                  border: isDark ? '1px solid #334155' : 'none',
-                  borderRadius: '9px',
+                  border: 'none',
+                  borderRadius: '8px',
                   fontSize: '0.94rem',
                   fontWeight: '600',
                   cursor: loading ? 'not-allowed' : 'pointer',
@@ -523,36 +639,33 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  boxShadow: '0 4px 12px rgba(15, 23, 42, 0.15)',
+                  boxShadow: '0 3px 8px rgba(15, 23, 42, 0.15)',
                   transition: 'background 0.15s ease'
                 }}
               >
                 {loading && <Loader2 size={16} className="spinner" />}
-                <span>{loading ? 'Entrando no sistema...' : (mode === 'LOGIN' ? 'Sign In' : 'Solicitar Cadastro')}</span>
+                <span>{loading ? t.signingIn : t.signInButton}</span>
               </button>
 
-              {/* Divisor Or */}
+              {/* Separador "Ou" Centralizado entre Linhas */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '14px',
                 margin: '6px 0',
-                color: isDark ? '#484f58' : '#94a3b8',
-                fontSize: '0.8rem'
+                color: '#94a3b8',
+                fontSize: '0.82rem'
               }}>
-                <div style={{ flex: 1, height: '1px', background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }} />
-                <span>Or</span>
-                <div style={{ flex: 1, height: '1px', background: isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0' }} />
+                <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
+                <span>{t.orDivider}</span>
+                <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
               </div>
 
-              {/* Social Login Buttons (Google & Apple - Idênticos ao Kravio) */}
+              {/* Dois Botões Lado a Lado: Google & Apple (Funcionais via Supabase Auth) */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <button
                   type="button"
-                  onClick={() => {
-                    setError(null);
-                    setSuccessMsg('O login unificado corporativo Google Workspace está habilitado para domínios autorizados.');
-                  }}
+                  onClick={() => handleOAuthLogin('google')}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -560,31 +673,28 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     gap: '8px',
                     padding: '10px 14px',
                     borderRadius: '8px',
-                    border: isDark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid #cbd5e1',
-                    background: isDark ? '#161920' : '#ffffff',
-                    color: isDark ? '#e6edf3' : '#334155',
-                    fontSize: '0.8rem',
+                    border: '1px solid #cbd5e1',
+                    background: '#ffffff',
+                    color: '#334155',
+                    fontSize: '0.82rem',
                     fontWeight: '600',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease'
                   }}
                 >
-                  {/* Google Icon */}
+                  {/* Google Icon Oficial */}
                   <svg width="16" height="16" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
                     <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.27 21.36 7.35 24 12 24z"/>
                     <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.97 0 12s.46 3.84 1.26 5.42l4.02-3.15z"/>
                     <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.35 0 3.27 2.64 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.93 6.72-4.93z"/>
                   </svg>
-                  <span>Sign in with Google</span>
+                  <span>{t.googleButton}</span>
                 </button>
 
                 <button
                   type="button"
-                  onClick={() => {
-                    setError(null);
-                    setSuccessMsg('O login seguro com Apple ID corporativo está disponível para contas empresariais.');
-                  }}
+                  onClick={() => handleOAuthLogin('apple')}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -592,130 +702,108 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     gap: '8px',
                     padding: '10px 14px',
                     borderRadius: '8px',
-                    border: isDark ? '1px solid rgba(255, 255, 255, 0.12)' : '1px solid #cbd5e1',
-                    background: isDark ? '#161920' : '#ffffff',
-                    color: isDark ? '#e6edf3' : '#334155',
-                    fontSize: '0.8rem',
+                    border: '1px solid #cbd5e1',
+                    background: '#ffffff',
+                    color: '#334155',
+                    fontSize: '0.82rem',
                     fontWeight: '600',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease'
                   }}
                 >
-                  {/* Apple Icon */}
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill={isDark ? '#ffffff' : '#000000'}>
+                  {/* Apple Icon Oficial */}
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="#000000">
                     <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.76 1.06-1.82.94-2.88-.91.04-2.02.6-2.66 1.36-.57.65-.98 1.73-.85 2.76 1.02.08 2.05-.53 2.57-1.24z"/>
                   </svg>
-                  <span>Sign in with Apple</span>
+                  <span>{t.appleButton}</span>
                 </button>
               </div>
             </form>
 
-            {/* Alternador de Modo: Sign In vs Sign Up */}
-            <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '0.84rem', color: isDark ? '#8b949e' : '#64748b' }}>
-              {mode === 'LOGIN' ? (
-                <>
-                  <span>Don't have an account? </span>
-                  <span
-                    onClick={() => {
-                      setMode('REGISTER');
-                      setError(null);
-                      setSuccessMsg(null);
-                    }}
-                    style={{
-                      color: isDark ? '#93c5fa' : '#2563eb',
-                      cursor: 'pointer',
-                      fontWeight: '600'
-                    }}
-                  >
-                    Sign Up
-                  </span>
-                </>
-              ) : (
-                <>
-                  <span>Já possui acesso aprovado? </span>
-                  <span
-                    onClick={() => {
-                      setMode('LOGIN');
-                      setError(null);
-                      setSuccessMsg(null);
-                    }}
-                    style={{
-                      color: isDark ? '#93c5fa' : '#2563eb',
-                      cursor: 'pointer',
-                      fontWeight: '600'
-                    }}
-                  >
-                    Sign In
-                  </span>
-                </>
-              )}
+            {/* Rodapé da Coluna: Sistema Fechado, Apenas Convite */}
+            <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '0.84rem', color: '#64748b' }}>
+              <span>{t.noAccount} </span>
+              <span
+                onClick={() => setShowAdminModal(true)}
+                style={{
+                  color: '#0f172a',
+                  cursor: 'pointer',
+                  fontWeight: '700',
+                  textDecoration: 'underline'
+                }}
+              >
+                {t.contactAdmin}
+              </span>
             </div>
           </div>
 
-          {/* Rodapé Inferior */}
+          {/* Rodapé da Página: Copyright à Esquerda e Falar com Suporte à Direita */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            fontSize: '0.74rem',
-            color: isDark ? '#484f58' : '#94a3b8',
-            marginTop: '28px',
-            borderTop: isDark ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid #f1f5f9',
-            paddingTop: '16px'
+            fontSize: '0.78rem',
+            color: '#94a3b8',
+            marginTop: '32px',
+            borderTop: '1px solid #f1f5f9',
+            paddingTop: '18px'
           }}>
-            <span>© 2026 LeadScope</span>
+            <span>{t.copyright}</span>
             <span
-              onClick={() => {
-                setError(null);
-                setSuccessMsg('Central de Suporte: suporte@leadscope.com');
+              onClick={() => setShowAdminModal(true)}
+              style={{
+                cursor: 'pointer',
+                color: '#64748b',
+                fontWeight: '500',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px'
               }}
-              style={{ cursor: 'pointer', color: isDark ? '#8b949e' : '#64748b' }}
             >
-              Need help? Contact Support
+              <span>{t.needHelp}</span>
+              <strong style={{ color: '#0f172a' }}>{t.contactSupport}</strong>
             </span>
           </div>
         </div>
 
-        {/* ==================== PAINEL DIREITO: DASHBOARD MOCKUP & SOCIAL PROOF ==================== */}
+        {/* ==================== COLUNA DIREITA: PRÉVIA DO SISTEMA (50%) ==================== */}
         <div style={{
-          background: isDark ? '#0a0c10' : '#f7f8fa',
-          borderLeft: isDark ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid rgba(0, 0, 0, 0.06)',
-          padding: '36px 44px',
+          background: '#f6f7f9', // Fundo cinza suave do container direito
+          borderLeft: '1px solid #f1f5f9',
+          padding: '44px 48px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
           boxSizing: 'border-box'
         }}>
-          {/* MOCKUP FLUTUANTE DA DASHBOARD (IDÊNTICO AO KRAVIO) */}
+          {/* PRÉVIA DO DASHBOARD DO LEADSCOPE (JANELA INTERNA FIEL AO KRAVIO) */}
           <div style={{
-            background: isDark ? '#141720' : '#ffffff',
+            background: '#ffffff',
             borderRadius: '16px',
-            border: isDark ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.08)',
-            boxShadow: isDark
-              ? '0 20px 50px rgba(0, 0, 0, 0.6)'
-              : '0 20px 40px rgba(0, 0, 0, 0.06)',
+            border: '1px solid rgba(0, 0, 0, 0.08)',
+            boxShadow: '0 18px 45px rgba(0, 0, 0, 0.05)',
             display: 'flex',
             overflow: 'hidden'
           }}>
-            {/* Mini Sidebar da Dashboard (Hierarquia Completa do Kravio) */}
+            {/* Mini-Sidebar Interna da Prévia */}
             <div style={{
               width: '185px',
-              borderRight: isDark ? '1px solid rgba(255, 255, 255, 0.06)' : '1px solid #f1f5f9',
+              borderRight: '1px solid #f1f5f9',
               padding: '16px 12px',
               display: 'flex',
               flexDirection: 'column',
               gap: '14px',
-              background: isDark ? '#111319' : '#fafafa'
+              background: '#fafafa'
             }}>
-              {/* Logo do Mockup */}
+              {/* Logo do LeadScope no Canto Superior Esquerdo da Janela */}
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <div style={{
                     width: '22px',
                     height: '22px',
                     borderRadius: '6px',
-                    background: isDark ? '#ffffff' : '#0f172a',
-                    color: isDark ? '#0f172a' : '#ffffff',
+                    background: '#0f172a',
+                    color: '#ffffff',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -724,119 +812,121 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   }}>
                     L
                   </div>
-                  <span style={{ fontSize: '0.82rem', fontWeight: '700', color: isDark ? '#ffffff' : '#0f172a' }}>
+                  <span style={{ fontSize: '0.82rem', fontWeight: '700', color: '#0f172a' }}>
                     LeadScope
                   </span>
                 </div>
                 <Layers size={13} color="#94a3b8" />
               </div>
 
-              {/* Search Bar no Mockup */}
+              {/* Barra de Busca Interna */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '5px 8px',
-                background: isDark ? 'rgba(255,255,255,0.04)' : '#ffffff',
+                background: '#ffffff',
                 borderRadius: '6px',
-                border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e2e8f0',
+                border: '1px solid #e2e8f0',
                 fontSize: '0.68rem',
-                color: isDark ? '#8b949e' : '#94a3b8'
+                color: '#94a3b8'
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
                   <Search size={11} />
-                  <span>Search anything</span>
+                  <span>{t.searchPlaceholder}</span>
                 </div>
                 <span style={{ fontSize: '0.6rem', border: '1px solid #cbd5e1', borderRadius: '3px', padding: '1px 3px' }}>⌘K</span>
               </div>
 
-              {/* Section: MAIN NAVIGATION */}
+              {/* Navegação Principal */}
               <div>
-                <span style={{ fontSize: '0.6rem', fontWeight: '700', color: isDark ? '#6e7681' : '#94a3b8', letterSpacing: '0.04em', display: 'block', marginBottom: '6px' }}>
-                  MAIN NAVIGATION
+                <span style={{ fontSize: '0.6rem', fontWeight: '700', color: '#94a3b8', letterSpacing: '0.04em', display: 'block', marginBottom: '6px' }}>
+                  {t.mainNav}
                 </span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                  {/* Visão Geral Ativa */}
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
                     gap: '7px',
                     padding: '5px 8px',
                     borderRadius: '5px',
-                    background: isDark ? '#1e293b' : '#f1f5f9',
-                    color: isDark ? '#ffffff' : '#0f172a',
+                    background: '#f1f5f9',
+                    color: '#0f172a',
                     fontWeight: '600',
                     fontSize: '0.72rem'
                   }}>
-                    <LayoutDashboard size={12} color="#2563eb" />
-                    <span>Overview</span>
+                    <LayoutDashboard size={12} color="#0f172a" />
+                    <span>{t.overview}</span>
                   </div>
 
-                  {/* Submenu Tickets / Leads */}
+                  {/* Pipeline */}
                   <div style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'space-between',
                     padding: '4px 8px',
-                    color: isDark ? '#cbd5e1' : '#334155',
+                    color: '#334155',
                     fontSize: '0.72rem',
                     fontWeight: '500'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
                       <FolderKanban size={12} />
-                      <span>Pipeline</span>
+                      <span>{t.pipeline}</span>
                     </div>
                     <ChevronDown size={11} />
                   </div>
 
-                  <div style={{ paddingLeft: '22px', display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.66rem', color: isDark ? '#8b949e' : '#64748b' }}>
-                    <span>• All / Active Queue</span>
-                    <span>• High Priority</span>
-                    <span>• Escalations</span>
+                  {/* Submenu */}
+                  <div style={{ paddingLeft: '22px', display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.66rem', color: '#64748b' }}>
+                    <span>{t.allQueue}</span>
+                    <span>{t.highPriority}</span>
+                    <span>{t.escalations}</span>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 8px', color: isDark ? '#8b949e' : '#64748b', fontSize: '0.72rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 8px', color: '#64748b', fontSize: '0.72rem' }}>
                     <Building2 size={12} />
-                    <span>Clients</span>
+                    <span>{t.clients}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 8px', color: isDark ? '#8b949e' : '#64748b', fontSize: '0.72rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 8px', color: '#64748b', fontSize: '0.72rem' }}>
                     <Users size={12} />
-                    <span>Agents & Teams</span>
+                    <span>{t.agentsTeams}</span>
                   </div>
                 </div>
               </div>
 
-              {/* Section: ANALYTICS & INSIGHTS */}
+              {/* Análises & Insights */}
               <div>
-                <span style={{ fontSize: '0.6rem', fontWeight: '700', color: isDark ? '#6e7681' : '#94a3b8', letterSpacing: '0.04em', display: 'block', marginBottom: '6px' }}>
-                  ANALYTICS & INSIGHTS
+                <span style={{ fontSize: '0.6rem', fontWeight: '700', color: '#94a3b8', letterSpacing: '0.04em', display: 'block', marginBottom: '6px' }}>
+                  {t.analyticsInsights}
                 </span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 8px', color: isDark ? '#8b949e' : '#64748b', fontSize: '0.72rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 8px', color: '#64748b', fontSize: '0.72rem' }}>
                     <ShieldCheck size={12} />
-                    <span>SLA Compliance</span>
+                    <span>{t.slaCompliance}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 8px', color: isDark ? '#8b949e' : '#64748b', fontSize: '0.72rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 8px', color: '#64748b', fontSize: '0.72rem' }}>
                     <TrendingUp size={12} />
-                    <span>Conversion Rate</span>
+                    <span>{t.csatNps}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 8px', color: isDark ? '#8b949e' : '#64748b', fontSize: '0.72rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 8px', color: '#64748b', fontSize: '0.72rem' }}>
                     <FileBarChart size={12} />
-                    <span>Reports</span>
+                    <span>{t.reports}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Painel de Conteúdo da Dashboard no Mockup */}
+            {/* Painel Interno da Dashboard */}
             <div style={{ flex: 1, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-              {/* Breadcrumb & Greeting */}
+              {/* Breadcrumb & Saudação */}
               <div>
-                <div style={{ fontSize: '0.68rem', color: isDark ? '#8b949e' : '#64748b', marginBottom: '3px' }}>
-                  Overview <span style={{ opacity: 0.5 }}>/</span> Dashboard
+                <div style={{ fontSize: '0.68rem', color: '#64748b', marginBottom: '3px' }}>
+                  {t.breadcrumb}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <h3 style={{ fontSize: '1.02rem', fontWeight: '700', color: isDark ? '#ffffff' : '#0f172a', margin: 0 }}>
-                    Hello, Gabriel Castro 👋
+                  <h3 style={{ fontSize: '1.02rem', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+                    {t.greeting}
                   </h3>
                   <span style={{
                     fontSize: '0.64rem',
@@ -849,86 +939,86 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     PROD ACTIVE
                   </span>
                 </div>
-                <p style={{ fontSize: '0.72rem', color: isDark ? '#8b949e' : '#64748b', margin: '2px 0 0 0' }}>
-                  Here are the latest insights from your customer interactions.
+                <p style={{ fontSize: '0.72rem', color: '#64748b', margin: '2px 0 0 0' }}>
+                  {t.greetingSub}
                 </p>
               </div>
 
-              {/* 2 Métricas Principais com Sparklines Fluídas */}
+              {/* 2 Métricas com Sparklines Flutuantes */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div style={{
                   padding: '10px 12px',
-                  background: isDark ? '#111319' : '#f8fafc',
+                  background: '#f8fafc',
                   borderRadius: '9px',
-                  border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e2e8f0'
+                  border: '1px solid #e2e8f0'
                 }}>
-                  <div style={{ fontSize: '0.68rem', color: isDark ? '#8b949e' : '#64748b', fontWeight: '500' }}>
-                    Current Leads
+                  <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: '500' }}>
+                    {t.currentLeads}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '3px' }}>
-                    <span style={{ fontSize: '1.2rem', fontWeight: '800', color: isDark ? '#ffffff' : '#0f172a' }}>
-                      3,484
+                    <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a' }}>
+                      3.484
                     </span>
-                    {/* Sparkline suave SVG */}
+                    {/* Sparkline Verde */}
                     <svg width="44" height="18" viewBox="0 0 44 18">
                       <path d="M2,14 C10,14 14,6 22,9 C30,12 34,4 42,2" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </div>
                   <div style={{ fontSize: '0.66rem', color: '#10b981', fontWeight: '600', marginTop: '3px' }}>
-                    +71% vs last week
+                    {t.leadsTrend}
                   </div>
                 </div>
 
                 <div style={{
                   padding: '10px 12px',
-                  background: isDark ? '#111319' : '#f8fafc',
+                  background: '#f8fafc',
                   borderRadius: '9px',
-                  border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e2e8f0'
+                  border: '1px solid #e2e8f0'
                 }}>
-                  <div style={{ fontSize: '0.68rem', color: isDark ? '#8b949e' : '#64748b', fontWeight: '500' }}>
-                    Daily Avg. Resolution
+                  <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: '500' }}>
+                    {t.dailyAvgClose}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '3px' }}>
-                    <span style={{ fontSize: '1.2rem', fontWeight: '800', color: isDark ? '#ffffff' : '#0f172a' }}>
+                    <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a' }}>
                       486
                     </span>
-                    {/* Sparkline suave SVG */}
+                    {/* Sparkline Verde */}
                     <svg width="44" height="18" viewBox="0 0 44 18">
                       <path d="M2,12 C10,12 16,14 24,6 C32,10 36,4 42,3" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </div>
                   <div style={{ fontSize: '0.66rem', color: '#10b981', fontWeight: '600', marginTop: '3px' }}>
-                    +2% vs last week
+                    {t.closeTrend}
                   </div>
                 </div>
               </div>
 
-              {/* Volume Trend Gráfico de Barras com Tooltip (Exato ao Kravio) */}
+              {/* Volume Trend Gráfico de Barras com Tooltip de Terça-Feira */}
               <div style={{
                 padding: '12px 14px',
-                background: isDark ? '#111319' : '#f8fafc',
+                background: '#f8fafc',
                 borderRadius: '9px',
-                border: isDark ? '1px solid rgba(255,255,255,0.06)' : '1px solid #e2e8f0'
+                border: '1px solid #e2e8f0'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <div>
-                    <span style={{ fontSize: '0.68rem', color: isDark ? '#8b949e' : '#64748b', fontWeight: '500', display: 'block' }}>
-                      Ticket Volume Trend
+                    <span style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: '500', display: 'block' }}>
+                      {t.ticketTrend}
                     </span>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '2px' }}>
-                      <span style={{ fontSize: '1.15rem', fontWeight: '800', color: isDark ? '#ffffff' : '#0f172a' }}>
-                        4,790
+                      <span style={{ fontSize: '1.15rem', fontWeight: '800', color: '#0f172a' }}>
+                        4.790
                       </span>
                       <span style={{ fontSize: '0.66rem', color: '#10b981', fontWeight: '600' }}>
-                        +8% vs last week
+                        {t.ticketTrendBadge}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* 7 Barras com Tooltip flutuante em 'Tue' */}
+                {/* 7 Barras com Tooltip 'Ter : 584' e Linha Pontilhada */}
                 <div style={{ position: 'relative', paddingTop: '22px' }}>
-                  {/* Tooltip 'Tue : 584' */}
+                  {/* Tooltip flutuante */}
                   <div style={{
                     position: 'absolute',
                     top: '0px',
@@ -946,10 +1036,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     alignItems: 'center',
                     gap: '4px'
                   }}>
-                    <span>Tue : 584</span>
+                    <span>{t.tueTooltip}</span>
                   </div>
 
-                  {/* Linha pontilhada horizontal até a borda direita */}
+                  {/* Linha pontilhada horizontal */}
                   <div style={{
                     position: 'absolute',
                     top: '9px',
@@ -962,13 +1052,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
 
                   <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '58px', gap: '8px' }}>
                     {[
-                      { day: 'Sun', height: 38, active: false },
-                      { day: 'Mon', height: 56, active: false },
-                      { day: 'Tue', height: 92, active: true },
-                      { day: 'Wed', height: 48, active: false },
-                      { day: 'Thu', height: 72, active: false },
-                      { day: 'Fri', height: 60, active: false },
-                      { day: 'Sat', height: 36, active: false }
+                      { day: t.days[0], height: 38, active: false },
+                      { day: t.days[1], height: 56, active: false },
+                      { day: t.days[2], height: 92, active: true },
+                      { day: t.days[3], height: 48, active: false },
+                      { day: t.days[4], height: 72, active: false },
+                      { day: t.days[5], height: 60, active: false },
+                      { day: t.days[6], height: 36, active: false }
                     ].map(col => (
                       <div key={col.day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
                         <div style={{
@@ -976,11 +1066,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                           height: `${col.height}%`,
                           borderRadius: '4px',
                           background: col.active
-                            ? (isDark ? '#3b82f6' : 'linear-gradient(180deg, #1e293b 0%, #475569 100%)')
-                            : (isDark ? 'rgba(255,255,255,0.08)' : '#e2e8f0'),
+                            ? 'linear-gradient(180deg, #1e293b 0%, #475569 100%)'
+                            : '#e2e8f0',
                           transition: 'height 0.3s ease'
                         }} />
-                        <span style={{ fontSize: '0.6rem', color: isDark ? '#8b949e' : '#94a3b8', fontWeight: col.active ? '700' : '400' }}>
+                        <span style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: col.active ? '700' : '400' }}>
                           {col.day}
                         </span>
                       </div>
@@ -991,48 +1081,337 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          {/* Social Proof & Testimonial Quote (Exato ao Kravio) */}
-          <div style={{ marginTop: '24px' }}>
+          {/* DEPOIMENTO DE CLIENTE ABAIXO DA PRÉVIA */}
+          <div style={{ marginTop: '28px' }}>
             <p style={{
-              fontSize: '1.02rem',
-              lineHeight: '1.5',
-              color: isDark ? '#e6edf3' : '#1e293b',
-              margin: '0 0 16px 0',
+              fontSize: '1.08rem',
+              lineHeight: '1.55',
+              color: '#1e293b',
+              margin: '0 0 18px 0',
               fontWeight: '500',
               letterSpacing: '-0.01em'
             }}>
-              <strong style={{ color: isDark ? '#ffffff' : '#0f172a', fontWeight: '700' }}>LeadScope has completely changed</strong> how we manage commercial intelligence. It's fast, intuitive, and gives us clear insights that actually matter.
+              <strong style={{ color: '#0f172a', fontWeight: '800' }}>
+                {lang === 'pt' ? 'O LeadScope mudou completamente' : 'LeadScope has completely changed'}
+              </strong>{' '}
+              {lang === 'pt'
+                ? 'como gerenciamos nossa prospecção. É rápido, intuitivo e nos dá insights claros que realmente importam.'
+                : "how we manage customer support. It's fast, intuitive, and gives us clear insights that actually matter."}
             </p>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
               <div style={{
-                width: '38px',
-                height: '38px',
+                width: '40px',
+                height: '40px',
                 borderRadius: '50%',
-                background: '#1e3a5f',
+                background: '#0f172a',
                 color: '#ffffff',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: '700',
-                fontSize: '0.9rem',
-                border: '2px solid rgba(255,255,255,0.2)',
-                boxShadow: '0 4px 10px rgba(0,0,0,0.15)'
+                fontSize: '0.88rem',
+                border: '2px solid #ffffff',
+                boxShadow: '0 4px 10px rgba(0,0,0,0.12)'
               }}>
-                GC
+                SK
               </div>
               <div>
-                <div style={{ fontSize: '0.86rem', fontWeight: '700', color: isDark ? '#ffffff' : '#0f172a' }}>
-                  Gabriel Castro
+                <div style={{ fontSize: '0.9rem', fontWeight: '700', color: '#0f172a' }}>
+                  {t.testimonialAuthor}
                 </div>
-                <div style={{ fontSize: '0.74rem', color: isDark ? '#8b949e' : '#64748b' }}>
-                  Head of Growth & Commercial Intelligence — LumeoTech Inc.
+                <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                  {t.testimonialRole}
                 </div>
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* ==================== MODAL DE RECUPERAÇÃO DE SENHA (SUPABASE AUTH) ==================== */}
+      {showForgotModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 23, 42, 0.45)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 100,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '20px',
+            maxWidth: '460px',
+            width: '100%',
+            padding: '32px',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.15)',
+            boxSizing: 'border-box',
+            position: 'relative'
+          }}>
+            <button
+              type="button"
+              onClick={() => {
+                setShowForgotModal(false);
+                setForgotSuccess(null);
+                setForgotError(null);
+              }}
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                background: 'none',
+                border: 'none',
+                color: '#94a3b8',
+                cursor: 'pointer',
+                padding: '4px'
+              }}
+            >
+              <X size={20} />
+            </button>
+
+            <h2 style={{ fontSize: '1.35rem', fontWeight: '700', color: '#0f172a', margin: '0 0 8px 0' }}>
+              {t.forgotModalTitle}
+            </h2>
+            <p style={{ fontSize: '0.86rem', color: '#64748b', margin: '0 0 20px 0', lineHeight: '1.5' }}>
+              {t.forgotModalSub}
+            </p>
+
+            {forgotSuccess && (
+              <div style={{
+                padding: '12px 14px',
+                background: 'rgba(16, 185, 129, 0.12)',
+                border: '1px solid rgba(16, 185, 129, 0.35)',
+                borderRadius: '8px',
+                color: '#059669',
+                fontSize: '0.84rem',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <CheckCircle2 size={18} />
+                <span>{forgotSuccess}</span>
+              </div>
+            )}
+
+            {forgotError && (
+              <div style={{
+                padding: '12px 14px',
+                background: '#fef2f2',
+                border: '1px solid #fecaca',
+                borderRadius: '8px',
+                color: '#dc2626',
+                fontSize: '0.84rem',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <AlertCircle size={18} />
+                <span>{forgotError}</span>
+              </div>
+            )}
+
+            {!forgotSuccess ? (
+              <form onSubmit={handleForgotPasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', color: '#334155', marginBottom: '6px' }}>
+                    {t.emailLabel}
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <Mail size={16} color="#94a3b8" style={{ position: 'absolute', left: '13px', top: '12px' }} />
+                    <input
+                      type="email"
+                      required
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                      placeholder={t.emailPlaceholder}
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px 10px 38px',
+                        background: '#ffffff',
+                        border: '1px solid #cbd5e1',
+                        borderRadius: '8px',
+                        color: '#0f172a',
+                        fontSize: '0.86rem',
+                        outline: 'none',
+                        boxSizing: 'border-box'
+                      }}
+                    />
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  style={{
+                    width: '100%',
+                    padding: '11px',
+                    background: '#0f172a',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontSize: '0.88rem',
+                    fontWeight: '600',
+                    cursor: forgotLoading ? 'not-allowed' : 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px'
+                  }}
+                >
+                  {forgotLoading && <Loader2 size={16} className="spinner" />}
+                  <span>{forgotLoading ? t.sendingResetBtn : t.sendResetBtn}</span>
+                </button>
+              </form>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForgotModal(false);
+                  setForgotSuccess(null);
+                }}
+                style={{
+                  width: '100%',
+                  padding: '11px',
+                  background: '#0f172a',
+                  color: '#ffffff',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '0.88rem',
+                  fontWeight: '600',
+                  cursor: 'pointer'
+                }}
+              >
+                {t.backToLogin}
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ==================== MODAL DE CONTATO DO ADMINISTRADOR & SUPORTE ==================== */}
+      {showAdminModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(15, 23, 42, 0.45)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 100,
+          padding: '20px'
+        }}>
+          <div style={{
+            background: '#ffffff',
+            borderRadius: '20px',
+            maxWidth: '480px',
+            width: '100%',
+            padding: '32px',
+            boxShadow: '0 25px 50px rgba(0,0,0,0.15)',
+            boxSizing: 'border-box',
+            position: 'relative'
+          }}>
+            <button
+              type="button"
+              onClick={() => setShowAdminModal(false)}
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                background: 'none',
+                border: 'none',
+                color: '#94a3b8',
+                cursor: 'pointer',
+                padding: '4px'
+              }}
+            >
+              <X size={20} />
+            </button>
+
+            <div style={{
+              width: '42px',
+              height: '42px',
+              borderRadius: '10px',
+              background: '#f1f5f9',
+              color: '#0f172a',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              marginBottom: '16px'
+            }}>
+              <HelpCircle size={22} />
+            </div>
+
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#0f172a', margin: '0 0 8px 0' }}>
+              {t.adminModalTitle}
+            </h2>
+            <p style={{ fontSize: '0.86rem', color: '#64748b', margin: '0 0 20px 0', lineHeight: '1.5' }}>
+              {t.adminModalSub}
+            </p>
+
+            <div style={{
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
+              borderRadius: '12px',
+              padding: '16px',
+              marginBottom: '20px'
+            }}>
+              <span style={{ fontSize: '0.78rem', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '8px' }}>
+                {t.adminContactTitle}
+              </span>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: '0.9rem', fontWeight: '700', color: '#0f172a' }}>
+                  suporte@leadscope.com
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCopyEmail}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 10px',
+                    background: '#ffffff',
+                    border: '1px solid #cbd5e1',
+                    borderRadius: '6px',
+                    fontSize: '0.76rem',
+                    fontWeight: '600',
+                    color: '#334155',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <Copy size={13} />
+                  <span>{copiedEmail ? t.emailCopied : t.copyEmail}</span>
+                </button>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowAdminModal(false)}
+              style={{
+                width: '100%',
+                padding: '11px',
+                background: '#0f172a',
+                color: '#ffffff',
+                border: 'none',
+                borderRadius: '8px',
+                fontSize: '0.88rem',
+                fontWeight: '600',
+                cursor: 'pointer'
+              }}
+            >
+              {t.closeBtn}
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

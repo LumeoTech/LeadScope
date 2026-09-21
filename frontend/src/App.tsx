@@ -57,8 +57,42 @@ export const App: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
+    // 1. Processa retorno de OAuth do Supabase (#access_token=...)
+    if (window.location.hash && window.location.hash.includes('access_token=')) {
+      try {
+        const hash = window.location.hash.substring(1);
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get('access_token');
+        if (accessToken) {
+          const base64Url = accessToken.split('.')[1];
+          const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+          const jsonPayload = decodeURIComponent(
+            atob(base64)
+              .split('')
+              .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
+              .join('')
+          );
+          const payload = JSON.parse(jsonPayload);
+          const oauthUser: UserInfo = {
+            id: 1,
+            name: payload.user_metadata?.full_name || payload.user_metadata?.name || payload.email?.split('@')[0] || 'Usuário',
+            email: payload.email || 'usuario@leadscope.com',
+            role: payload.app_metadata?.role || 'ADMIN'
+          };
+          localStorage.setItem('token', accessToken);
+          localStorage.setItem('user', JSON.stringify(oauthUser));
+          setUser(oauthUser);
+          window.history.replaceState(null, '', window.location.pathname);
+          setInitializing(false);
+          return;
+        }
+      } catch (e) {
+        console.error('Erro ao processar token OAuth do Supabase:', e);
+      }
+    }
+
+    const savedUser = localStorage.getItem('user') || sessionStorage.getItem('user');
+    const token = localStorage.getItem('token') || sessionStorage.getItem('token');
     if (savedUser && token) {
       try {
         const parsed = JSON.parse(savedUser);
@@ -66,6 +100,8 @@ export const App: React.FC = () => {
       } catch (e) {
         localStorage.removeItem('user');
         localStorage.removeItem('token');
+        sessionStorage.removeItem('user');
+        sessionStorage.removeItem('token');
       }
     }
     setInitializing(false);
@@ -141,6 +177,8 @@ export const App: React.FC = () => {
     }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
+    sessionStorage.removeItem('token');
+    sessionStorage.removeItem('user');
     setUser(null);
   };
 
