@@ -21,8 +21,6 @@ import {
   AlertCircle,
   X,
   Copy,
-  ExternalLink,
-  MessageSquare,
   HelpCircle
 } from 'lucide-react';
 
@@ -46,6 +44,7 @@ const TRANSLATIONS = {
     forgotPassword: 'Esqueceu a senha?',
     signInButton: 'Entrar',
     signingIn: 'Entrando...',
+    serverWaking: 'O servidor em nuvem está acordando (Render). Aguarde alguns instantes...',
     orDivider: 'Ou',
     googleButton: 'Entrar com Google',
     appleButton: 'Entrar com Apple',
@@ -113,6 +112,7 @@ const TRANSLATIONS = {
     forgotPassword: 'Forgot Password?',
     signInButton: 'Sign In',
     signingIn: 'Signing in...',
+    serverWaking: 'Cloud server is waking up (Render). Please wait a moment...',
     orDivider: 'Or',
     googleButton: 'Sign in with Google',
     appleButton: 'Sign in with Apple',
@@ -179,6 +179,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [coldStartNotice, setColdStartNotice] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // Modais funcionais
@@ -218,6 +219,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setColdStartNotice(false);
+
+    // Se a requisição demorar mais de 2 segundos (Render acordando), avisa o usuário
+    const noticeTimer = setTimeout(() => {
+      setColdStartNotice(true);
+    }, 2000);
 
     try {
       const response = await api.auth.login({ email, password });
@@ -240,7 +247,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       const msg = err.message || (lang === 'pt' ? 'Credenciais inválidas. Verifique seu e-mail e senha.' : 'Invalid credentials. Please check your email and password.');
       setError(msg);
     } finally {
+      clearTimeout(noticeTimer);
       setLoading(false);
+      setColdStartNotice(false);
     }
   };
 
@@ -259,7 +268,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     setForgotSuccess(null);
 
     try {
-      // Chama o endpoint oficial de recovery do Supabase Auth
       const res = await fetch(`${SUPABASE_URL}/auth/v1/recover`, {
         method: 'POST',
         headers: {
@@ -279,7 +287,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       setForgotSuccess(t.resetSuccessMsg);
       setForgotEmail('');
     } catch (err: any) {
-      // Mensagem amigável de recuperação mesmo se o provider exigir chave anon
       setForgotSuccess(t.resetSuccessMsg);
     } finally {
       setForgotLoading(false);
@@ -295,175 +302,187 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   return (
     <div style={{
       minHeight: '100vh',
-      width: '100%',
+      width: '100vw',
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '24px',
+      padding: '16px', // Margem fina ao redor do card
       background: '#ebe9e1', // Cinza claro suave idêntico à referência Kravio
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       boxSizing: 'border-box'
     }}>
-      {/* CARD PRINCIPAL (50% / 50%) — BORDAS ARREDONDADAS E SOMBRA SUAVE */}
+      {/* CARD PRINCIPAL EXPANSIVO (ALTURA MÍNIMA 90VH E LARGURA MÍNIMA 85VW) */}
       <div style={{
-        width: '100%',
-        maxWidth: '1480px',
-        minHeight: 'calc(100vh - 48px)',
+        width: 'calc(100vw - 32px)',
+        minWidth: '85vw',
+        maxWidth: '1680px',
+        height: 'calc(100vh - 32px)',
+        minHeight: '90vh',
         background: '#ffffff',
         borderRadius: '28px',
-        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.07)',
+        boxShadow: '0 20px 60px rgba(0, 0, 0, 0.06)',
         border: '1px solid rgba(0, 0, 0, 0.04)',
         display: 'grid',
-        gridTemplateColumns: '1fr 1fr', // Exatos 50% / 50%
+        gridTemplateColumns: '1fr 1fr', // 50% / 50% exatos
+        alignItems: 'stretch',
         overflow: 'hidden'
       }}>
 
         {/* ==================== COLUNA ESQUERDA: FORMULÁRIO (50%) ==================== */}
         <div style={{
-          padding: '48px 64px 36px 64px',
+          height: '100%',
+          padding: '40px 60px 32px 60px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
           background: '#ffffff',
-          boxSizing: 'border-box'
+          boxSizing: 'border-box',
+          overflowY: 'auto'
         }}>
           {/* TOPO: LOGO LEADSCOPE À ESQUERDA E SELETOR DE IDIOMA À DIREITA */}
-          <div>
-            <div style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              marginBottom: '38px',
-              position: 'relative'
-            }}>
-              {/* Logo do LeadScope */}
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '10px',
-                  background: '#0f172a',
-                  color: '#ffffff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontWeight: '800',
-                  fontSize: '1.2rem',
-                  letterSpacing: '-0.04em'
-                }}>
-                  L
-                </div>
-                <span style={{
-                  fontWeight: '700',
-                  fontSize: '1.2rem',
-                  letterSpacing: '-0.03em',
-                  color: '#0f172a'
-                }}>
-                  LeadScope
-                </span>
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '16px',
+            position: 'relative'
+          }}>
+            {/* Logo do LeadScope */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                background: '#0f172a',
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: '800',
+                fontSize: '1.25rem',
+                letterSpacing: '-0.04em'
+              }}>
+                L
               </div>
-
-              {/* Seletor de Idioma Funcional */}
-              <div style={{ position: 'relative' }}>
-                <button
-                  type="button"
-                  onClick={() => setShowLangMenu(!showLangMenu)}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '7px',
-                    padding: '6px 14px',
-                    borderRadius: '8px',
-                    border: '1px solid #e2e8f0',
-                    background: '#ffffff',
-                    color: '#475569',
-                    fontSize: '0.84rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease'
-                  }}
-                >
-                  <Globe size={15} color="#64748b" />
-                  <span>{t.localeCode}</span>
-                  <ChevronDown size={14} color="#64748b" />
-                </button>
-
-                {/* Dropdown de Idiomas */}
-                {showLangMenu && (
-                  <div style={{
-                    position: 'absolute',
-                    right: 0,
-                    top: '40px',
-                    background: '#ffffff',
-                    borderRadius: '10px',
-                    boxShadow: '0 10px 25px rgba(0,0,0,0.1)',
-                    border: '1px solid #e2e8f0',
-                    padding: '6px',
-                    minWidth: '150px',
-                    zIndex: 50
-                  }}>
-                    <button
-                      type="button"
-                      onClick={() => handleLanguageChange('pt')}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '8px 12px',
-                        borderRadius: '6px',
-                        border: 'none',
-                        background: lang === 'pt' ? '#f1f5f9' : 'transparent',
-                        color: lang === 'pt' ? '#0f172a' : '#475569',
-                        fontWeight: lang === 'pt' ? '700' : '500',
-                        fontSize: '0.82rem',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                      }}
-                    >
-                      <span>🇧🇷</span>
-                      <span>Português</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleLanguageChange('en')}
-                      style={{
-                        width: '100%',
-                        textAlign: 'left',
-                        padding: '8px 12px',
-                        borderRadius: '6px',
-                        border: 'none',
-                        background: lang === 'en' ? '#f1f5f9' : 'transparent',
-                        color: lang === 'en' ? '#0f172a' : '#475569',
-                        fontWeight: lang === 'en' ? '700' : '500',
-                        fontSize: '0.82rem',
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px'
-                      }}
-                    >
-                      <span>🇺🇸</span>
-                      <span>English</span>
-                    </button>
-                  </div>
-                )}
-              </div>
+              <span style={{
+                fontWeight: '700',
+                fontSize: '1.25rem',
+                letterSpacing: '-0.03em',
+                color: '#0f172a'
+              }}>
+                LeadScope
+              </span>
             </div>
 
-            {/* CENTRO DA COLUNA: TÍTULO & SUBTÍTULO */}
+            {/* Seletor de Idioma */}
+            <div style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => setShowLangMenu(!showLangMenu)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '7px',
+                  padding: '7px 14px',
+                  borderRadius: '8px',
+                  border: '1px solid #e2e8f0',
+                  background: '#ffffff',
+                  color: '#475569',
+                  fontSize: '0.85rem',
+                  fontWeight: '600',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                <Globe size={15} color="#64748b" />
+                <span>{t.localeCode}</span>
+                <ChevronDown size={14} color="#64748b" />
+              </button>
+
+              {/* Dropdown de Idiomas */}
+              {showLangMenu && (
+                <div style={{
+                  position: 'absolute',
+                  right: 0,
+                  top: '44px',
+                  background: '#ffffff',
+                  borderRadius: '10px',
+                  boxShadow: '0 12px 30px rgba(0,0,0,0.12)',
+                  border: '1px solid #e2e8f0',
+                  padding: '6px',
+                  minWidth: '150px',
+                  zIndex: 50
+                }}>
+                  <button
+                    type="button"
+                    onClick={() => handleLanguageChange('pt')}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: lang === 'pt' ? '#f1f5f9' : 'transparent',
+                      color: lang === 'pt' ? '#0f172a' : '#475569',
+                      fontWeight: lang === 'pt' ? '700' : '500',
+                      fontSize: '0.84rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <span>🇧🇷</span>
+                    <span>Português</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleLanguageChange('en')}
+                    style={{
+                      width: '100%',
+                      textAlign: 'left',
+                      padding: '8px 12px',
+                      borderRadius: '6px',
+                      border: 'none',
+                      background: lang === 'en' ? '#f1f5f9' : 'transparent',
+                      color: lang === 'en' ? '#0f172a' : '#475569',
+                      fontWeight: lang === 'en' ? '700' : '500',
+                      fontSize: '0.84rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px'
+                    }}
+                  >
+                    <span>🇺🇸</span>
+                    <span>English</span>
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* CENTRO: FORMULÁRIO COM RESPIRO VERTICAL GENEROSO */}
+          <div style={{
+            margin: 'auto 0',
+            padding: '16px 0',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'center'
+          }}>
+            {/* Título & Subtítulo */}
             <div style={{ marginBottom: '28px' }}>
               <h1 style={{
-                fontSize: '1.95rem',
+                fontSize: '2.05rem',
                 fontWeight: '700',
-                letterSpacing: '-0.03em',
+                letterSpacing: '-0.035em',
                 color: '#0f172a',
                 margin: '0 0 8px 0'
               }}>
                 {t.title}
               </h1>
               <p style={{
-                fontSize: '0.94rem',
+                fontSize: '0.96rem',
                 color: '#64748b',
                 margin: 0
               }}>
@@ -471,32 +490,51 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               </p>
             </div>
 
+            {/* Aviso de Render Cold Start */}
+            {coldStartNotice && (
+              <div style={{
+                padding: '11px 14px',
+                background: '#eff6ff',
+                border: '1px solid #bfdbfe',
+                borderRadius: '8px',
+                color: '#1d4ed8',
+                fontSize: '0.84rem',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px'
+              }}>
+                <Loader2 size={16} className="spinner" />
+                <span>{t.serverWaking}</span>
+              </div>
+            )}
+
             {/* Banner de Erro */}
             {error && (
               <div style={{
-                padding: '11px 14px',
+                padding: '12px 14px',
                 background: '#fef2f2',
                 border: '1px solid #fecaca',
                 borderRadius: '8px',
                 color: '#dc2626',
-                fontSize: '0.84rem',
+                fontSize: '0.85rem',
                 marginBottom: '18px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '10px'
               }}>
-                <AlertCircle size={17} />
+                <AlertCircle size={18} />
                 <span>{error}</span>
               </div>
             )}
 
-            {/* FORMULÁRIO */}
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+            {/* Formulário com Espaçamento Generoso */}
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               {/* Campo de E-mail */}
               <div>
                 <label style={{
                   display: 'block',
-                  fontSize: '0.84rem',
+                  fontSize: '0.85rem',
                   fontWeight: '600',
                   color: '#334155',
                   marginBottom: '7px'
@@ -504,7 +542,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   {t.emailLabel} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <Mail size={16} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '13px' }} />
+                  <Mail size={17} color="#94a3b8" style={{ position: 'absolute', left: '15px', top: '14px' }} />
                   <input
                     type="email"
                     required
@@ -513,12 +551,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     placeholder={t.emailPlaceholder}
                     style={{
                       width: '100%',
-                      padding: '11px 14px 11px 42px',
+                      height: '46px',
+                      padding: '0 14px 0 44px',
                       background: '#ffffff',
                       border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       color: '#0f172a',
-                      fontSize: '0.88rem',
+                      fontSize: '0.9rem',
                       outline: 'none',
                       boxSizing: 'border-box',
                       transition: 'border-color 0.15s ease'
@@ -531,7 +570,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               <div>
                 <label style={{
                   display: 'block',
-                  fontSize: '0.84rem',
+                  fontSize: '0.85rem',
                   fontWeight: '600',
                   color: '#334155',
                   marginBottom: '7px'
@@ -539,7 +578,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   {t.passwordLabel} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <Lock size={16} color="#94a3b8" style={{ position: 'absolute', left: '14px', top: '13px' }} />
+                  <Lock size={17} color="#94a3b8" style={{ position: 'absolute', left: '15px', top: '14px' }} />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
@@ -548,12 +587,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     placeholder={t.passwordPlaceholder}
                     style={{
                       width: '100%',
-                      padding: '11px 42px 11px 42px',
+                      height: '46px',
+                      padding: '0 44px 0 44px',
                       background: '#ffffff',
                       border: '1px solid #cbd5e1',
                       borderRadius: '8px',
                       color: '#0f172a',
-                      fontSize: '0.88rem',
+                      fontSize: '0.9rem',
                       outline: 'none',
                       boxSizing: 'border-box',
                       transition: 'border-color 0.15s ease'
@@ -564,8 +604,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     onClick={() => setShowPassword(!showPassword)}
                     style={{
                       position: 'absolute',
-                      right: '12px',
-                      top: '12px',
+                      right: '14px',
+                      top: '14px',
                       background: 'none',
                       border: 'none',
                       color: '#94a3b8',
@@ -573,7 +613,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                       padding: 0
                     }}
                   >
-                    {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                    {showPassword ? <EyeOff size={17} /> : <Eye size={17} />}
                   </button>
                 </div>
               </div>
@@ -583,7 +623,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                fontSize: '0.82rem',
+                fontSize: '0.84rem',
                 marginTop: '2px',
                 marginBottom: '4px'
               }}>
@@ -599,7 +639,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     type="checkbox"
                     checked={rememberMe}
                     onChange={(e) => setRememberMe(e.target.checked)}
-                    style={{ accentColor: '#0f172a', width: '15px', height: '15px', cursor: 'pointer' }}
+                    style={{ accentColor: '#0f172a', width: '16px', height: '16px', cursor: 'pointer' }}
                   />
                   <span>{t.rememberMe}</span>
                 </label>
@@ -612,57 +652,56 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   style={{
                     color: '#0f172a',
                     cursor: 'pointer',
-                    fontWeight: '600',
-                    textDecoration: 'none'
+                    fontWeight: '600'
                   }}
                 >
                   {t.forgotPassword}
                 </span>
               </div>
 
-              {/* Botão Principal: Entrar (Largura Total, Cor Escura Sólida) */}
+              {/* Botão Principal: Entrar */}
               <button
                 type="submit"
                 disabled={loading}
                 style={{
                   width: '100%',
-                  padding: '12px 18px',
+                  height: '46px',
                   background: '#0f172a',
                   color: '#ffffff',
                   border: 'none',
                   borderRadius: '8px',
-                  fontSize: '0.94rem',
+                  fontSize: '0.95rem',
                   fontWeight: '600',
                   cursor: loading ? 'not-allowed' : 'pointer',
-                  opacity: loading ? 0.75 : 1,
+                  opacity: loading ? 0.8 : 1,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  boxShadow: '0 3px 8px rgba(15, 23, 42, 0.15)',
+                  boxShadow: '0 4px 10px rgba(15, 23, 42, 0.15)',
                   transition: 'background 0.15s ease'
                 }}
               >
-                {loading && <Loader2 size={16} className="spinner" />}
+                {loading && <Loader2 size={17} className="spinner" />}
                 <span>{loading ? t.signingIn : t.signInButton}</span>
               </button>
 
-              {/* Separador "Ou" Centralizado entre Linhas */}
+              {/* Separador "Ou" Centralizado */}
               <div style={{
                 display: 'flex',
                 alignItems: 'center',
                 gap: '14px',
-                margin: '6px 0',
+                margin: '4px 0',
                 color: '#94a3b8',
-                fontSize: '0.82rem'
+                fontSize: '0.84rem'
               }}>
                 <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
                 <span>{t.orDivider}</span>
                 <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
               </div>
 
-              {/* Dois Botões Lado a Lado: Google & Apple (Funcionais via Supabase Auth) */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              {/* Dois Botões Lado a Lado: Google & Apple */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <button
                   type="button"
                   onClick={() => handleOAuthLogin('google')}
@@ -671,19 +710,18 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
-                    padding: '10px 14px',
+                    height: '44px',
                     borderRadius: '8px',
                     border: '1px solid #cbd5e1',
                     background: '#ffffff',
                     color: '#334155',
-                    fontSize: '0.82rem',
+                    fontSize: '0.84rem',
                     fontWeight: '600',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease'
                   }}
                 >
-                  {/* Google Icon Oficial */}
-                  <svg width="16" height="16" viewBox="0 0 24 24">
+                  <svg width="17" height="17" viewBox="0 0 24 24">
                     <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
                     <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.27 21.36 7.35 24 12 24z"/>
                     <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.97 0 12s.46 3.84 1.26 5.42l4.02-3.15z"/>
@@ -700,19 +738,18 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
-                    padding: '10px 14px',
+                    height: '44px',
                     borderRadius: '8px',
                     border: '1px solid #cbd5e1',
                     background: '#ffffff',
                     color: '#334155',
-                    fontSize: '0.82rem',
+                    fontSize: '0.84rem',
                     fontWeight: '600',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease'
                   }}
                 >
-                  {/* Apple Icon Oficial */}
-                  <svg width="15" height="15" viewBox="0 0 24 24" fill="#000000">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="#000000">
                     <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.76 1.06-1.82.94-2.88-.91.04-2.02.6-2.66 1.36-.57.65-.98 1.73-.85 2.76 1.02.08 2.05-.53 2.57-1.24z"/>
                   </svg>
                   <span>{t.appleButton}</span>
@@ -720,8 +757,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               </div>
             </form>
 
-            {/* Rodapé da Coluna: Sistema Fechado, Apenas Convite */}
-            <div style={{ textAlign: 'center', marginTop: '24px', fontSize: '0.84rem', color: '#64748b' }}>
+            {/* Aviso de Sistema Fechado */}
+            <div style={{ textAlign: 'center', marginTop: '26px', fontSize: '0.86rem', color: '#64748b' }}>
               <span>{t.noAccount} </span>
               <span
                 onClick={() => setShowAdminModal(true)}
@@ -737,16 +774,15 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          {/* Rodapé da Página: Copyright à Esquerda e Falar com Suporte à Direita */}
+          {/* BASE: COPYRIGHT À ESQUERDA E SUPORTE À DIREITA */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
-            fontSize: '0.78rem',
+            fontSize: '0.8rem',
             color: '#94a3b8',
-            marginTop: '32px',
-            borderTop: '1px solid #f1f5f9',
-            paddingTop: '18px'
+            paddingTop: '20px',
+            borderTop: '1px solid #f1f5f9'
           }}>
             <span>{t.copyright}</span>
             <span
@@ -768,18 +804,21 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
 
         {/* ==================== COLUNA DIREITA: PRÉVIA DO SISTEMA (50%) ==================== */}
         <div style={{
-          background: '#f6f7f9', // Fundo cinza suave do container direito
+          height: '100%',
+          background: '#f6f7f9',
           borderLeft: '1px solid #f1f5f9',
-          padding: '44px 48px',
+          padding: '36px 44px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
           boxSizing: 'border-box'
         }}>
-          {/* PRÉVIA DO DASHBOARD DO LEADSCOPE (JANELA INTERNA FIEL AO KRAVIO) */}
+          {/* PRÉVIA DO DASHBOARD DO LEADSCOPE (PREENCHE A MAIOR PARTE DA COLUNA) */}
           <div style={{
+            flex: 1,
+            minHeight: '440px',
             background: '#ffffff',
-            borderRadius: '16px',
+            borderRadius: '18px',
             border: '1px solid rgba(0, 0, 0, 0.08)',
             boxShadow: '0 18px 45px rgba(0, 0, 0, 0.05)',
             display: 'flex',
@@ -787,151 +826,161 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
           }}>
             {/* Mini-Sidebar Interna da Prévia */}
             <div style={{
-              width: '185px',
+              width: '190px',
               borderRight: '1px solid #f1f5f9',
-              padding: '16px 12px',
+              padding: '18px 14px',
               display: 'flex',
               flexDirection: 'column',
-              gap: '14px',
+              justifyContent: 'space-between',
+              gap: '12px',
               background: '#fafafa'
             }}>
-              {/* Logo do LeadScope no Canto Superior Esquerdo da Janela */}
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div style={{
-                    width: '22px',
-                    height: '22px',
-                    borderRadius: '6px',
-                    background: '#0f172a',
-                    color: '#ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    fontWeight: '800',
-                    fontSize: '0.72rem'
-                  }}>
-                    L
-                  </div>
-                  <span style={{ fontSize: '0.82rem', fontWeight: '700', color: '#0f172a' }}>
-                    LeadScope
-                  </span>
-                </div>
-                <Layers size={13} color="#94a3b8" />
-              </div>
-
-              {/* Barra de Busca Interna */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                padding: '5px 8px',
-                background: '#ffffff',
-                borderRadius: '6px',
-                border: '1px solid #e2e8f0',
-                fontSize: '0.68rem',
-                color: '#94a3b8'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                  <Search size={11} />
-                  <span>{t.searchPlaceholder}</span>
-                </div>
-                <span style={{ fontSize: '0.6rem', border: '1px solid #cbd5e1', borderRadius: '3px', padding: '1px 3px' }}>⌘K</span>
-              </div>
-
-              {/* Navegação Principal */}
-              <div>
-                <span style={{ fontSize: '0.6rem', fontWeight: '700', color: '#94a3b8', letterSpacing: '0.04em', display: 'block', marginBottom: '6px' }}>
-                  {t.mainNav}
-                </span>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                  {/* Visão Geral Ativa */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '7px',
-                    padding: '5px 8px',
-                    borderRadius: '5px',
-                    background: '#f1f5f9',
-                    color: '#0f172a',
-                    fontWeight: '600',
-                    fontSize: '0.72rem'
-                  }}>
-                    <LayoutDashboard size={12} color="#0f172a" />
-                    <span>{t.overview}</span>
-                  </div>
-
-                  {/* Pipeline */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'space-between',
-                    padding: '4px 8px',
-                    color: '#334155',
-                    fontSize: '0.72rem',
-                    fontWeight: '500'
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
-                      <FolderKanban size={12} />
-                      <span>{t.pipeline}</span>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                {/* Logo do LeadScope no Canto Superior Esquerdo da Janela */}
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <div style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '6px',
+                      background: '#0f172a',
+                      color: '#ffffff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: '800',
+                      fontSize: '0.74rem'
+                    }}>
+                      L
                     </div>
-                    <ChevronDown size={11} />
+                    <span style={{ fontSize: '0.84rem', fontWeight: '700', color: '#0f172a' }}>
+                      LeadScope
+                    </span>
                   </div>
+                  <Layers size={13} color="#94a3b8" />
+                </div>
 
-                  {/* Submenu */}
-                  <div style={{ paddingLeft: '22px', display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.66rem', color: '#64748b' }}>
-                    <span>{t.allQueue}</span>
-                    <span>{t.highPriority}</span>
-                    <span>{t.escalations}</span>
+                {/* Barra de Busca Interna */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '6px 9px',
+                  background: '#ffffff',
+                  borderRadius: '6px',
+                  border: '1px solid #e2e8f0',
+                  fontSize: '0.7rem',
+                  color: '#94a3b8'
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                    <Search size={12} />
+                    <span>{t.searchPlaceholder}</span>
                   </div>
+                  <span style={{ fontSize: '0.62rem', border: '1px solid #cbd5e1', borderRadius: '3px', padding: '1px 3px' }}>⌘K</span>
+                </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 8px', color: '#64748b', fontSize: '0.72rem' }}>
-                    <Building2 size={12} />
-                    <span>{t.clients}</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 8px', color: '#64748b', fontSize: '0.72rem' }}>
-                    <Users size={12} />
-                    <span>{t.agentsTeams}</span>
+                {/* Navegação Principal */}
+                <div>
+                  <span style={{ fontSize: '0.62rem', fontWeight: '700', color: '#94a3b8', letterSpacing: '0.04em', display: 'block', marginBottom: '6px' }}>
+                    {t.mainNav}
+                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
+                    {/* Visão Geral Ativa */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '7px',
+                      padding: '6px 9px',
+                      borderRadius: '5px',
+                      background: '#f1f5f9',
+                      color: '#0f172a',
+                      fontWeight: '600',
+                      fontSize: '0.74rem'
+                    }}>
+                      <LayoutDashboard size={13} color="#0f172a" />
+                      <span>{t.overview}</span>
+                    </div>
+
+                    {/* Pipeline */}
+                    <div style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '5px 9px',
+                      color: '#334155',
+                      fontSize: '0.74rem',
+                      fontWeight: '500'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                        <FolderKanban size={13} />
+                        <span>{t.pipeline}</span>
+                      </div>
+                      <ChevronDown size={12} />
+                    </div>
+
+                    {/* Submenu */}
+                    <div style={{ paddingLeft: '24px', display: 'flex', flexDirection: 'column', gap: '2px', fontSize: '0.68rem', color: '#64748b' }}>
+                      <span>{t.allQueue}</span>
+                      <span>{t.highPriority}</span>
+                      <span>{t.escalations}</span>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '5px 9px', color: '#64748b', fontSize: '0.74rem' }}>
+                      <Building2 size={13} />
+                      <span>{t.clients}</span>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '5px 9px', color: '#64748b', fontSize: '0.74rem' }}>
+                      <Users size={13} />
+                      <span>{t.agentsTeams}</span>
+                    </div>
                   </div>
                 </div>
               </div>
 
               {/* Análises & Insights */}
               <div>
-                <span style={{ fontSize: '0.6rem', fontWeight: '700', color: '#94a3b8', letterSpacing: '0.04em', display: 'block', marginBottom: '6px' }}>
+                <span style={{ fontSize: '0.62rem', fontWeight: '700', color: '#94a3b8', letterSpacing: '0.04em', display: 'block', marginBottom: '6px' }}>
                   {t.analyticsInsights}
                 </span>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '3px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 8px', color: '#64748b', fontSize: '0.72rem' }}>
-                    <ShieldCheck size={12} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '5px 9px', color: '#64748b', fontSize: '0.74rem' }}>
+                    <ShieldCheck size={13} />
                     <span>{t.slaCompliance}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 8px', color: '#64748b', fontSize: '0.72rem' }}>
-                    <TrendingUp size={12} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '5px 9px', color: '#64748b', fontSize: '0.74rem' }}>
+                    <TrendingUp size={13} />
                     <span>{t.csatNps}</span>
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '4px 8px', color: '#64748b', fontSize: '0.72rem' }}>
-                    <FileBarChart size={12} />
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '7px', padding: '5px 9px', color: '#64748b', fontSize: '0.74rem' }}>
+                    <FileBarChart size={13} />
                     <span>{t.reports}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Painel Interno da Dashboard */}
-            <div style={{ flex: 1, padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            {/* Painel Interno da Dashboard (Preenchendo Toda a Altura) */}
+            <div style={{
+              flex: 1,
+              padding: '22px 24px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'space-between',
+              gap: '16px'
+            }}>
               {/* Breadcrumb & Saudação */}
               <div>
-                <div style={{ fontSize: '0.68rem', color: '#64748b', marginBottom: '3px' }}>
+                <div style={{ fontSize: '0.72rem', color: '#64748b', marginBottom: '3px' }}>
                   {t.breadcrumb}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <h3 style={{ fontSize: '1.02rem', fontWeight: '700', color: '#0f172a', margin: 0 }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: '700', color: '#0f172a', margin: 0 }}>
                     {t.greeting}
                   </h3>
                   <span style={{
-                    fontSize: '0.64rem',
+                    fontSize: '0.66rem',
                     fontWeight: '700',
-                    padding: '2px 7px',
+                    padding: '3px 8px',
                     borderRadius: '4px',
                     background: 'rgba(16, 185, 129, 0.15)',
                     color: '#10b981'
@@ -939,86 +988,90 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     PROD ACTIVE
                   </span>
                 </div>
-                <p style={{ fontSize: '0.72rem', color: '#64748b', margin: '2px 0 0 0' }}>
+                <p style={{ fontSize: '0.76rem', color: '#64748b', margin: '2px 0 0 0' }}>
                   {t.greetingSub}
                 </p>
               </div>
 
-              {/* 2 Métricas com Sparklines Flutuantes */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+              {/* 2 Métricas Principais com Sparklines em SVG */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '14px' }}>
                 <div style={{
-                  padding: '10px 12px',
+                  padding: '14px 16px',
                   background: '#f8fafc',
-                  borderRadius: '9px',
+                  borderRadius: '10px',
                   border: '1px solid #e2e8f0'
                 }}>
-                  <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: '500' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '500' }}>
                     {t.currentLeads}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '3px' }}>
-                    <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ fontSize: '1.35rem', fontWeight: '800', color: '#0f172a' }}>
                       3.484
                     </span>
                     {/* Sparkline Verde */}
-                    <svg width="44" height="18" viewBox="0 0 44 18">
-                      <path d="M2,14 C10,14 14,6 22,9 C30,12 34,4 42,2" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" />
+                    <svg width="50" height="20" viewBox="0 0 50 20">
+                      <path d="M2,16 C12,16 16,7 26,10 C34,13 38,4 48,2" fill="none" stroke="#10b981" strokeWidth="2.2" strokeLinecap="round" />
                     </svg>
                   </div>
-                  <div style={{ fontSize: '0.66rem', color: '#10b981', fontWeight: '600', marginTop: '3px' }}>
+                  <div style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: '600', marginTop: '4px' }}>
                     {t.leadsTrend}
                   </div>
                 </div>
 
                 <div style={{
-                  padding: '10px 12px',
+                  padding: '14px 16px',
                   background: '#f8fafc',
-                  borderRadius: '9px',
+                  borderRadius: '10px',
                   border: '1px solid #e2e8f0'
                 }}>
-                  <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: '500' }}>
+                  <div style={{ fontSize: '0.72rem', color: '#64748b', fontWeight: '500' }}>
                     {t.dailyAvgClose}
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '3px' }}>
-                    <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '4px' }}>
+                    <span style={{ fontSize: '1.35rem', fontWeight: '800', color: '#0f172a' }}>
                       486
                     </span>
                     {/* Sparkline Verde */}
-                    <svg width="44" height="18" viewBox="0 0 44 18">
-                      <path d="M2,12 C10,12 16,14 24,6 C32,10 36,4 42,3" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" />
+                    <svg width="50" height="20" viewBox="0 0 50 20">
+                      <path d="M2,14 C12,14 18,16 28,6 C36,11 40,4 48,3" fill="none" stroke="#10b981" strokeWidth="2.2" strokeLinecap="round" />
                     </svg>
                   </div>
-                  <div style={{ fontSize: '0.66rem', color: '#10b981', fontWeight: '600', marginTop: '3px' }}>
+                  <div style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: '600', marginTop: '4px' }}>
                     {t.closeTrend}
                   </div>
                 </div>
               </div>
 
-              {/* Volume Trend Gráfico de Barras com Tooltip de Terça-Feira */}
+              {/* Volume Trend Gráfico de Barras Expandido */}
               <div style={{
-                padding: '12px 14px',
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                padding: '16px 18px',
                 background: '#f8fafc',
-                borderRadius: '9px',
+                borderRadius: '10px',
                 border: '1px solid #e2e8f0'
               }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <div>
-                    <span style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: '500', display: 'block' }}>
+                    <span style={{ fontSize: '0.74rem', color: '#64748b', fontWeight: '500', display: 'block' }}>
                       {t.ticketTrend}
                     </span>
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '2px' }}>
-                      <span style={{ fontSize: '1.15rem', fontWeight: '800', color: '#0f172a' }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '7px', marginTop: '2px' }}>
+                      <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>
                         4.790
                       </span>
-                      <span style={{ fontSize: '0.66rem', color: '#10b981', fontWeight: '600' }}>
+                      <span style={{ fontSize: '0.7rem', color: '#10b981', fontWeight: '600' }}>
                         {t.ticketTrendBadge}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* 7 Barras com Tooltip 'Ter : 584' e Linha Pontilhada */}
-                <div style={{ position: 'relative', paddingTop: '22px' }}>
-                  {/* Tooltip flutuante */}
+                {/* 7 Barras com Tooltip de Terça-Feira e Altura Generosa */}
+                <div style={{ position: 'relative', paddingTop: '24px' }}>
+                  {/* Tooltip 'Ter : 584' */}
                   <div style={{
                     position: 'absolute',
                     top: '0px',
@@ -1026,11 +1079,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     transform: 'translateX(-50%)',
                     background: '#0f172a',
                     color: '#ffffff',
-                    padding: '2px 7px',
-                    borderRadius: '4px',
-                    fontSize: '0.62rem',
+                    padding: '3px 8px',
+                    borderRadius: '5px',
+                    fontSize: '0.66rem',
                     fontWeight: '700',
-                    boxShadow: '0 4px 8px rgba(0,0,0,0.25)',
+                    boxShadow: '0 4px 10px rgba(0,0,0,0.25)',
                     zIndex: 2,
                     display: 'flex',
                     alignItems: 'center',
@@ -1042,7 +1095,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   {/* Linha pontilhada horizontal */}
                   <div style={{
                     position: 'absolute',
-                    top: '9px',
+                    top: '10px',
                     left: '42%',
                     right: '6%',
                     height: '1px',
@@ -1050,7 +1103,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     zIndex: 1
                   }} />
 
-                  <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '58px', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '80px', gap: '10px' }}>
                     {[
                       { day: t.days[0], height: 38, active: false },
                       { day: t.days[1], height: 56, active: false },
@@ -1060,17 +1113,17 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                       { day: t.days[5], height: 60, active: false },
                       { day: t.days[6], height: 36, active: false }
                     ].map(col => (
-                      <div key={col.day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px' }}>
+                      <div key={col.day} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px' }}>
                         <div style={{
                           width: '100%',
                           height: `${col.height}%`,
-                          borderRadius: '4px',
+                          borderRadius: '5px',
                           background: col.active
                             ? 'linear-gradient(180deg, #1e293b 0%, #475569 100%)'
                             : '#e2e8f0',
                           transition: 'height 0.3s ease'
                         }} />
-                        <span style={{ fontSize: '0.6rem', color: '#94a3b8', fontWeight: col.active ? '700' : '400' }}>
+                        <span style={{ fontSize: '0.66rem', color: '#94a3b8', fontWeight: col.active ? '700' : '400' }}>
                           {col.day}
                         </span>
                       </div>
@@ -1081,13 +1134,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          {/* DEPOIMENTO DE CLIENTE ABAIXO DA PRÉVIA */}
-          <div style={{ marginTop: '28px' }}>
+          {/* DEPOIMENTO DE CLIENTE FIXO NO RODAPÉ DA COLUNA DIREITA */}
+          <div style={{ marginTop: '26px' }}>
             <p style={{
-              fontSize: '1.08rem',
-              lineHeight: '1.55',
+              fontSize: '1.1rem',
+              lineHeight: '1.6',
               color: '#1e293b',
-              margin: '0 0 18px 0',
+              margin: '0 0 16px 0',
               fontWeight: '500',
               letterSpacing: '-0.01em'
             }}>
@@ -1095,14 +1148,18 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 {lang === 'pt' ? 'O LeadScope mudou completamente' : 'LeadScope has completely changed'}
               </strong>{' '}
               {lang === 'pt'
-                ? 'como gerenciamos nossa prospecção. É rápido, intuitivo e nos dá insights claros que realmente importam.'
-                : "how we manage customer support. It's fast, intuitive, and gives us clear insights that actually matter."}
+                ? 'como gerenciamos nossa prospecção. É rápido, intuitivo e nos dá '
+                : 'how we manage customer support. It\'s fast, intuitive, and gives us '}
+              <strong style={{ color: '#0f172a', fontWeight: '800' }}>
+                {lang === 'pt' ? 'insights claros' : 'clear insights'}
+              </strong>{' '}
+              {lang === 'pt' ? 'que realmente importam.' : 'that actually matter.'}
             </p>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
               <div style={{
-                width: '40px',
-                height: '40px',
+                width: '42px',
+                height: '42px',
                 borderRadius: '50%',
                 background: '#0f172a',
                 color: '#ffffff',
@@ -1110,17 +1167,17 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 alignItems: 'center',
                 justifyContent: 'center',
                 fontWeight: '700',
-                fontSize: '0.88rem',
+                fontSize: '0.92rem',
                 border: '2px solid #ffffff',
                 boxShadow: '0 4px 10px rgba(0,0,0,0.12)'
               }}>
                 SK
               </div>
               <div>
-                <div style={{ fontSize: '0.9rem', fontWeight: '700', color: '#0f172a' }}>
+                <div style={{ fontSize: '0.92rem', fontWeight: '700', color: '#0f172a' }}>
                   {t.testimonialAuthor}
                 </div>
-                <div style={{ fontSize: '0.78rem', color: '#64748b' }}>
+                <div style={{ fontSize: '0.8rem', color: '#64748b' }}>
                   {t.testimonialRole}
                 </div>
               </div>

@@ -1,7 +1,11 @@
 // Cliente HTTP centralizado e integração com a API REST do CRM LeadScope
 const rawApiUrl = import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL) : '';
 const urlMatch = rawApiUrl.match(/https?:\/\/[a-zA-Z0-9.-]+(:\d+)?/);
-const BASE_URL = urlMatch ? `${urlMatch[0]}/api` : '/api';
+const isBrowser = typeof window !== 'undefined';
+const isVercel = isBrowser && window.location.hostname.includes('vercel.app');
+const BASE_URL = urlMatch
+  ? `${urlMatch[0]}/api`
+  : (isVercel ? 'https://leadscope-e8lo.onrender.com/api' : '/api');
 
 export interface UserInfo {
   id: number;
