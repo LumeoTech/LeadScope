@@ -6,9 +6,9 @@ import {
   Eye,
   EyeOff,
   Globe,
-  Search,
-  LayoutDashboard,
-  Users,
+  LayoutGrid,
+  Flag,
+  BarChart2,
   Building2,
   ChevronDown,
   Layers,
@@ -20,8 +20,7 @@ import {
   X,
   Copy,
   HelpCircle,
-  BarChart3,
-  Settings
+  Sparkles
 } from 'lucide-react';
 
 interface LoginViewProps {
@@ -34,10 +33,10 @@ const TRANSLATIONS = {
   pt: {
     localeName: 'Português',
     localeCode: 'PT',
-    title: 'Entrar para Continuar',
-    subtitle: 'Acesse todas as suas ferramentas em um só lugar.',
+    title: 'Entrar no LeadScope',
+    subtitle: 'Inteligência comercial e gestão de prospecção corporativa.',
     emailLabel: 'Endereço de E-mail',
-    emailPlaceholder: 'achmadhakim@gmail.com',
+    emailPlaceholder: 'seu.email@empresa.com',
     passwordLabel: 'Senha',
     passwordPlaceholder: '••••••••',
     rememberMe: 'Manter-me conectado',
@@ -50,24 +49,25 @@ const TRANSLATIONS = {
     appleButton: 'Entrar com Apple',
     noAccount: 'Não tem uma conta?',
     contactAdmin: 'Fale com o administrador.',
-    copyright: `© ${new Date().getFullYear()} LeadScope`,
+    copyright: `© ${new Date().getFullYear()} LeadScope Inc.`,
     needHelp: 'Precisa de ajuda?',
     contactSupport: 'Falar com Suporte',
-    testimonialText: 'O LeadScope mudou completamente como gerenciamos nossa prospecção. É rápido, intuitivo e nos dá insights claros que realmente importam.',
-    testimonialAuthor: 'Sarah Kim',
-    testimonialRole: 'Gerente de Experiência e Vendas — TechWave Inc.',
-    // Mockup
-    searchPlaceholder: 'Buscar no LeadScope...',
-    breadcrumb: 'Visão Geral / Dashboard',
+    testimonialLead: 'O LeadScope mudou completamente',
+    testimonialBody: 'como gerenciamos nossa prospecção comercial. É rápido, intuitivo e nos dá',
+    testimonialHighlight: 'insights claros',
+    testimonialEnd: 'que realmente importam.',
+    // Mockup Interface LeadScope
+    searchPlaceholder: 'Buscar no LeadScope... ⌘K',
+    breadcrumb: 'LeadScope / Dashboard Comercial',
     greeting: 'Olá, Gabriel Castro 👋',
-    greetingSub: 'Aqui estão os insights mais recentes das suas interações comerciais.',
-    currentLeads: 'Leads Ativos',
-    leadsTrend: '+71% vs semana anterior',
-    dailyAvgClose: 'Tempo Médio Resolução',
-    closeTrend: '+2% vs semana anterior',
-    ticketTrend: 'Volume de Prospecção',
-    ticketTrendBadge: '+8% vs semana anterior',
-    tueTooltip: 'Ter : 584',
+    greetingSub: 'Visão consolidada de oportunidades qualificadas e pipeline em tempo real.',
+    activeCampaigns: 'Campanhas Ativas',
+    campaignsTrend: '+71% vs mês anterior',
+    mappedCompanies: 'Empresas Mapeadas',
+    companiesTrend: '+18% novas empresas',
+    prospectingVolume: 'Desempenho Semanal de Prospecção',
+    volumeTrendBadge: '+8% vs semana anterior',
+    tueTooltip: 'Ter : 584 leads',
     days: ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'],
     // Modal Recuperar Senha
     forgotModalTitle: 'Recuperar Senha',
@@ -87,10 +87,10 @@ const TRANSLATIONS = {
   en: {
     localeName: 'English',
     localeCode: 'ENG',
-    title: 'Sign In to Continue',
-    subtitle: 'Access all your tools in one place.',
+    title: 'Sign In to LeadScope',
+    subtitle: 'Commercial intelligence and enterprise prospecting platform.',
     emailLabel: 'Email Address',
-    emailPlaceholder: 'achmadhakim@gmail.com',
+    emailPlaceholder: 'user@leadscope.com',
     passwordLabel: 'Password',
     passwordPlaceholder: '••••••••',
     rememberMe: 'Keep me logged in',
@@ -102,25 +102,26 @@ const TRANSLATIONS = {
     googleButton: 'Sign in with Google',
     appleButton: 'Sign in with Apple',
     noAccount: "Don't have an account?",
-    contactAdmin: 'Sign Up',
-    copyright: `© ${new Date().getFullYear()} LeadScope`,
+    contactAdmin: 'Contact administrator.',
+    copyright: `© ${new Date().getFullYear()} LeadScope Inc.`,
     needHelp: 'Need help?',
     contactSupport: 'Contact Support',
-    testimonialText: "LeadScope has completely changed how we manage customer support. It's fast, intuitive, and gives us clear insights that actually matter.",
-    testimonialAuthor: 'Sarah Kim',
-    testimonialRole: 'Customer Experience Manager — TechWave Inc.',
-    // Mockup
-    searchPlaceholder: 'Search anything',
-    breadcrumb: 'Overview / Dashboard',
-    greeting: 'Hello, Achmad Hakim 👋',
-    greetingSub: 'Here are the latest insights from your customer interactions.',
-    currentLeads: 'Current Tickets',
-    leadsTrend: '+71% vs last week',
-    dailyAvgClose: 'Daily Avg. Resolution',
-    closeTrend: '+2% vs last week',
-    ticketTrend: 'Ticket Volume Trend',
-    ticketTrendBadge: '+8% vs last week',
-    tueTooltip: 'Tue : 584',
+    testimonialLead: 'LeadScope has completely changed',
+    testimonialBody: 'how we manage our commercial pipeline. It is fast, intuitive, and gives us',
+    testimonialHighlight: 'clear insights',
+    testimonialEnd: 'that actually matter.',
+    // Mockup Interface LeadScope
+    searchPlaceholder: 'Search LeadScope... ⌘K',
+    breadcrumb: 'LeadScope / Commercial Dashboard',
+    greeting: 'Hello, Gabriel Castro 👋',
+    greetingSub: 'Real-time overview of qualified opportunities and sales pipeline.',
+    activeCampaigns: 'Active Campaigns',
+    campaignsTrend: '+71% vs last month',
+    mappedCompanies: 'Mapped Companies',
+    companiesTrend: '+18% new accounts',
+    prospectingVolume: 'Weekly Prospecting Performance',
+    volumeTrendBadge: '+8% vs last week',
+    tueTooltip: 'Tue : 584 leads',
     days: ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'],
     // Modal Forgot Password
     forgotModalTitle: 'Reset Password',
@@ -165,13 +166,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const t = TRANSLATIONS[lang];
 
   useEffect(() => {
-    // Carrega preferência de idioma persistida
     const savedLang = localStorage.getItem('leadscope_lang') as Language;
     if (savedLang === 'en' || savedLang === 'pt') {
       setLang(savedLang);
     }
 
-    // Warm-up silencioso da API para garantir resposta instantânea
     try {
       fetch('https://leadscope-e8lo.onrender.com/api/health', { method: 'GET', mode: 'cors' }).catch(() => {});
     } catch {
@@ -191,7 +190,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     setError(null);
     setColdStartNotice(false);
 
-    // Se a requisição demorar mais de 2 segundos (Render acordando), avisa o usuário
     const noticeTimer = setTimeout(() => {
       setColdStartNotice(true);
     }, 2000);
@@ -199,7 +197,6 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     try {
       const response = await api.auth.login({ email, password });
 
-      // Persistência da sessão conforme a preferência "Manter-me conectado"
       if (rememberMe) {
         localStorage.setItem('token', response.accessToken);
         localStorage.setItem('user', JSON.stringify(response.user));
@@ -223,14 +220,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     }
   };
 
-  // OAuth com Supabase para Google e Apple
   const handleOAuthLogin = (provider: 'google' | 'apple') => {
     const redirectUri = encodeURIComponent(window.location.origin);
     const oauthUrl = `${SUPABASE_URL}/auth/v1/authorize?provider=${provider}&redirect_to=${redirectUri}`;
     window.location.href = oauthUrl;
   };
 
-  // Envio real de recuperação de senha via Supabase
   const handleForgotPasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setForgotLoading(true);
@@ -276,17 +271,17 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      padding: '24px 28px',
-      background: '#ebe9e1', // Fundo cinza suave idêntico à imagem de referência
+      padding: '24px 30px',
+      background: '#ebe9e1', // Fundo cinza suave idêntico à referência
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
       boxSizing: 'border-box'
     }}>
-      {/* CARD FLUTUANTE ("BOLHA FLUTUANDO" IDÊNTICO À IMAGEM KRAVIO) */}
+      {/* CARD FLUTUANTE EXPANDIDO ("BOLHA FLUTUANDO" UM POUCO MAIOR) */}
       <div style={{
         width: '100%',
-        maxWidth: '1280px',
-        minHeight: '660px',
-        height: 'min(88vh, 790px)',
+        maxWidth: '1380px',
+        minHeight: '700px',
+        height: 'min(90vh, 830px)',
         background: '#ffffff',
         borderRadius: '28px',
         boxShadow: '0 25px 65px rgba(0, 0, 0, 0.07)',
@@ -297,10 +292,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
         overflow: 'hidden'
       }}>
 
-        {/* ==================== COLUNA ESQUERDA: FORMULÁRIO ==================== */}
+        {/* ==================== COLUNA ESQUERDA: NOSSA INTERFACE LEADSCOPE ==================== */}
         <div style={{
           height: '100%',
-          padding: '36px 48px 28px 48px',
+          padding: '40px 54px 30px 54px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
@@ -308,28 +303,38 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
           boxSizing: 'border-box',
           overflowY: 'auto'
         }}>
-          {/* TOPO: LOGO [L] À ESQUERDA E SELETOR DE IDIOMA À DIREITA */}
+          {/* TOPO: LOGO LEADSCOPE À ESQUERDA E SELETOR DE IDIOMA À DIREITA */}
           <div style={{
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',
             position: 'relative'
           }}>
-            {/* Logo estilo Kravio */}
-            <div style={{
-              width: '38px',
-              height: '38px',
-              borderRadius: '9px',
-              background: '#0f172a',
-              color: '#ffffff',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontWeight: '800',
-              fontSize: '1.2rem',
-              letterSpacing: '-0.04em'
-            }}>
-              L
+            {/* Logo Oficial LeadScope */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+              <div style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '10px',
+                background: '#0f172a',
+                color: '#ffffff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontWeight: '800',
+                fontSize: '1.25rem',
+                letterSpacing: '-0.04em'
+              }}>
+                L
+              </div>
+              <span style={{
+                fontWeight: '800',
+                fontSize: '1.25rem',
+                letterSpacing: '-0.03em',
+                color: '#0f172a'
+              }}>
+                LeadScope
+              </span>
             </div>
 
             {/* Seletor de Idioma */}
@@ -343,8 +348,8 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   gap: '6px',
                   padding: '6px 12px',
                   borderRadius: '7px',
-                  border: '1px solid transparent',
-                  background: 'transparent',
+                  border: '1px solid #e2e8f0',
+                  background: '#ffffff',
                   color: '#475569',
                   fontSize: '0.84rem',
                   fontWeight: '600',
@@ -420,10 +425,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          {/* CENTRO: FORMULÁRIO BEM DISTRIBUÍDO E ELEGANTE */}
+          {/* CENTRO: FORMULÁRIO DO LEADSCOPE COM NOSSA IDENTIDADE */}
           <div style={{
             margin: 'auto 0',
-            maxWidth: '380px',
+            maxWidth: '390px',
             width: '100%',
             alignSelf: 'center',
             display: 'flex',
@@ -432,17 +437,17 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             {/* Título & Subtítulo */}
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <h1 style={{
-                fontSize: '1.75rem',
+                fontSize: '1.85rem',
                 fontWeight: '700',
                 letterSpacing: '-0.03em',
-                color: '#111827',
+                color: '#0f172a',
                 margin: '0 0 6px 0'
               }}>
                 {t.title}
               </h1>
               <p style={{
                 fontSize: '0.88rem',
-                color: '#6b7280',
+                color: '#64748b',
                 margin: 0
               }}>
                 {t.subtitle}
@@ -488,20 +493,20 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             )}
 
             {/* Formulário */}
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               {/* Campo de E-mail */}
               <div>
                 <label style={{
                   display: 'block',
                   fontSize: '0.82rem',
                   fontWeight: '600',
-                  color: '#374151',
+                  color: '#334155',
                   marginBottom: '6px'
                 }}>
                   {t.emailLabel} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <Mail size={16} color="#9ca3af" style={{ position: 'absolute', left: '13px', top: '13px' }} />
+                  <Mail size={16} color="#94a3b8" style={{ position: 'absolute', left: '13px', top: '13px' }} />
                   <input
                     type="email"
                     required
@@ -513,12 +518,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                       height: '42px',
                       padding: '0 12px 0 40px',
                       background: '#ffffff',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
-                      color: '#111827',
+                      color: '#0f172a',
                       fontSize: '0.88rem',
                       outline: 'none',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      transition: 'border-color 0.15s ease'
                     }}
                   />
                 </div>
@@ -530,13 +536,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   display: 'block',
                   fontSize: '0.82rem',
                   fontWeight: '600',
-                  color: '#374151',
+                  color: '#334155',
                   marginBottom: '6px'
                 }}>
                   {t.passwordLabel} <span style={{ color: '#ef4444' }}>*</span>
                 </label>
                 <div style={{ position: 'relative' }}>
-                  <Lock size={16} color="#9ca3af" style={{ position: 'absolute', left: '13px', top: '13px' }} />
+                  <Lock size={16} color="#94a3b8" style={{ position: 'absolute', left: '13px', top: '13px' }} />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     required
@@ -548,12 +554,13 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                       height: '42px',
                       padding: '0 40px 0 40px',
                       background: '#ffffff',
-                      border: '1px solid #d1d5db',
+                      border: '1px solid #cbd5e1',
                       borderRadius: '8px',
-                      color: '#111827',
+                      color: '#0f172a',
                       fontSize: '0.88rem',
                       outline: 'none',
-                      boxSizing: 'border-box'
+                      boxSizing: 'border-box',
+                      transition: 'border-color 0.15s ease'
                     }}
                   />
                   <button
@@ -565,7 +572,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                       top: '12px',
                       background: 'none',
                       border: 'none',
-                      color: '#9ca3af',
+                      color: '#94a3b8',
                       cursor: 'pointer',
                       padding: 0
                     }}
@@ -588,7 +595,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '7px',
-                  color: '#4b5563',
+                  color: '#475569',
                   cursor: 'pointer',
                   userSelect: 'none'
                 }}>
@@ -607,7 +614,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     setShowForgotModal(true);
                   }}
                   style={{
-                    color: '#111827',
+                    color: '#0f172a',
                     cursor: 'pointer',
                     fontWeight: '600',
                     fontSize: '0.8rem'
@@ -649,12 +656,12 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 alignItems: 'center',
                 gap: '12px',
                 margin: '2px 0',
-                color: '#9ca3af',
+                color: '#94a3b8',
                 fontSize: '0.78rem'
               }}>
-                <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }} />
+                <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
                 <span>{t.orDivider}</span>
-                <div style={{ flex: 1, height: '1px', background: '#e5e7eb' }} />
+                <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }} />
               </div>
 
               {/* Botões Google & Apple */}
@@ -669,9 +676,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     gap: '7px',
                     height: '40px',
                     borderRadius: '8px',
-                    border: '1px solid #d1d5db',
+                    border: '1px solid #cbd5e1',
                     background: '#ffffff',
-                    color: '#374151',
+                    color: '#334155',
                     fontSize: '0.8rem',
                     fontWeight: '600',
                     cursor: 'pointer'
@@ -696,9 +703,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     gap: '7px',
                     height: '40px',
                     borderRadius: '8px',
-                    border: '1px solid #d1d5db',
+                    border: '1px solid #cbd5e1',
                     background: '#ffffff',
-                    color: '#374151',
+                    color: '#334155',
                     fontSize: '0.8rem',
                     fontWeight: '600',
                     cursor: 'pointer'
@@ -712,15 +719,16 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               </div>
             </form>
 
-            {/* Link de Cadastro / Contato com Admin */}
-            <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '0.82rem', color: '#6b7280' }}>
+            {/* Link de Contato com Admin */}
+            <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '0.82rem', color: '#64748b' }}>
               <span>{t.noAccount} </span>
               <span
                 onClick={() => setShowAdminModal(true)}
                 style={{
-                  color: '#111827',
+                  color: '#0f172a',
                   cursor: 'pointer',
-                  fontWeight: '600'
+                  fontWeight: '700',
+                  textDecoration: 'underline'
                 }}
               >
                 {t.contactAdmin}
@@ -734,37 +742,37 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             justifyContent: 'space-between',
             alignItems: 'center',
             fontSize: '0.76rem',
-            color: '#9ca3af'
+            color: '#94a3b8'
           }}>
             <span>{t.copyright}</span>
             <span
               onClick={() => setShowAdminModal(true)}
               style={{
                 cursor: 'pointer',
-                color: '#4b5563',
+                color: '#64748b',
                 fontWeight: '500'
               }}
             >
-              {t.needHelp} <strong style={{ color: '#111827' }}>{t.contactSupport}</strong>
+              {t.needHelp} <strong style={{ color: '#0f172a' }}>{t.contactSupport}</strong>
             </span>
           </div>
         </div>
 
-        {/* ==================== COLUNA DIREITA: PRÉVIA DO SISTEMA ==================== */}
+        {/* ==================== COLUNA DIREITA: NOSSA PRÉVIA LEADSCOPE ==================== */}
         <div style={{
           height: '100%',
-          background: '#f6f7f9',
-          borderLeft: '1px solid #f1f2f4',
-          padding: '28px 34px 24px 34px',
+          background: '#f7f8fa',
+          borderLeft: '1px solid #f0f1f3',
+          padding: '32px 38px 28px 38px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
           boxSizing: 'border-box'
         }}>
-          {/* PRÉVIA DO DASHBOARD COM VISUAL ELEGANTE E EXPANSIVO */}
+          {/* PRÉVIA REAL DO DASHBOARD COM OS MÓDULOS E KPIS DO LEADSCOPE */}
           <div style={{
             flex: 1,
-            maxHeight: '460px',
+            maxHeight: '470px',
             background: '#ffffff',
             borderRadius: '16px',
             border: '1px solid rgba(0, 0, 0, 0.08)',
@@ -772,170 +780,177 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             display: 'flex',
             overflow: 'hidden'
           }}>
-            {/* MINI DOCK LATERAL MODERNO (SUBSTITUI O PAINEL DE TEXTO CRAMPED) */}
+            {/* MINI-SIDEBAR OFICIAL DO LEADSCOPE (COM NOSSOS MÓDULOS REAIS) */}
             <div style={{
-              width: '46px',
+              width: '50px',
               borderRight: '1px solid #f1f2f4',
-              padding: '14px 0',
+              padding: '16px 0',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
               justifyContent: 'space-between',
-              background: '#fafafa'
+              background: '#0c0d0f' // Fundo dark do sidebar real do LeadScope
             }}>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '14px' }}>
+                {/* Ícone Stylized Flux do LeadScope */}
                 <div style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '6px',
-                  background: '#0f172a',
-                  color: '#ffffff',
+                  width: '26px',
+                  height: '26px',
+                  borderRadius: '7px',
+                  background: '#ffffff',
+                  color: '#0c0d0f',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   fontWeight: '800',
-                  fontSize: '0.72rem'
+                  fontSize: '0.75rem'
                 }}>
                   L
                 </div>
 
-                <div style={{
-                  width: '28px',
-                  height: '28px',
-                  borderRadius: '6px',
-                  background: '#0f172a',
-                  color: '#ffffff',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <LayoutDashboard size={13} />
+                {/* Módulos Reais do LeadScope */}
+                <div
+                  title="Dashboard"
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '7px',
+                    background: 'rgba(255, 255, 255, 0.12)',
+                    color: '#ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer'
+                  }}
+                >
+                  <LayoutGrid size={15} color="#ffffff" />
                 </div>
-                <div style={{ color: '#9ca3af', padding: '4px' }}>
-                  <Users size={13} />
+
+                <div title="Campanhas / Leads" style={{ color: '#8c93a0', padding: '6px' }}>
+                  <Flag size={15} />
                 </div>
-                <div style={{ color: '#9ca3af', padding: '4px' }}>
-                  <Building2 size={13} />
+
+                <div title="Analytics / Scanner" style={{ color: '#8c93a0', padding: '6px' }}>
+                  <BarChart2 size={15} />
                 </div>
-                <div style={{ color: '#9ca3af', padding: '4px' }}>
-                  <TrendingUp size={13} />
+
+                <div title="Empresas Mapeadas" style={{ color: '#8c93a0', padding: '6px' }}>
+                  <Building2 size={15} />
                 </div>
               </div>
 
-              <div style={{ color: '#9ca3af', padding: '4px' }}>
-                <Settings size={13} />
+              {/* Status do Workspace Ativo */}
+              <div title="Workspace Conectado" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px' }}>
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }} />
               </div>
             </div>
 
-            {/* PAINEL PRINCIPAL DO DASHBOARD (OCUPA TODO O RESTANTE COM CHARTS E CARDS) */}
+            {/* PAINEL PRINCIPAL DO DASHBOARD LEADSCOPE */}
             <div style={{
               flex: 1,
-              padding: '16px 20px',
+              padding: '18px 22px',
               display: 'flex',
               flexDirection: 'column',
               justifyContent: 'space-between',
               gap: '12px'
             }}>
-              {/* Top bar do Mockup */}
+              {/* Header do Mockup */}
               <div>
-                <div style={{ fontSize: '0.68rem', color: '#9ca3af', marginBottom: '2px' }}>
+                <div style={{ fontSize: '0.68rem', color: '#64748b', marginBottom: '2px', fontWeight: '500' }}>
                   {t.breadcrumb}
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                  <h3 style={{ fontSize: '1rem', fontWeight: '700', color: '#111827', margin: 0 }}>
+                  <h3 style={{ fontSize: '1.05rem', fontWeight: '700', color: '#0f172a', margin: 0 }}>
                     {t.greeting}
                   </h3>
                   <span style={{
                     fontSize: '0.62rem',
                     fontWeight: '700',
-                    padding: '2px 6px',
+                    padding: '2px 7px',
                     borderRadius: '4px',
                     background: 'rgba(16, 185, 129, 0.12)',
                     color: '#10b981'
                   }}>
-                    PROD ACTIVE
+                    WORKSPACE ATIVO
                   </span>
                 </div>
-                <p style={{ fontSize: '0.72rem', color: '#6b7280', margin: '2px 0 0 0' }}>
+                <p style={{ fontSize: '0.72rem', color: '#64748b', margin: '2px 0 0 0' }}>
                   {t.greetingSub}
                 </p>
               </div>
 
-              {/* 2 Métricas com Sparklines Fluidas */}
+              {/* KPIs Reais do LeadScope */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div style={{
                   padding: '10px 12px',
-                  background: '#f9fafb',
+                  background: '#f8fafc',
                   borderRadius: '9px',
-                  border: '1px solid #f3f4f6'
+                  border: '1px solid #e2e8f0'
                 }}>
-                  <div style={{ fontSize: '0.68rem', color: '#6b7280', fontWeight: '500' }}>
-                    {t.currentLeads}
+                  <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: '500' }}>
+                    {t.activeCampaigns}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '3px' }}>
-                    <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#111827' }}>
-                      3,484
+                    <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>
+                      3.484
                     </span>
-                    {/* Sparkline Verde */}
                     <svg width="46" height="18" viewBox="0 0 46 18">
                       <path d="M2,15 C10,15 15,6 24,9 C32,12 36,4 44,2" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </div>
                   <div style={{ fontSize: '0.65rem', color: '#10b981', fontWeight: '600', marginTop: '2px' }}>
-                    {t.leadsTrend}
+                    {t.campaignsTrend}
                   </div>
                 </div>
 
                 <div style={{
                   padding: '10px 12px',
-                  background: '#f9fafb',
+                  background: '#f8fafc',
                   borderRadius: '9px',
-                  border: '1px solid #f3f4f6'
+                  border: '1px solid #e2e8f0'
                 }}>
-                  <div style={{ fontSize: '0.68rem', color: '#6b7280', fontWeight: '500' }}>
-                    {t.dailyAvgClose}
+                  <div style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: '500' }}>
+                    {t.mappedCompanies}
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: '3px' }}>
-                    <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#111827' }}>
-                      486
+                    <span style={{ fontSize: '1.25rem', fontWeight: '800', color: '#0f172a' }}>
+                      1.280
                     </span>
-                    {/* Sparkline Verde */}
                     <svg width="46" height="18" viewBox="0 0 46 18">
                       <path d="M2,13 C12,13 18,15 26,5 C34,9 38,3 44,2" fill="none" stroke="#10b981" strokeWidth="2" strokeLinecap="round" />
                     </svg>
                   </div>
                   <div style={{ fontSize: '0.65rem', color: '#10b981', fontWeight: '600', marginTop: '2px' }}>
-                    {t.closeTrend}
+                    {t.companiesTrend}
                   </div>
                 </div>
               </div>
 
-              {/* Volume Trend Gráfico de Barras com Tooltip Flutuante */}
+              {/* Volume de Prospecção do LeadScope com Tooltip de Terça-Feira */}
               <div style={{
                 padding: '12px 14px',
-                background: '#f9fafb',
+                background: '#f8fafc',
                 borderRadius: '9px',
-                border: '1px solid #f3f4f6'
+                border: '1px solid #e2e8f0'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                   <div>
-                    <span style={{ fontSize: '0.68rem', color: '#6b7280', fontWeight: '500', display: 'block' }}>
-                      {t.ticketTrend}
+                    <span style={{ fontSize: '0.68rem', color: '#64748b', fontWeight: '500', display: 'block' }}>
+                      {t.prospectingVolume}
                     </span>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '1px' }}>
-                      <span style={{ fontSize: '1.15rem', fontWeight: '800', color: '#111827' }}>
-                        4,790
+                      <span style={{ fontSize: '1.2rem', fontWeight: '800', color: '#0f172a' }}>
+                        4.790 leads
                       </span>
                       <span style={{ fontSize: '0.65rem', color: '#10b981', fontWeight: '600' }}>
-                        {t.ticketTrendBadge}
+                        {t.volumeTrendBadge}
                       </span>
                     </div>
                   </div>
                 </div>
 
-                {/* 7 Barras com Tooltip 'Tue : 584' e Linha Pontilhada */}
+                {/* 7 Barras com Tooltip Flutuante */}
                 <div style={{ position: 'relative', paddingTop: '20px' }}>
-                  {/* Tooltip flutuante sobre a terça-feira */}
                   <div style={{
                     position: 'absolute',
                     top: '0px',
@@ -943,7 +958,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     transform: 'translateX(-50%)',
                     background: '#0f172a',
                     color: '#ffffff',
-                    padding: '2px 6px',
+                    padding: '2px 7px',
                     borderRadius: '4px',
                     fontSize: '0.62rem',
                     fontWeight: '700',
@@ -955,18 +970,17 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     <span>{t.tueTooltip}</span>
                   </div>
 
-                  {/* Linha pontilhada horizontal */}
                   <div style={{
                     position: 'absolute',
                     top: '8px',
                     left: '42%',
                     right: '6%',
                     height: '1px',
-                    borderTop: '1px dashed #d1d5db',
+                    borderTop: '1px dashed #cbd5e1',
                     zIndex: 1
                   }} />
 
-                  <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '62px', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', height: '64px', gap: '8px' }}>
                     {[
                       { day: t.days[0], height: 38, active: false },
                       { day: t.days[1], height: 56, active: false },
@@ -983,10 +997,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                           borderRadius: '4px',
                           background: col.active
                             ? 'linear-gradient(180deg, #1e293b 0%, #475569 100%)'
-                            : '#e5e7eb',
+                            : '#e2e8f0',
                           transition: 'height 0.3s ease'
                         }} />
-                        <span style={{ fontSize: '0.62rem', color: '#9ca3af', fontWeight: col.active ? '700' : '400' }}>
+                        <span style={{ fontSize: '0.62rem', color: '#94a3b8', fontWeight: col.active ? '700' : '400' }}>
                           {col.day}
                         </span>
                       </div>
@@ -997,54 +1011,25 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             </div>
           </div>
 
-          {/* DEPOIMENTO NO RODAPÉ DA COLUNA DIREITA */}
-          <div style={{ marginTop: '20px' }}>
+          {/* DEPOIMENTO CORPORATIVO (SEM NOME FICTÍCIO DE TERCEIROS) */}
+          <div style={{ marginTop: '22px' }}>
             <p style={{
-              fontSize: '1.02rem',
-              lineHeight: '1.5',
-              color: '#1f2937',
-              margin: '0 0 14px 0',
+              fontSize: '1.05rem',
+              lineHeight: '1.55',
+              color: '#1e293b',
+              margin: 0,
               fontWeight: '500',
               letterSpacing: '-0.01em'
             }}>
-              <strong style={{ color: '#111827', fontWeight: '800' }}>
-                {lang === 'pt' ? 'O LeadScope mudou completamente' : 'LeadScope has completely changed'}
+              <strong style={{ color: '#0f172a', fontWeight: '800' }}>
+                {t.testimonialLead}
               </strong>{' '}
-              {lang === 'pt'
-                ? 'como gerenciamos nossa prospecção. É rápido, intuitivo e nos dá '
-                : 'how we manage customer support. It\'s fast, intuitive, and gives us '}
-              <strong style={{ color: '#111827', fontWeight: '800' }}>
-                {lang === 'pt' ? 'insights claros' : 'clear insights'}
+              {t.testimonialBody}{' '}
+              <strong style={{ color: '#0f172a', fontWeight: '800' }}>
+                {t.testimonialHighlight}
               </strong>{' '}
-              {lang === 'pt' ? 'que realmente importam.' : 'that actually matter.'}
+              {t.testimonialEnd}
             </p>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div style={{
-                width: '38px',
-                height: '38px',
-                borderRadius: '50%',
-                background: '#0f172a',
-                color: '#ffffff',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontWeight: '700',
-                fontSize: '0.85rem',
-                border: '2px solid #ffffff',
-                boxShadow: '0 3px 8px rgba(0,0,0,0.1)'
-              }}>
-                SK
-              </div>
-              <div>
-                <div style={{ fontSize: '0.88rem', fontWeight: '700', color: '#111827' }}>
-                  {t.testimonialAuthor}
-                </div>
-                <div style={{ fontSize: '0.75rem', color: '#6b7280' }}>
-                  {t.testimonialRole}
-                </div>
-              </div>
-            </div>
           </div>
         </div>
       </div>
@@ -1085,7 +1070,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 right: '18px',
                 background: 'none',
                 border: 'none',
-                color: '#9ca3af',
+                color: '#94a3b8',
                 cursor: 'pointer',
                 padding: '4px'
               }}
@@ -1093,10 +1078,10 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               <X size={18} />
             </button>
 
-            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#111827', margin: '0 0 6px 0' }}>
+            <h2 style={{ fontSize: '1.25rem', fontWeight: '700', color: '#0f172a', margin: '0 0 6px 0' }}>
               {t.forgotModalTitle}
             </h2>
-            <p style={{ fontSize: '0.84rem', color: '#6b7280', margin: '0 0 18px 0', lineHeight: '1.5' }}>
+            <p style={{ fontSize: '0.84rem', color: '#64748b', margin: '0 0 18px 0', lineHeight: '1.5' }}>
               {t.forgotModalSub}
             </p>
 
@@ -1139,11 +1124,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             {!forgotSuccess ? (
               <form onSubmit={handleForgotPasswordSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: '#374151', marginBottom: '5px' }}>
+                  <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: '600', color: '#334155', marginBottom: '5px' }}>
                     {t.emailLabel}
                   </label>
                   <div style={{ position: 'relative' }}>
-                    <Mail size={15} color="#9ca3af" style={{ position: 'absolute', left: '12px', top: '11px' }} />
+                    <Mail size={15} color="#94a3b8" style={{ position: 'absolute', left: '12px', top: '11px' }} />
                     <input
                       type="email"
                       required
@@ -1154,9 +1139,9 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                         width: '100%',
                         padding: '9px 12px 9px 36px',
                         background: '#ffffff',
-                        border: '1px solid #d1d5db',
+                        border: '1px solid #cbd5e1',
                         borderRadius: '8px',
-                        color: '#111827',
+                        color: '#0f172a',
                         fontSize: '0.84rem',
                         outline: 'none',
                         boxSizing: 'border-box'
@@ -1246,7 +1231,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 right: '18px',
                 background: 'none',
                 border: 'none',
-                color: '#9ca3af',
+                color: '#94a3b8',
                 cursor: 'pointer',
                 padding: '4px'
               }}
@@ -1268,25 +1253,25 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               <HelpCircle size={20} />
             </div>
 
-            <h2 style={{ fontSize: '1.2rem', fontWeight: '700', color: '#111827', margin: '0 0 6px 0' }}>
+            <h2 style={{ fontSize: '1.2rem', fontWeight: '700', color: '#0f172a', margin: '0 0 6px 0' }}>
               {t.adminModalTitle}
             </h2>
-            <p style={{ fontSize: '0.84rem', color: '#6b7280', margin: '0 0 16px 0', lineHeight: '1.5' }}>
+            <p style={{ fontSize: '0.84rem', color: '#64748b', margin: '0 0 16px 0', lineHeight: '1.5' }}>
               {t.adminModalSub}
             </p>
 
             <div style={{
-              background: '#f9fafb',
-              border: '1px solid #e5e7eb',
+              background: '#f8fafc',
+              border: '1px solid #e2e8f0',
               borderRadius: '10px',
               padding: '14px',
               marginBottom: '16px'
             }}>
-              <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#4b5563', display: 'block', marginBottom: '6px' }}>
+              <span style={{ fontSize: '0.75rem', fontWeight: '600', color: '#475569', display: 'block', marginBottom: '6px' }}>
                 {t.adminContactTitle}
               </span>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <span style={{ fontSize: '0.88rem', fontWeight: '700', color: '#111827' }}>
+                <span style={{ fontSize: '0.88rem', fontWeight: '700', color: '#0f172a' }}>
                   suporte@leadscope.com
                 </span>
                 <button
@@ -1298,11 +1283,11 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                     gap: '5px',
                     padding: '5px 8px',
                     background: '#ffffff',
-                    border: '1px solid #d1d5db',
+                    border: '1px solid #cbd5e1',
                     borderRadius: '6px',
                     fontSize: '0.74rem',
                     fontWeight: '600',
-                    color: '#374151',
+                    color: '#334155',
                     cursor: 'pointer'
                   }}
                 >
