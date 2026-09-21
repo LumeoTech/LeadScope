@@ -35,12 +35,35 @@ public class CrmBackendApplication {
             }
         }
 
+        // Garante que se o pooler do Supabase estiver sendo usado, use a porta 6543 (Transaction Mode)
+        // Isso impede o erro fatal EMAXCONNSESSION (limite de 15 conexões no modo sessão 5432)
+        String currentHost = System.getProperty("DB_HOST");
+        if (currentHost == null || currentHost.isBlank()) {
+            currentHost = System.getenv("DB_HOST");
+        }
+        if (currentHost != null && currentHost.contains("pooler.supabase.com")) {
+            String dbPort = System.getenv("DB_PORT");
+            if (dbPort == null || dbPort.isBlank() || "5432".equals(dbPort)) {
+                System.setProperty("DB_PORT", "6543");
+            }
+            String dbParams = System.getProperty("DB_PARAMS");
+            if (dbParams == null || !dbParams.contains("prepareThreshold=0")) {
+                System.setProperty("DB_PARAMS", "?sslmode=require&prepareThreshold=0");
+            }
+        }
+
         String dsUrl = System.getenv("SPRING_DATASOURCE_URL");
         if (dsUrl == null || dsUrl.isBlank()) {
             dsUrl = System.getProperty("SPRING_DATASOURCE_URL");
         }
-        if (dsUrl != null && dsUrl.contains("db.") && dsUrl.contains(".supabase.co")) {
+        if (dsUrl != null) {
             String fixedUrl = dsUrl.replaceAll("db\\.[a-z0-9]+\\.supabase\\.co", "aws-0-us-east-2.pooler.supabase.com");
+            if (fixedUrl.contains("pooler.supabase.com:5432")) {
+                fixedUrl = fixedUrl.replace("pooler.supabase.com:5432", "pooler.supabase.com:6543");
+            }
+            if (fixedUrl.contains("pooler.supabase.com") && !fixedUrl.contains("prepareThreshold=0")) {
+                fixedUrl += (fixedUrl.contains("?") ? "&" : "?") + "prepareThreshold=0";
+            }
             System.setProperty("SPRING_DATASOURCE_URL", fixedUrl);
         }
     }
