@@ -300,15 +300,15 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
   }, {} as Record<string, typeof ALL_PERMISSIONS_KEYS>);
 
   return (
-    <div style={{ padding: '24px', maxWidth: '1280px', margin: '0 auto', color: '#ffffff' }}>
+    <div style={{ padding: '10px 16px', maxWidth: '1600px', margin: '0 auto', color: '#ffffff' }}>
       {/* Top Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
             <div style={{
-              width: '40px',
-              height: '40px',
-              borderRadius: '12px',
+              width: '28px',
+              height: '28px',
+              borderRadius: 'var(--radius-sm)',
               background: 'rgba(30, 58, 95, 0.45)',
               border: '1px solid rgba(30, 58, 95, 0.8)',
               display: 'flex',
@@ -316,46 +316,46 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
               justifyContent: 'center',
               color: '#93c5fd'
             }}>
-              <Users size={22} />
+              <Users size={16} />
             </div>
             <div>
-              <h1 style={{ fontSize: '1.5rem', fontWeight: '800', margin: 0, color: 'var(--text-primary)' }}>
+              <h1 style={{ fontSize: '1.15rem', fontWeight: '700', margin: 0, color: 'var(--text-primary)' }}>
                 Gestão de Equipe & Permissões
               </h1>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', margin: 0 }}>
+              <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>
                 Controle de acessos, convites e matriz de permissões em tempo real
               </p>
             </div>
           </div>
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <button
             onClick={loadData}
             disabled={loading}
             className="btn btn-secondary btn-sm"
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 10px', fontSize: '0.78rem' }}
             title="Recarregar usuários"
           >
-            <RefreshCw size={14} className={loading ? 'spin' : ''} />
+            <RefreshCw size={13} className={loading ? 'spin' : ''} />
             <span>Atualizar</span>
           </button>
 
           <button
             onClick={() => setShowInviteModal(true)}
-            className="btn btn-primary"
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}
+            className="btn btn-primary btn-sm"
+            style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 10px', fontSize: '0.78rem' }}
           >
-            <Mail size={16} />
+            <Mail size={14} />
             <span>Convidar por E-mail</span>
           </button>
 
           <button
             onClick={() => setShowCreateModal(true)}
-            className="btn btn-secondary"
-            style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.85rem' }}
+            className="btn btn-secondary btn-sm"
+            style={{ display: 'flex', alignItems: 'center', gap: '5px', padding: '5px 10px', fontSize: '0.78rem' }}
           >
-            <UserPlus size={16} />
+            <UserPlus size={14} />
             <span>Criar direto</span>
           </button>
         </div>
@@ -364,51 +364,52 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
       {/* Toast Feedback */}
       {message && (
         <div style={{
-          padding: '12px 18px',
-          borderRadius: '8px',
-          marginBottom: '20px',
+          padding: '8px 14px',
+          borderRadius: 'var(--radius-sm)',
+          marginBottom: '10px',
           display: 'flex',
           alignItems: 'center',
-          gap: '10px',
+          gap: '8px',
           background: message.type === 'success' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)',
           border: `1px solid ${message.type === 'success' ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
           color: message.type === 'success' ? '#10b981' : '#ef4444',
-          fontSize: '0.88rem',
+          fontSize: '0.8rem',
           fontWeight: '500'
         }}>
-          {message.type === 'success' ? <CheckCircle2 size={18} /> : <AlertCircle size={18} />}
+          {message.type === 'success' ? <CheckCircle2 size={15} /> : <AlertCircle size={15} />}
           <span>{message.text}</span>
         </div>
       )}
 
       {/* Main Tabs Navigation: Usuários / Cargos */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '8px' }}>
+      <div style={{ display: 'flex', gap: '6px', marginBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '4px' }}>
         <button
           onClick={() => setActiveTab('USERS')}
           style={{
             background: 'none',
             border: 'none',
             borderBottom: activeTab === 'USERS' ? '2px solid var(--accent-coral)' : '2px solid transparent',
-            padding: '8px 18px',
-            fontSize: '0.92rem',
+            padding: '6px 14px',
+            fontSize: '0.82rem',
             fontWeight: activeTab === 'USERS' ? '700' : '500',
             color: activeTab === 'USERS' ? '#ffffff' : 'var(--text-secondary)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '6px',
+            borderRadius: 'var(--radius-xs)'
           }}
         >
-          <Users size={16} />
+          <Users size={14} />
           <span>Usuários ({allUsers.length})</span>
           {pendingUsers.length > 0 && (
             <span style={{
               background: '#ef4444',
               color: '#ffffff',
-              fontSize: '0.7rem',
+              fontSize: '0.65rem',
               fontWeight: '700',
-              padding: '2px 7px',
-              borderRadius: '10px'
+              padding: '1px 5px',
+              borderRadius: 'var(--radius-xs)'
             }}>
               {pendingUsers.length} pendentes
             </span>
@@ -421,39 +422,40 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
             background: 'none',
             border: 'none',
             borderBottom: activeTab === 'ROLES' ? '2px solid var(--accent-coral)' : '2px solid transparent',
-            padding: '8px 18px',
-            fontSize: '0.92rem',
+            padding: '6px 14px',
+            fontSize: '0.82rem',
             fontWeight: activeTab === 'ROLES' ? '700' : '500',
             color: activeTab === 'ROLES' ? '#ffffff' : 'var(--text-secondary)',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px'
+            gap: '6px',
+            borderRadius: 'var(--radius-xs)'
           }}
         >
-          <ShieldCheck size={16} />
+          <ShieldCheck size={14} />
           <span>Cargos & Permissões ({roles.length})</span>
         </button>
       </div>
 
       {/* ==================== ABA 1: USUÁRIOS ==================== */}
       {activeTab === 'USERS' && (
-        <div className="card" style={{ padding: 0, overflow: 'hidden' }}>
-          <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.88rem' }}>
+        <div className="card" style={{ padding: 0, overflow: 'hidden', maxHeight: 'calc(100vh - 128px)', display: 'flex', flexDirection: 'column' }}>
+          <div style={{ overflowX: 'auto', overflowY: 'auto' }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.82rem' }}>
               <thead>
-                <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-subtle)' }}>
-                  <th style={{ padding: '14px 20px', color: 'var(--text-secondary)', fontWeight: '600' }}>Nome</th>
-                  <th style={{ padding: '14px 20px', color: 'var(--text-secondary)', fontWeight: '600' }}>E-mail</th>
-                  <th style={{ padding: '14px 20px', color: 'var(--text-secondary)', fontWeight: '600' }}>Cargo</th>
-                  <th style={{ padding: '14px 20px', color: 'var(--text-secondary)', fontWeight: '600' }}>Status</th>
-                  <th style={{ padding: '14px 20px', color: 'var(--text-secondary)', fontWeight: '600', textAlign: 'right' }}>Ações</th>
+                <tr style={{ background: 'var(--bg-secondary)', borderBottom: '1px solid var(--border-subtle)', position: 'sticky', top: 0, zIndex: 2 }}>
+                  <th style={{ padding: '8px 14px', color: 'var(--text-secondary)', fontWeight: '600' }}>Nome</th>
+                  <th style={{ padding: '8px 14px', color: 'var(--text-secondary)', fontWeight: '600' }}>E-mail</th>
+                  <th style={{ padding: '8px 14px', color: 'var(--text-secondary)', fontWeight: '600' }}>Cargo</th>
+                  <th style={{ padding: '8px 14px', color: 'var(--text-secondary)', fontWeight: '600' }}>Status</th>
+                  <th style={{ padding: '8px 14px', color: 'var(--text-secondary)', fontWeight: '600', textAlign: 'right' }}>Ações</th>
                 </tr>
               </thead>
               <tbody>
                 {allUsers.length === 0 ? (
                   <tr>
-                    <td colSpan={5} style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+                    <td colSpan={5} style={{ padding: '30px', textAlign: 'center', color: 'var(--text-muted)' }}>
                       Nenhum usuário cadastrado.
                     </td>
                   </tr>
@@ -463,12 +465,12 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
 
                     return (
                       <tr key={user.id} style={{ borderBottom: '1px solid var(--border-subtle)', transition: 'background 0.15s' }}>
-                        <td style={{ padding: '14px 20px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <td style={{ padding: '8px 14px' }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                             <div style={{
-                              width: '32px',
-                              height: '32px',
-                              borderRadius: '50%',
+                              width: '26px',
+                              height: '26px',
+                              borderRadius: 'var(--radius-sm)',
                               background: isUntouchable ? 'rgba(234, 179, 8, 0.2)' : 'rgba(30, 58, 95, 0.35)',
                               border: `1px solid ${isUntouchable ? '#eab308' : '#1e3a5f'}`,
                               color: isUntouchable ? '#eab308' : '#93c5fd',
@@ -476,18 +478,18 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                               alignItems: 'center',
                               justifyContent: 'center',
                               fontWeight: '700',
-                              fontSize: '0.8rem'
+                              fontSize: '0.74rem'
                             }}>
                               {(user.name || 'U').charAt(0).toUpperCase()}
                             </div>
                             <div>
-                              <div style={{ fontWeight: '600', color: 'var(--text-primary)' }}>{user.name}</div>
+                              <div style={{ fontWeight: '600', color: 'var(--text-primary)', fontSize: '0.82rem' }}>{user.name}</div>
                               {isUntouchable ? (
-                                <span style={{ fontSize: '0.7rem', color: '#eab308', fontWeight: '700', letterSpacing: '0.02em' }}>
+                                <span style={{ fontSize: '0.66rem', color: '#eab308', fontWeight: '700', letterSpacing: '0.02em' }}>
                                   Admin Master • Intocável
                                 </span>
                               ) : user.role === 'ADMIN' ? (
-                                <span style={{ fontSize: '0.7rem', color: '#93c5fd', fontWeight: '600' }}>
+                                <span style={{ fontSize: '0.66rem', color: '#93c5fd', fontWeight: '600' }}>
                                   Administrador
                                 </span>
                               ) : null}
@@ -495,26 +497,26 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                           </div>
                         </td>
 
-                        <td style={{ padding: '14px 20px', color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '0.82rem' }}>
+                        <td style={{ padding: '8px 14px', color: 'var(--text-secondary)', fontFamily: 'monospace', fontSize: '0.78rem' }}>
                           {formatDisplayEmail(user.email)}
                         </td>
 
                         {/* Seletor de Cargo Dinâmico */}
-                        <td style={{ padding: '14px 20px' }}>
+                        <td style={{ padding: '8px 14px' }}>
                           {isUntouchable ? (
                             <span style={{
                               display: 'inline-flex',
                               alignItems: 'center',
-                              gap: '6px',
-                              padding: '4px 10px',
-                              borderRadius: '8px',
+                              gap: '5px',
+                              padding: '2px 8px',
+                              borderRadius: 'var(--radius-xs)',
                               background: 'rgba(234, 179, 8, 0.15)',
                               color: '#eab308',
                               border: '1px solid rgba(234, 179, 8, 0.3)',
-                              fontSize: '0.78rem',
+                              fontSize: '0.72rem',
                               fontWeight: '700'
                             }}>
-                              <Lock size={12} />
+                              <Lock size={11} />
                               <span>ADMIN MASTER</span>
                             </span>
                           ) : (
@@ -523,13 +525,13 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                               onChange={(e) => handleChangeUserRole(user, e.target.value)}
                               className="input"
                               style={{
-                                padding: '4px 8px',
-                                fontSize: '0.8rem',
+                                padding: '3px 7px',
+                                fontSize: '0.75rem',
                                 fontWeight: '600',
                                 color: '#ffffff',
                                 background: '#1c1f26',
                                 border: '1px solid rgba(255,255,255,0.12)',
-                                borderRadius: '6px',
+                                borderRadius: 'var(--radius-xs)',
                                 cursor: 'pointer',
                                 outline: 'none'
                               }}
@@ -544,16 +546,16 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                           )}
                         </td>
 
-                        <td style={{ padding: '14px 20px' }}>
-                          <span className={`badge ${user.active !== false ? 'badge-success' : 'badge-warning'}`}>
+                        <td style={{ padding: '8px 14px' }}>
+                          <span className={`badge ${user.active !== false ? 'badge-success' : 'badge-warning'}`} style={{ fontSize: '0.7rem', padding: '2px 7px', borderRadius: 'var(--radius-xs)' }}>
                             {user.active !== false ? 'Ativo' : 'Pendente'}
                           </span>
                         </td>
 
                         {/* Ações */}
-                        <td style={{ padding: '14px 20px', textAlign: 'right' }}>
+                        <td style={{ padding: '8px 14px', textAlign: 'right' }}>
                           {isUntouchable ? (
-                            <span style={{ fontSize: '0.75rem', color: '#eab308', fontStyle: 'italic', fontWeight: '600' }}>
+                            <span style={{ fontSize: '0.72rem', color: '#eab308', fontStyle: 'italic', fontWeight: '600' }}>
                               Intocável
                             </span>
                           ) : (
@@ -565,14 +567,14 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                                 border: 'none',
                                 color: 'var(--text-muted)',
                                 cursor: 'pointer',
-                                padding: '6px',
-                                borderRadius: '6px'
+                                padding: '4px',
+                                borderRadius: 'var(--radius-xs)'
                               }}
                               title={`Excluir ${user.name}`}
                               onMouseEnter={(e) => (e.currentTarget.style.color = '#ef4444')}
                               onMouseLeave={(e) => (e.currentTarget.style.color = 'var(--text-muted)')}
                             >
-                              <Trash2 size={16} />
+                              <Trash2 size={14} />
                             </button>
                           )}
                         </td>
@@ -588,26 +590,26 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
 
       {/* ==================== ABA 2: CARGOS & PERMISSÕES ==================== */}
       {activeTab === 'ROLES' && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(260px, 320px) 1fr', gap: '20px', alignItems: 'flex-start' }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '260px 1fr', gap: '12px', height: 'calc(100vh - 128px)', overflow: 'hidden' }}>
           {/* Lado Esquerdo: Lista de Cargos */}
-          <div className="card" style={{ padding: '18px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Layers size={18} color="var(--accent-coral)" />
-                <h3 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0 }}>Cargos</h3>
+          <div className="card" style={{ padding: '12px', display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <Layers size={15} color="var(--accent-coral)" />
+                <h3 style={{ fontSize: '0.92rem', fontWeight: '700', margin: 0 }}>Cargos</h3>
               </div>
               <button
                 type="button"
                 onClick={() => setShowNewRoleModal(true)}
                 className="btn btn-secondary btn-sm"
-                style={{ display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.78rem' }}
+                style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '0.72rem', padding: '3px 7px' }}
               >
-                <Plus size={14} />
+                <Plus size={12} />
                 <span>Novo Cargo</span>
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
               {roles.map(r => {
                 const isSelected = selectedRole?.id === r.id;
                 const isAdmin = r.id === 'ADMIN';
@@ -617,24 +619,24 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                     key={r.id}
                     onClick={() => setSelectedRole(r)}
                     style={{
-                      padding: '12px 14px',
-                      borderRadius: '8px',
+                      padding: '8px 10px',
+                      borderRadius: 'var(--radius-sm)',
                       background: isSelected ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.02)',
                       border: `1px solid ${isSelected ? 'var(--accent-coral)' : 'rgba(255, 255, 255, 0.06)'}`,
                       cursor: 'pointer',
                       transition: 'all 0.15s ease'
                     }}
                   >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
-                      <span style={{ fontWeight: '700', fontSize: '0.9rem', color: isSelected ? '#ffffff' : 'var(--text-primary)' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                      <span style={{ fontWeight: '700', fontSize: '0.82rem', color: isSelected ? '#ffffff' : 'var(--text-primary)' }}>
                         {r.name}
                       </span>
                       {isAdmin && (
                         <span style={{
-                          fontSize: '0.66rem',
+                          fontSize: '0.62rem',
                           fontWeight: '700',
-                          padding: '2px 6px',
-                          borderRadius: '6px',
+                          padding: '1px 5px',
+                          borderRadius: 'var(--radius-xs)',
                           background: 'rgba(234, 179, 8, 0.2)',
                           color: '#eab308'
                         }}>
@@ -642,7 +644,7 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                         </span>
                       )}
                     </div>
-                    <div style={{ fontSize: '0.76rem', color: 'var(--text-muted)', lineHeight: '1.3' }}>
+                    <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)', lineHeight: '1.25' }}>
                       {r.description || 'Cargo personalizado do CRM'}
                     </div>
                   </div>
@@ -653,20 +655,20 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
 
           {/* Lado Direito: Matriz de 20 Permissões do Cargo Selecionado */}
           {selectedRole && (
-            <div className="card" style={{ padding: '24px' }}>
+            <div className="card" style={{ padding: '14px 16px', display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto' }}>
               {/* Header do Cargo */}
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '18px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '14px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px', borderBottom: '1px solid rgba(255, 255, 255, 0.08)', paddingBottom: '8px' }}>
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                    <h2 style={{ fontSize: '1.3rem', fontWeight: '800', margin: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <h2 style={{ fontSize: '1.05rem', fontWeight: '700', margin: 0 }}>
                       Permissões: {selectedRole.name}
                     </h2>
                     {selectedRole.id === 'ADMIN' ? (
                       <span style={{
-                        fontSize: '0.72rem',
+                        fontSize: '0.68rem',
                         fontWeight: '700',
-                        padding: '3px 8px',
-                        borderRadius: '8px',
+                        padding: '2px 6px',
+                        borderRadius: 'var(--radius-xs)',
                         background: 'rgba(234, 179, 8, 0.2)',
                         color: '#eab308',
                         border: '1px solid rgba(234, 179, 8, 0.4)'
@@ -674,12 +676,12 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                         Acesso Total Permanente
                       </span>
                     ) : (
-                      <span style={{ fontSize: '0.76rem', color: '#10b981', fontWeight: '600' }}>
+                      <span style={{ fontSize: '0.72rem', color: '#10b981', fontWeight: '600' }}>
                         Permissões Customizáveis
                       </span>
                     )}
                   </div>
-                  <p style={{ fontSize: '0.84rem', color: 'var(--text-muted)', marginTop: '4px', marginBottom: 0 }}>
+                  <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', marginBottom: 0 }}>
                     {selectedRole.description}
                   </p>
                 </div>
@@ -694,9 +696,9 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                       }
                     }}
                     className="btn btn-secondary btn-sm"
-                    style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', gap: '6px' }}
+                    style={{ color: '#ef4444', borderColor: 'rgba(239, 68, 68, 0.3)', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '0.72rem', padding: '3px 8px' }}
                   >
-                    <Trash2 size={13} />
+                    <Trash2 size={12} />
                     <span>Excluir Cargo</span>
                   </button>
                 )}
@@ -705,33 +707,33 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
               {/* Banner Informativo do Admin */}
               {selectedRole.id === 'ADMIN' && (
                 <div style={{
-                  padding: '12px 16px',
-                  borderRadius: '8px',
+                  padding: '8px 12px',
+                  borderRadius: 'var(--radius-sm)',
                   background: 'rgba(234, 179, 8, 0.1)',
                   border: '1px solid rgba(234, 179, 8, 0.25)',
                   color: '#eab308',
-                  fontSize: '0.84rem',
+                  fontSize: '0.78rem',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '10px',
-                  marginBottom: '20px'
+                  gap: '8px',
+                  marginBottom: '10px'
                 }}>
-                  <Lock size={18} />
+                  <Lock size={15} />
                   <span>
                     O cargo Admin é intocável, está acima de tudo, tem todas as 20 permissões sempre ativas e bloqueadas para edição.
                   </span>
                 </div>
               )}
 
-              {/* Categorias e Toggles */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+              {/* Categorias e Toggles em Grid responsivo sem scroll de página */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(310px, 1fr))', gap: '8px' }}>
                 {Object.entries(groupedPermissions).map(([category, items]) => (
-                  <div key={category} style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '16px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
-                    <div style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--accent-coral)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '12px' }}>
+                  <div key={category} style={{ background: 'rgba(255, 255, 255, 0.02)', padding: '10px 12px', borderRadius: 'var(--radius-sm)', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                    <div style={{ fontSize: '0.72rem', fontWeight: '700', color: 'var(--accent-coral)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: '8px' }}>
                       {category}
                     </div>
 
-                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '10px' }}>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                       {items.map(p => {
                         const isChecked = selectedRole.id === 'ADMIN' ? true : Boolean(selectedRole.permissions[p.key]);
                         const isLocked = selectedRole.id === 'ADMIN';
@@ -744,38 +746,39 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'space-between',
-                              padding: '10px 14px',
-                              borderRadius: '8px',
+                              padding: '5px 10px',
+                              borderRadius: 'var(--radius-xs)',
                               background: isChecked ? 'rgba(16, 185, 129, 0.08)' : 'rgba(255, 255, 255, 0.03)',
                               border: `1px solid ${isChecked ? 'rgba(16, 185, 129, 0.25)' : 'rgba(255, 255, 255, 0.06)'}`,
                               cursor: isLocked ? 'not-allowed' : 'pointer',
                               transition: 'all 0.15s ease'
                             }}
                           >
-                            <span style={{ fontSize: '0.84rem', fontWeight: '500', color: isChecked ? '#ffffff' : 'var(--text-secondary)' }}>
+                            <span style={{ fontSize: '0.76rem', fontWeight: '500', color: isChecked ? '#ffffff' : 'var(--text-secondary)' }}>
                               {p.label}
                             </span>
 
-                            {/* Toggle Switch */}
+                            {/* Toggle Switch Compact Myrmex Style */}
                             <div style={{
-                              width: '36px',
-                              height: '20px',
-                              borderRadius: '12px',
+                              width: '28px',
+                              height: '16px',
+                              borderRadius: 'var(--radius-xs)',
                               background: isChecked ? '#10b981' : '#374151',
                               position: 'relative',
                               transition: 'background 0.2s',
-                              opacity: isLocked ? 0.6 : 1
+                              opacity: isLocked ? 0.6 : 1,
+                              flexShrink: 0
                             }}>
                               <div style={{
-                                width: '16px',
-                                height: '16px',
-                                borderRadius: '50%',
+                                width: '12px',
+                                height: '12px',
+                                borderRadius: 'var(--radius-xs)',
                                 background: '#ffffff',
                                 position: 'absolute',
                                 top: '2px',
-                                left: isChecked ? '18px' : '2px',
-                                transition: 'left 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-                                boxShadow: '0 1px 3px rgba(0,0,0,0.4)'
+                                left: isChecked ? '14px' : '2px',
+                                transition: 'left 0.18s cubic-bezier(0.4, 0, 0.2, 1)',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.4)'
                               }} />
                             </div>
                           </div>
@@ -1012,19 +1015,19 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
       {/* ==================== MODAL: EXCLUIR USUÁRIO ==================== */}
       {userToDelete && (
         <div className="modal-overlay">
-          <div className="card" style={{ maxWidth: '420px', width: '100%', padding: '24px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#ef4444', marginBottom: '14px' }}>
-              <AlertCircle size={22} />
-              <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '700' }}>Confirmar Exclusão</h3>
+          <div className="card" style={{ maxWidth: '400px', width: '100%', padding: '18px', borderRadius: 'var(--radius-md)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#ef4444', marginBottom: '10px' }}>
+              <AlertCircle size={18} />
+              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700' }}>Confirmar Exclusão</h3>
             </div>
-            <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', marginBottom: '20px', lineHeight: 1.5 }}>
+            <p style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', marginBottom: '16px', lineHeight: 1.45 }}>
               Deseja realmente remover o usuário <strong>{userToDelete.name}</strong>? Ele perderá imediatamente o acesso ao CRM.
             </p>
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}>
               <button
                 type="button"
                 onClick={() => setUserToDelete(null)}
-                className="btn btn-secondary"
+                className="btn btn-secondary btn-sm"
                 disabled={deletingUser}
               >
                 Cancelar
@@ -1033,7 +1036,7 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                 type="button"
                 onClick={handleConfirmDelete}
                 disabled={deletingUser}
-                className="btn btn-primary"
+                className="btn btn-primary btn-sm"
                 style={{ background: '#ef4444', borderColor: '#ef4444' }}
               >
                 {deletingUser ? 'Excluindo...' : 'Confirmar Exclusão'}

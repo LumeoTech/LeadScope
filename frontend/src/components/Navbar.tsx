@@ -145,13 +145,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                 overflowY: 'auto',
                 background: '#16181b',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '14px',
-                padding: '14px',
+                borderRadius: 'var(--radius-md)',
+                padding: '12px',
                 boxShadow: '0 16px 36px rgba(0, 0, 0, 0.8)',
                 zIndex: 200,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '8px'
+                gap: '6px'
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
@@ -296,13 +296,13 @@ export const Navbar: React.FC<NavbarProps> = ({
                 width: '240px',
                 background: '#16181b',
                 border: '1px solid rgba(255, 255, 255, 0.1)',
-                borderRadius: '14px',
-                padding: '12px',
+                borderRadius: 'var(--radius-md)',
+                padding: '10px',
                 boxShadow: '0 16px 36px rgba(0, 0, 0, 0.8)',
                 zIndex: 200,
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '6px'
+                gap: '5px'
               }}
             >
               {/* User info header */}
@@ -320,7 +320,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                       fontWeight: '700',
                       textTransform: 'uppercase',
                       padding: '2px 8px',
-                      borderRadius: '12px',
+                      borderRadius: 'var(--radius-xs)',
                       background: 'rgba(16, 185, 129, 0.12)',
                       color: '#10b981',
                       border: '1px solid rgba(16, 185, 129, 0.25)'
@@ -388,7 +388,7 @@ const dropdownItemStyle: React.CSSProperties = {
   gap: '8px',
   width: '100%',
   padding: '8px 10px',
-  borderRadius: '8px',
+  borderRadius: 'var(--radius-sm)',
   background: 'transparent',
   border: 'none',
   color: '#8c93a0',

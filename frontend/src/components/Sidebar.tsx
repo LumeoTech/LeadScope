@@ -225,7 +225,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
             gap: '10px',
             cursor: 'pointer',
             padding: '4px 6px',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             background: isAccountMenuOpen ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
             transition: 'background 0.15s ease'
           }}
@@ -277,7 +277,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
               color: '#6e7481',
               cursor: 'pointer',
               padding: '4px',
-              borderRadius: '4px'
+              borderRadius: 'var(--radius-xs)'
             }}
           >
             <ChevronsLeft size={16} />
@@ -291,23 +291,23 @@ export const Sidebar: React.FC<SidebarProps> = ({
           onClick={onOpenCommandPalette}
           style={{
             position: 'relative',
-            marginBottom: '18px',
+            marginBottom: '14px',
             cursor: 'pointer'
           }}
           title="Search (⌘K)"
         >
-          <Search size={14} color="#5e6471" style={{ position: 'absolute', left: '10px', top: '9px' }} />
+          <Search size={13} color="#5e6471" style={{ position: 'absolute', left: '10px', top: '9px' }} />
           <input
             type="text"
             placeholder="Search..."
             readOnly
             style={{
               width: '100%',
-              padding: '6px 36px 6px 32px',
-              fontSize: '0.82rem',
+              padding: '5px 36px 5px 30px',
+              fontSize: '0.8rem',
               background: '#16171a',
               border: '1px solid rgba(255, 255, 255, 0.08)',
-              borderRadius: '8px',
+              borderRadius: 'var(--radius-sm)',
               color: '#8c93a0',
               outline: 'none',
               cursor: 'pointer'
@@ -316,12 +316,12 @@ export const Sidebar: React.FC<SidebarProps> = ({
           <span style={{
             position: 'absolute',
             right: '8px',
-            top: '6px',
-            fontSize: '0.68rem',
+            top: '5px',
+            fontSize: '0.65rem',
             color: '#686f7d',
             border: '1px solid rgba(255, 255, 255, 0.08)',
             padding: '1px 5px',
-            borderRadius: '4px',
+            borderRadius: 'var(--radius-xs)',
             background: '#1e2025'
           }}>
             ⌘ K
@@ -334,19 +334,19 @@ export const Sidebar: React.FC<SidebarProps> = ({
           title="Search (⌘K)"
           style={{
             width: '100%',
-            height: '36px',
-            borderRadius: '8px',
+            height: '32px',
+            borderRadius: 'var(--radius-sm)',
             border: '1px solid rgba(255, 255, 255, 0.08)',
             background: '#16171a',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            marginBottom: '18px',
+            marginBottom: '14px',
             cursor: 'pointer',
             color: '#8c93a0'
           }}
         >
-          <Search size={15} />
+          <Search size={14} />
         </button>
       )}
 
@@ -526,42 +526,42 @@ export const Sidebar: React.FC<SidebarProps> = ({
       {!isCollapsed ? (
         <div style={{
           marginTop: 'auto',
-          marginBottom: '10px',
-          padding: '10px 12px',
+          marginBottom: '8px',
+          padding: '8px 10px',
           background: 'rgba(255, 255, 255, 0.02)',
           border: '1px solid rgba(255, 255, 255, 0.06)',
-          borderRadius: '8px',
+          borderRadius: 'var(--radius-sm)',
           display: 'flex',
           flexDirection: 'column',
-          gap: '6px'
+          gap: '5px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <span style={{
-                width: '7px',
-                height: '7px',
+                width: '6px',
+                height: '6px',
                 borderRadius: '50%',
                 background: autoScanInfo.active ? '#10b981' : '#f59e0b',
                 boxShadow: autoScanInfo.active ? '0 0 6px #10b981' : '0 0 6px #f59e0b',
                 flexShrink: 0
               }} />
-              <span style={{ fontSize: '0.74rem', color: '#e2e8f0', fontWeight: '600' }}>
+              <span style={{ fontSize: '0.72rem', color: '#e2e8f0', fontWeight: '600' }}>
                 Busca {autoScanInfo.active ? 'Ativa' : 'Pausada'}
               </span>
             </div>
             <span style={{
-              fontSize: '0.68rem',
+              fontSize: '0.64rem',
               fontWeight: '700',
               color: autoScanInfo.active ? '#34d399' : '#fbbf24',
               background: autoScanInfo.active ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
               padding: '1px 5px',
-              borderRadius: '4px'
+              borderRadius: 'var(--radius-xs)'
             }}>
               {autoScanInfo.active ? 'ON' : 'PAUSA'}
             </span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.72rem', color: '#8c93a0' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '0.7rem', color: '#8c93a0' }}>
             <span>Média hoje</span>
             <strong style={{ color: '#ffffff', fontWeight: '700' }}>
               {autoScanInfo.avgTodayScore}%
@@ -573,13 +573,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
           title={`Busca Automática: ${autoScanInfo.active ? 'Ativa' : 'Pausada'} • Média hoje: ${autoScanInfo.avgTodayScore}%`}
           style={{
             marginTop: 'auto',
-            marginBottom: '10px',
+            marginBottom: '8px',
             display: 'flex',
             flexDirection: 'column',
             alignItems: 'center',
-            padding: '8px 0',
+            padding: '6px 0',
             background: 'rgba(255, 255, 255, 0.02)',
-            borderRadius: '8px',
+            borderRadius: 'var(--radius-sm)',
             border: '1px solid rgba(255, 255, 255, 0.06)'
           }}
         >
@@ -1052,15 +1052,15 @@ const getNavItemStyle = (isActive: boolean, isCollapsed: boolean): React.CSSProp
   alignItems: 'center',
   justifyContent: isCollapsed ? 'center' : 'flex-start',
   gap: '10px',
-  padding: '9px 12px',
-  borderRadius: '8px',
-  background: isActive ? '#22252a' : 'transparent',
+  padding: '7px 10px',
+  borderRadius: 'var(--radius-sm)',
+  background: isActive ? '#1c1f24' : 'transparent',
   color: isActive ? '#ffffff' : '#8c93a0',
-  fontSize: '0.84rem',
+  fontSize: '0.81rem',
   fontWeight: isActive ? '600' : '500',
   cursor: 'pointer',
   border: 'none',
   width: '100%',
   textAlign: 'left',
-  transition: 'all 0.15s ease'
+  transition: 'all 0.12s ease'
 });
