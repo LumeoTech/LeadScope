@@ -163,14 +163,15 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
     }
   };
 
-  // Cores sem nenhum roxo
-  const primaryNavy = '#1e3a5f';
-  const navyBorder = '#2e558a';
-  const accentBlue = '#3b82f6';
-  const lightBlueText = '#93c5fd';
+  // Padrão visual sóbrio de CRM corporativo (HubSpot / Linear / Stripe)
+  const corporateBlue = '#2563eb';
+  const corporateBlueHover = '#1d4ed8';
+  const borderSubtle = 'rgba(255, 255, 255, 0.08)';
+  const borderCard = '#334155';
+  const controlBg = '#0f172a';
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '28px', maxWidth: '1280px', margin: '0 auto' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '1280px', margin: '0 auto' }}>
       
       {/* HEADER DA SEÇÃO ANALYTICS */}
       <div style={{
@@ -182,36 +183,36 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
         padding: '20px 24px',
         background: 'var(--bg-surface)',
         border: '1px solid var(--border-subtle)',
-        borderRadius: '14px',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.25)'
+        borderRadius: '12px',
+        boxShadow: '0 2px 10px rgba(0, 0, 0, 0.2)'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
           <div style={{
-            width: '46px',
-            height: '46px',
-            borderRadius: '12px',
-            background: primaryNavy,
-            border: `1px solid ${navyBorder}`,
+            width: '44px',
+            height: '44px',
+            borderRadius: '10px',
+            background: '#1e293b',
+            border: '1px solid #334155',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 14px rgba(30, 58, 95, 0.45)'
+            color: '#ffffff'
           }}>
-            <SlidersHorizontal size={22} color="#ffffff" />
+            <SlidersHorizontal size={20} />
           </div>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <h1 style={{ fontSize: '1.45rem', fontWeight: '800', color: 'var(--text-primary)', margin: 0 }}>
+              <h1 style={{ fontSize: '1.35rem', fontWeight: '700', color: '#ffffff', margin: 0 }}>
                 Centro de Controle da Busca & IA
               </h1>
               <span style={{
                 fontSize: '0.72rem',
-                fontWeight: '700',
+                fontWeight: '600',
                 padding: '2px 8px',
-                borderRadius: '12px',
-                background: settings.active ? 'rgba(16, 185, 129, 0.15)' : 'rgba(245, 158, 11, 0.15)',
-                color: settings.active ? '#34d399' : '#fbbf24',
-                border: `1px solid ${settings.active ? 'rgba(16, 185, 129, 0.3)' : 'rgba(245, 158, 11, 0.3)'}`,
+                borderRadius: '6px',
+                background: settings.active ? 'rgba(16, 185, 129, 0.12)' : 'rgba(148, 163, 184, 0.12)',
+                color: settings.active ? '#34d399' : '#94a3b8',
+                border: `1px solid ${settings.active ? 'rgba(16, 185, 129, 0.25)' : 'rgba(148, 163, 184, 0.25)'}`,
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '5px'
@@ -220,13 +221,12 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
                   width: '6px',
                   height: '6px',
                   borderRadius: '50%',
-                  background: settings.active ? '#10b981' : '#f59e0b',
-                  boxShadow: settings.active ? '0 0 6px #10b981' : '0 0 6px #f59e0b'
+                  background: settings.active ? '#10b981' : '#94a3b8'
                 }} />
                 {settings.active ? 'BUSCA ATIVA' : 'BUSCA PAUSADA'}
               </span>
             </div>
-            <p style={{ color: 'var(--text-secondary)', fontSize: '0.85rem', margin: '4px 0 0 0' }}>
+            <p style={{ color: '#94a3b8', fontSize: '0.85rem', margin: '4px 0 0 0' }}>
               Automação diária de prospecção, qualificação profunda com IA e filtros preditivos salvos no Supabase
             </p>
           </div>
@@ -244,18 +244,18 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
               gap: '8px',
               padding: '9px 18px',
               borderRadius: '8px',
-              background: '#0f172a',
-              border: '1px solid rgba(255, 255, 255, 0.14)',
+              background: '#1e293b',
+              border: '1px solid #334155',
               color: '#ffffff',
-              fontWeight: '700',
+              fontWeight: '600',
               fontSize: '0.84rem',
               cursor: runningManual || loading ? 'not-allowed' : 'pointer',
               transition: 'all 0.15s ease'
             }}
             title="Executa a rotina de busca de leads agora fora do horário configurado"
           >
-            {runningManual ? <Loader2 size={16} className="spin" color="#38bdf8" /> : <Play size={16} color="#38bdf8" />}
-            <span>{runningManual ? 'Buscando Leads com IA...' : 'Buscar Agora'}</span>
+            {runningManual ? <Loader2 size={16} className="spin" /> : <Play size={16} />}
+            <span>{runningManual ? 'Buscando Leads...' : 'Buscar Agora'}</span>
           </button>
 
           <button
@@ -268,13 +268,13 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
               gap: '8px',
               padding: '9px 20px',
               borderRadius: '8px',
-              background: primaryNavy,
-              border: `1px solid ${navyBorder}`,
+              background: corporateBlue,
+              border: `1px solid ${corporateBlue}`,
               color: '#ffffff',
-              fontWeight: '700',
+              fontWeight: '600',
               fontSize: '0.84rem',
               cursor: saving || loading ? 'not-allowed' : 'pointer',
-              boxShadow: '0 3px 12px rgba(30, 58, 95, 0.5)',
+              boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)',
               transition: 'all 0.15s ease'
             }}
             title="Salvar alterações de horário, cota e filtros no banco Supabase"
@@ -308,9 +308,9 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
       {lastRunResult && (
         <div style={{
           padding: '14px 18px',
-          borderRadius: '10px',
-          background: 'rgba(30, 58, 95, 0.25)',
-          border: `1px solid ${navyBorder}`,
+          borderRadius: '8px',
+          background: 'rgba(37, 99, 235, 0.12)',
+          border: '1px solid #2563eb',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'space-between',
@@ -318,7 +318,7 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
           flexWrap: 'wrap'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <Sparkles size={20} color={lightBlueText} />
+            <Sparkles size={20} color="#60a5fa" />
             <div>
               <strong style={{ fontSize: '0.88rem', color: '#ffffff', display: 'block' }}>
                 Relatório da Execução Autônoma:
@@ -337,8 +337,8 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
                 gap: '6px',
                 background: 'transparent',
                 border: 'none',
-                color: lightBlueText,
-                fontWeight: '700',
+                color: '#60a5fa',
+                fontWeight: '600',
                 fontSize: '0.82rem',
                 cursor: 'pointer'
               }}
@@ -357,7 +357,7 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
         padding: '24px',
         background: 'var(--bg-surface)',
         border: '1px solid var(--border-subtle)',
-        borderRadius: '14px'
+        borderRadius: '12px'
       }}>
         <div style={{
           display: 'flex',
@@ -371,20 +371,20 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
             width: '34px',
             height: '34px',
             borderRadius: '8px',
-            background: 'rgba(30, 58, 95, 0.4)',
-            border: `1px solid ${navyBorder}`,
+            background: '#1e293b',
+            border: '1px solid #334155',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            color: lightBlueText
+            color: '#cbd5e1'
           }}>
             <Target size={18} />
           </div>
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+            <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '700', color: '#ffffff' }}>
               1. Controle de Busca Automática
             </h2>
-            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+            <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
               Parâmetros operacionais e regras de exclusão aplicados diretamente pelo agente de qualificação
             </span>
           </div>
@@ -406,26 +406,26 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
           }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <span style={{ fontSize: '0.88rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                <span style={{ fontSize: '0.88rem', fontWeight: '700', color: '#ffffff' }}>
                   Busca Automática Diária
                 </span>
                 <span style={{
                   fontSize: '0.72rem',
-                  fontWeight: '700',
-                  color: settings.active ? '#34d399' : '#fbbf24',
-                  background: settings.active ? 'rgba(16, 185, 129, 0.12)' : 'rgba(245, 158, 11, 0.12)',
+                  fontWeight: '600',
+                  color: settings.active ? '#34d399' : '#94a3b8',
+                  background: settings.active ? 'rgba(16, 185, 129, 0.12)' : 'rgba(148, 163, 184, 0.12)',
                   padding: '2px 8px',
-                  borderRadius: '10px'
+                  borderRadius: '6px'
                 }}>
                   {settings.active ? 'Ativada' : 'Pausada'}
                 </span>
               </div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.4' }}>
+              <p style={{ fontSize: '0.78rem', color: '#94a3b8', margin: 0, lineHeight: '1.4' }}>
                 Quando pausado, o agente não roda no horário configurado e nenhuma busca em lote ocorre.
               </p>
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button
                 type="button"
                 onClick={() => setSettings(prev => ({ ...prev, active: true }))}
@@ -437,15 +437,16 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
                   gap: '6px',
                   padding: '8px 12px',
                   borderRadius: '8px',
-                  background: settings.active ? primaryNavy : 'var(--bg-hover)',
-                  border: settings.active ? `1.5px solid ${navyBorder}` : '1px solid var(--border-subtle)',
-                  color: '#ffffff',
-                  fontWeight: '700',
+                  background: settings.active ? corporateBlue : '#0f172a',
+                  border: settings.active ? `1px solid ${corporateBlue}` : '1px solid #334155',
+                  color: settings.active ? '#ffffff' : '#94a3b8',
+                  fontWeight: '600',
                   fontSize: '0.82rem',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
                 }}
               >
-                <Check size={14} color={settings.active ? '#34d399' : '#64748b'} />
+                <Check size={14} color={settings.active ? '#ffffff' : '#64748b'} />
                 <span>Ativar</span>
               </button>
 
@@ -460,15 +461,16 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
                   gap: '6px',
                   padding: '8px 12px',
                   borderRadius: '8px',
-                  background: !settings.active ? '#451a03' : 'var(--bg-hover)',
-                  border: !settings.active ? '1.5px solid #d97706' : '1px solid var(--border-subtle)',
-                  color: '#ffffff',
-                  fontWeight: '700',
+                  background: !settings.active ? '#1e293b' : '#0f172a',
+                  border: !settings.active ? '1px solid #475569' : '1px solid #334155',
+                  color: !settings.active ? '#ffffff' : '#94a3b8',
+                  fontWeight: '600',
                   fontSize: '0.82rem',
-                  cursor: 'pointer'
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
                 }}
               >
-                <XCircle size={14} color={!settings.active ? '#fbbf24' : '#64748b'} />
+                <XCircle size={14} color={!settings.active ? '#ffffff' : '#64748b'} />
                 <span>Pausar</span>
               </button>
             </div>
@@ -487,12 +489,12 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
           }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                <Clock size={16} color={lightBlueText} />
-                <span style={{ fontSize: '0.88rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                <Clock size={16} color="#94a3b8" />
+                <span style={{ fontSize: '0.88rem', fontWeight: '700', color: '#ffffff' }}>
                   Horário de Execução Diária
                 </span>
               </div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.4' }}>
+              <p style={{ fontSize: '0.78rem', color: '#94a3b8', margin: 0, lineHeight: '1.4' }}>
                 Define o horário fixo em que o robô escaneia o Google Maps e sites diariamente.
               </p>
             </div>
@@ -505,13 +507,13 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
                 className="input"
                 style={{
                   padding: '8px 12px',
-                  fontSize: '1rem',
+                  fontSize: '0.95rem',
                   fontWeight: '700',
                   textAlign: 'center',
                   letterSpacing: '0.05em',
                   color: '#ffffff',
                   background: '#0f172a',
-                  border: `1px solid ${navyBorder}`,
+                  border: '1px solid #334155',
                   borderRadius: '8px',
                   width: '100%'
                 }}
@@ -532,22 +534,22 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
           }}>
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                <span style={{ fontSize: '0.88rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                <span style={{ fontSize: '0.88rem', fontWeight: '700', color: '#ffffff' }}>
                   Leads por Dia (Cota)
                 </span>
                 <span style={{
-                  fontSize: '0.88rem',
-                  fontWeight: '800',
+                  fontSize: '0.82rem',
+                  fontWeight: '700',
                   color: '#ffffff',
-                  background: primaryNavy,
+                  background: '#1e293b',
                   padding: '2px 10px',
-                  borderRadius: '8px',
-                  border: `1px solid ${navyBorder}`
+                  borderRadius: '6px',
+                  border: '1px solid #334155'
                 }}>
                   {settings.leadsPerDay} leads
                 </span>
               </div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.4' }}>
+              <p style={{ fontSize: '0.78rem', color: '#94a3b8', margin: 0, lineHeight: '1.4' }}>
                 Quantidade máxima de leads qualificados a capturar por dia (limite de 1 a 50).
               </p>
             </div>
@@ -562,7 +564,7 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
                 onChange={(e) => setSettings(prev => ({ ...prev, leadsPerDay: Number(e.target.value) }))}
                 style={{
                   flex: 1,
-                  accentColor: accentBlue,
+                  accentColor: corporateBlue,
                   cursor: 'pointer'
                 }}
               />
@@ -583,7 +585,9 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
                   fontSize: '0.88rem',
                   fontWeight: '700',
                   color: '#ffffff',
-                  background: '#0f172a'
+                  background: '#0f172a',
+                  border: '1px solid #334155',
+                  borderRadius: '6px'
                 }}
               />
             </div>
@@ -602,12 +606,12 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
           }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '6px' }}>
-                <MapPin size={16} color={lightBlueText} />
-                <span style={{ fontSize: '0.88rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+                <MapPin size={16} color="#94a3b8" />
+                <span style={{ fontSize: '0.88rem', fontWeight: '700', color: '#ffffff' }}>
                   Padrão de Localização
                 </span>
               </div>
-              <p style={{ fontSize: '0.78rem', color: 'var(--text-secondary)', margin: 0, lineHeight: '1.4' }}>
+              <p style={{ fontSize: '0.78rem', color: '#94a3b8', margin: 0, lineHeight: '1.4' }}>
                 Filtra bairros e centros comerciais pelo nível socioeconômico da região.
               </p>
             </div>
@@ -628,9 +632,9 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
                     style={{
                       padding: '8px 4px',
                       borderRadius: '8px',
-                      background: isSelected ? primaryNavy : 'var(--bg-hover)',
-                      border: isSelected ? `1.5px solid ${navyBorder}` : '1px solid var(--border-subtle)',
-                      color: isSelected ? '#ffffff' : 'var(--text-secondary)',
+                      background: isSelected ? corporateBlue : '#0f172a',
+                      border: isSelected ? `1px solid ${corporateBlue}` : '1px solid #334155',
+                      color: isSelected ? '#ffffff' : '#94a3b8',
                       fontWeight: isSelected ? '700' : '500',
                       fontSize: '0.74rem',
                       cursor: 'pointer',
@@ -649,9 +653,9 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
         {/* 5. SLIDER DE PORCENTAGEM MÍNIMA DE ACEITE (Destaque Principal) */}
         <div style={{
           padding: '20px 24px',
-          background: 'rgba(30, 58, 95, 0.15)',
-          border: `1.5px solid ${navyBorder}`,
-          borderRadius: '12px',
+          background: 'rgba(255, 255, 255, 0.02)',
+          border: '1px solid #334155',
+          borderRadius: '10px',
           display: 'flex',
           flexDirection: 'column',
           gap: '14px'
@@ -662,8 +666,9 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
                 width: '36px',
                 height: '36px',
                 borderRadius: '8px',
-                background: primaryNavy,
-                color: lightBlueText,
+                background: '#1e293b',
+                color: '#cbd5e1',
+                border: '1px solid #334155',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center'
@@ -674,7 +679,7 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
                 <strong style={{ fontSize: '0.96rem', color: '#ffffff', display: 'block' }}>
                   Filtro de Porcentagem Mínima de Aceite
                 </strong>
-                <span style={{ fontSize: '0.78rem', color: '#cbd5e1' }}>
+                <span style={{ fontSize: '0.78rem', color: '#94a3b8' }}>
                   Apenas estabelecimentos que atingirem esta chance preditiva calculada por IA entrarão no CRM.
                 </span>
               </div>
@@ -688,25 +693,24 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
                 gap: '2px',
                 padding: '6px 16px',
                 background: '#0f172a',
-                border: `2px solid ${settings.minAcceptanceScore >= 85 ? '#10b981' : settings.minAcceptanceScore >= 70 ? accentBlue : '#f59e0b'}`,
-                borderRadius: '10px'
+                border: '1px solid #334155',
+                borderRadius: '8px'
               }}>
                 <span style={{
                   fontSize: '1.6rem',
-                  fontWeight: '900',
-                  color: settings.minAcceptanceScore >= 85 ? '#34d399' : settings.minAcceptanceScore >= 70 ? '#60a5fa' : '#fbbf24',
-                  fontFamily: 'monospace'
+                  fontWeight: '800',
+                  color: '#ffffff'
                 }}>
                   {settings.minAcceptanceScore}
                 </span>
-                <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-secondary)' }}>%</span>
+                <span style={{ fontSize: '0.9rem', fontWeight: '600', color: '#94a3b8' }}>%</span>
               </div>
             </div>
           </div>
 
           {/* Slider Duplo e Barra Visual */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-            <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)' }}>0%</span>
+            <span style={{ fontSize: '0.78rem', fontWeight: '700', color: '#64748b' }}>0%</span>
             <input
               type="range"
               min={0}
@@ -716,12 +720,12 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
               onChange={(e) => setSettings(prev => ({ ...prev, minAcceptanceScore: Number(e.target.value) }))}
               style={{
                 flex: 1,
-                accentColor: settings.minAcceptanceScore >= 85 ? '#10b981' : accentBlue,
+                accentColor: corporateBlue,
                 cursor: 'pointer',
                 height: '6px'
               }}
             />
-            <span style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted)' }}>100%</span>
+            <span style={{ fontSize: '0.78rem', fontWeight: '700', color: '#64748b' }}>100%</span>
           </div>
 
           <div style={{
@@ -736,7 +740,7 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
             <span>
               Regra ativa: Se hoje você definir <strong>{settings.minAcceptanceScore}%</strong>, qualquer lead com score inferior a {settings.minAcceptanceScore}% é <strong>descartado automaticamente</strong> sem consumir espaço no CRM.
             </span>
-            <span style={{ color: '#ffffff', fontWeight: '700' }}>
+            <span style={{ color: '#ffffff', fontWeight: '600' }}>
               {settings.discardedLeadsCount || 0} leads descartados historicamente
             </span>
           </div>
@@ -754,15 +758,15 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
               gap: '8px',
               padding: '10px 20px',
               borderRadius: '8px',
-              background: '#0f172a',
-              border: '1px solid rgba(255, 255, 255, 0.16)',
+              background: '#1e293b',
+              border: '1px solid #334155',
               color: '#ffffff',
-              fontWeight: '700',
+              fontWeight: '600',
               fontSize: '0.84rem',
               cursor: runningManual || loading ? 'not-allowed' : 'pointer'
             }}
           >
-            {runningManual ? <Loader2 size={16} className="spin" color="#38bdf8" /> : <Play size={16} color="#38bdf8" />}
+            {runningManual ? <Loader2 size={16} className="spin" /> : <Play size={16} />}
             <span>Rodar Busca Manual Agora</span>
           </button>
 
@@ -776,13 +780,13 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
               gap: '8px',
               padding: '10px 24px',
               borderRadius: '8px',
-              background: primaryNavy,
-              border: `1px solid ${navyBorder}`,
+              background: corporateBlue,
+              border: `1px solid ${corporateBlue}`,
               color: '#ffffff',
-              fontWeight: '700',
+              fontWeight: '600',
               fontSize: '0.86rem',
               cursor: saving || loading ? 'not-allowed' : 'pointer',
-              boxShadow: '0 4px 16px rgba(30, 58, 95, 0.4)'
+              boxShadow: '0 2px 8px rgba(37, 99, 235, 0.3)'
             }}
           >
             {saving ? <Loader2 size={16} className="spin" /> : <Save size={16} />}
@@ -798,7 +802,7 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
         padding: '24px',
         background: 'var(--bg-surface)',
         border: '1px solid var(--border-subtle)',
-        borderRadius: '14px'
+        borderRadius: '12px'
       }}>
         <div style={{
           display: 'flex',
@@ -815,20 +819,20 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
               width: '34px',
               height: '34px',
               borderRadius: '8px',
-              background: 'rgba(30, 58, 95, 0.4)',
-              border: `1px solid ${navyBorder}`,
+              background: '#1e293b',
+              border: '1px solid #334155',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              color: lightBlueText
+              color: '#cbd5e1'
             }}>
               <BarChart3 size={18} />
             </div>
             <div>
-              <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '700', color: 'var(--text-primary)' }}>
+              <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '700', color: '#ffffff' }}>
                 2. Qualidade dos Leads & Métricas de Aceite
               </h2>
-              <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>
+              <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>
                 Dados reais extraídos diretamente do banco Supabase sobre taxas de conversão e assertividade da IA
               </span>
             </div>
@@ -839,7 +843,14 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
             onClick={loadAllData}
             disabled={loading}
             className="btn btn-secondary btn-sm"
-            style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              background: '#1e293b',
+              border: '1px solid #334155',
+              color: '#ffffff'
+            }}
           >
             <Clock size={14} />
             <span>Atualizar Dados</span>
@@ -859,17 +870,26 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
             flexDirection: 'column',
             gap: '8px'
           }}>
-            <span style={{ fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', fontWeight: '700' }}>
+            <span style={{ fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#94a3b8', fontWeight: '700' }}>
               Média de Score dos Leads Aceitos
             </span>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-              <span style={{ fontSize: '2rem', fontWeight: '900', color: '#60a5fa', fontFamily: 'monospace' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+              <span style={{ fontSize: '2rem', fontWeight: '800', color: '#ffffff' }}>
                 {analytics?.averageScore || 84.8}%
               </span>
-              <span style={{ fontSize: '0.75rem', color: '#34d399', fontWeight: '600' }}>+4.2% esta semana</span>
+              <span style={{
+                fontSize: '0.72rem',
+                color: '#34d399',
+                fontWeight: '600',
+                background: 'rgba(16, 185, 129, 0.12)',
+                padding: '2px 6px',
+                borderRadius: '4px'
+              }}>
+                +4.2% esta semana
+              </span>
             </div>
-            <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
-              Média hoje: <strong>{analytics?.todayAvgScore || 88}%</strong> ({analytics?.todayLeadsCount || 0} leads capturados hoje)
+            <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
+              Média hoje: <strong style={{ color: '#94a3b8' }}>{analytics?.todayAvgScore || 88}%</strong> ({analytics?.todayLeadsCount || 0} leads capturados hoje)
             </span>
           </div>
 
@@ -883,16 +903,16 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
             flexDirection: 'column',
             gap: '8px'
           }}>
-            <span style={{ fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', fontWeight: '700' }}>
+            <span style={{ fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#94a3b8', fontWeight: '700' }}>
               Leads Aceitos no Funil
             </span>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-              <span style={{ fontSize: '2rem', fontWeight: '900', color: '#34d399', fontFamily: 'monospace' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+              <span style={{ fontSize: '2rem', fontWeight: '800', color: '#ffffff' }}>
                 {analytics?.totalAccepted || 0}
               </span>
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>de {analytics?.totalLeads || 0} varridos</span>
+              <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>de {analytics?.totalLeads || 0} varridos</span>
             </div>
-            <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
               Leads ativos no funil comercial do CRM
             </span>
           </div>
@@ -907,16 +927,16 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
             flexDirection: 'column',
             gap: '8px'
           }}>
-            <span style={{ fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', fontWeight: '700' }}>
+            <span style={{ fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#94a3b8', fontWeight: '700' }}>
               Descartados por Score Mínimo
             </span>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
-              <span style={{ fontSize: '2rem', fontWeight: '900', color: '#f87171', fontFamily: 'monospace' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+              <span style={{ fontSize: '2rem', fontWeight: '800', color: '#ffffff' }}>
                 {analytics?.discardedCount !== undefined ? analytics.discardedCount : (settings.discardedLeadsCount || 0)}
               </span>
-              <span style={{ fontSize: '0.75rem', color: '#fbbf24', fontWeight: '600' }}>abaixo de {settings.minAcceptanceScore}%</span>
+              <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>abaixo de {settings.minAcceptanceScore}%</span>
             </div>
-            <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
               Eliminados automaticamente pelo filtro da IA
             </span>
           </div>
@@ -931,22 +951,22 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
             flexDirection: 'column',
             gap: '8px'
           }}>
-            <span style={{ fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--text-secondary)', fontWeight: '700' }}>
+            <span style={{ fontSize: '0.74rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: '#94a3b8', fontWeight: '700' }}>
               Taxa de Aprovação da Busca
             </span>
-            <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
               {(() => {
                 const total = (analytics?.totalAccepted || 0) + (analytics?.discardedCount || settings.discardedLeadsCount || 0);
                 const rate = total > 0 ? Math.round(((analytics?.totalAccepted || 0) / total) * 100) : 72;
                 return (
-                  <span style={{ fontSize: '2rem', fontWeight: '900', color: '#38bdf8', fontFamily: 'monospace' }}>
+                  <span style={{ fontSize: '2rem', fontWeight: '800', color: '#ffffff' }}>
                     {rate}%
                   </span>
                 );
               })()}
-              <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>assertividade</span>
+              <span style={{ fontSize: '0.75rem', color: '#94a3b8' }}>assertividade</span>
             </div>
-            <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+            <span style={{ fontSize: '0.74rem', color: '#64748b' }}>
               Proporção de leads úteis qualificados
             </span>
           </div>
@@ -960,13 +980,13 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
             padding: '20px',
             background: 'rgba(255, 255, 255, 0.02)',
             border: '1px solid var(--border-subtle)',
-            borderRadius: '12px'
+            borderRadius: '10px'
           }}>
-            <h3 style={{ margin: '0 0 6px 0', fontSize: '0.98rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <TrendingUp size={16} color={lightBlueText} />
+            <h3 style={{ margin: '0 0 6px 0', fontSize: '0.98rem', fontWeight: '700', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <TrendingUp size={16} color="#94a3b8" />
               <span>Distribuição dos Leads por Faixa de Aceite</span>
             </h3>
-            <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', margin: '0 0 18px 0' }}>
+            <p style={{ fontSize: '0.76rem', color: '#94a3b8', margin: '0 0 18px 0' }}>
               Volume de oportunidades agrupadas pelo índice de conversão predito
             </p>
 
@@ -982,22 +1002,22 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
                 const totalDist = Object.values(dist).reduce((a, b) => a + Number(b), 0) || 1;
 
                 const tiers = [
-                  { label: '85% - 100%', name: 'Altíssima Conversão (Lead Quente)', count: dist['85% - 100%'] || 0, color: '#10b981' },
+                  { label: '85% - 100%', name: 'Altíssima Conversão (Lead Quente)', count: dist['85% - 100%'] || 0, color: '#2563eb' },
                   { label: '70% - 84%', name: 'Alta Probabilidade de Aceite', count: dist['70% - 84%'] || 0, color: '#3b82f6' },
-                  { label: '50% - 69%', name: 'Média Probabilidade', count: dist['50% - 69%'] || 0, color: '#f59e0b' },
-                  { label: '< 50%', name: 'Baixa Probabilidade (Descartados)', count: dist['< 50%'] || 0, color: '#ef4444' }
+                  { label: '50% - 69%', name: 'Média Probabilidade', count: dist['50% - 69%'] || 0, color: '#60a5fa' },
+                  { label: '< 50%', name: 'Baixa Probabilidade (Descartados)', count: dist['< 50%'] || 0, color: '#94a3b8' }
                 ];
 
                 return tiers.map(tier => {
                   const pct = Math.round((tier.count / totalDist) * 100);
                   return (
                     <div key={tier.label}>
-                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <span style={{ fontSize: '0.82rem', fontWeight: '700', color: '#ffffff', minWidth: '70px' }}>
                             {tier.label}
                           </span>
-                          <span style={{ fontSize: '0.74rem', color: 'var(--text-muted)' }}>
+                          <span style={{ fontSize: '0.74rem', color: '#94a3b8' }}>
                             • {tier.name}
                           </span>
                         </div>
@@ -1005,7 +1025,7 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
                           <span style={{ fontSize: '0.8rem', fontWeight: '700', color: '#ffffff' }}>
                             {tier.count} leads
                           </span>
-                          <span style={{ fontSize: '0.74rem', color: 'var(--text-secondary)', minWidth: '32px', textAlign: 'right' }}>
+                          <span style={{ fontSize: '0.74rem', color: '#94a3b8', minWidth: '32px', textAlign: 'right' }}>
                             ({pct}%)
                           </span>
                         </div>
@@ -1013,7 +1033,7 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
 
                       <div style={{
                         width: '100%',
-                        height: '8px',
+                        height: '7px',
                         background: 'rgba(255, 255, 255, 0.06)',
                         borderRadius: '4px',
                         overflow: 'hidden'
@@ -1038,13 +1058,13 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
             padding: '20px',
             background: 'rgba(255, 255, 255, 0.02)',
             border: '1px solid var(--border-subtle)',
-            borderRadius: '12px'
+            borderRadius: '10px'
           }}>
-            <h3 style={{ margin: '0 0 6px 0', fontSize: '0.98rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Award size={16} color={lightBlueText} />
+            <h3 style={{ margin: '0 0 6px 0', fontSize: '0.98rem', fontWeight: '700', color: '#ffffff', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Award size={16} color="#94a3b8" />
               <span>Regiões com Maior Taxa de Aceite Histórica</span>
             </h3>
-            <p style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', margin: '0 0 16px 0' }}>
+            <p style={{ fontSize: '0.76rem', color: '#94a3b8', margin: '0 0 16px 0' }}>
               Bairros e polos comerciais ranqueados por assertividade comprovada
             </p>
 
@@ -1068,34 +1088,34 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      padding: '10px 12px',
+                      padding: '10px 14px',
                       background: 'rgba(255, 255, 255, 0.02)',
                       border: '1px solid var(--border-subtle)',
                       borderRadius: '8px',
                       gap: '10px'
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                       <span style={{
-                        width: '22px',
-                        height: '22px',
-                        borderRadius: '50%',
-                        background: idx === 0 ? 'rgba(234, 179, 8, 0.2)' : primaryNavy,
-                        color: idx === 0 ? '#eab308' : '#93c5fd',
-                        border: `1px solid ${idx === 0 ? '#eab308' : navyBorder}`,
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '6px',
+                        background: '#1e293b',
+                        color: '#cbd5e1',
+                        border: '1px solid #334155',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        fontSize: '0.72rem',
-                        fontWeight: '800'
+                        fontSize: '0.75rem',
+                        fontWeight: '700'
                       }}>
                         {idx + 1}
                       </span>
                       <div>
-                        <strong style={{ fontSize: '0.84rem', color: '#ffffff', display: 'block' }}>
+                        <strong style={{ fontSize: '0.85rem', color: '#ffffff', display: 'block' }}>
                           {reg.region}
                         </strong>
-                        <span style={{ fontSize: '0.72rem', color: reg.socioEconomicTier.includes('Alto') ? '#34d399' : 'var(--text-secondary)' }}>
+                        <span style={{ fontSize: '0.73rem', color: '#94a3b8' }}>
                           {reg.socioEconomicTier} • {reg.totalLeads} leads
                         </span>
                       </div>
@@ -1103,14 +1123,13 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
 
                     <div style={{ textAlign: 'right' }}>
                       <span style={{
-                        fontSize: '0.88rem',
-                        fontWeight: '800',
-                        color: reg.avgScore >= 85 ? '#34d399' : '#60a5fa',
-                        fontFamily: 'monospace'
+                        fontSize: '0.9rem',
+                        fontWeight: '700',
+                        color: '#ffffff'
                       }}>
                         {reg.avgScore}%
                       </span>
-                      <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', display: 'block' }}>
+                      <span style={{ fontSize: '0.68rem', color: '#64748b', display: 'block' }}>
                         aceite
                       </span>
                     </div>
