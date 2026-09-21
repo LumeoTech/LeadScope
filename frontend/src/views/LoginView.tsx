@@ -4,6 +4,7 @@ import { useTheme } from '../hooks/useTheme';
 import {
   Lock,
   Mail,
+  User,
   Eye,
   EyeOff,
   Globe,
@@ -32,16 +33,32 @@ const TRANSLATIONS = {
   pt: {
     localeName: 'Português',
     localeCode: 'PT',
-    title: 'Entrar no LeadScope',
-    subtitle: 'Inteligência comercial e gestão de prospecção corporativa.',
+    modeSignIn: 'Entrar',
+    modeRegister: 'Solicitar Acesso',
+    loginTitle: 'Entrar no LeadScope',
+    loginSubtitle: 'Inteligência comercial e gestão de prospecção corporativa.',
+    registerTitle: 'Solicitar Acesso ao LeadScope',
+    registerSubtitle: 'Preencha seus dados para solicitar liberação da sua conta corporativa.',
+    fullNameLabel: 'Nome Completo',
+    fullNamePlaceholder: 'Ex: Gabriel Castro',
     emailLabel: 'Endereço de E-mail',
     emailPlaceholder: 'seu.email@empresa.com',
     passwordLabel: 'Senha',
     passwordPlaceholder: '••••••••',
+    confirmPasswordLabel: 'Confirmar Senha',
+    confirmPasswordPlaceholder: '••••••••',
+    passwordMismatch: 'As senhas digitadas não coincidem.',
     rememberMe: 'Manter-me conectado',
     forgotPassword: 'Esqueceu a senha?',
     signInButton: 'Entrar',
     signingIn: 'Entrando...',
+    submitRegisterBtn: 'Enviar Solicitação de Acesso',
+    submittingRegisterBtn: 'Enviando solicitação...',
+    registerSuccessNotice: 'Solicitação enviada com sucesso! Aguarde a aprovação do administrador para acessar o sistema.',
+    noAccountPrompt: 'Não tem uma conta corporativa?',
+    requestAccessAction: 'Solicitar acesso.',
+    alreadyHaveAccountPrompt: 'Já possui uma conta?',
+    signInAction: 'Entrar.',
     serverWaking: 'O servidor em nuvem está acordando (Render). Aguarde alguns instantes...',
     orDivider: 'Ou',
     googleButton: 'Entrar com Google',
@@ -88,16 +105,32 @@ const TRANSLATIONS = {
   en: {
     localeName: 'English',
     localeCode: 'ENG',
-    title: 'Sign In to LeadScope',
-    subtitle: 'Commercial intelligence and enterprise prospecting platform.',
+    modeSignIn: 'Sign In',
+    modeRegister: 'Request Access',
+    loginTitle: 'Sign In to LeadScope',
+    loginSubtitle: 'Commercial intelligence and enterprise prospecting platform.',
+    registerTitle: 'Request LeadScope Access',
+    registerSubtitle: 'Submit your credentials to request enterprise account activation.',
+    fullNameLabel: 'Full Name',
+    fullNamePlaceholder: 'e.g. John Doe',
     emailLabel: 'Email Address',
     emailPlaceholder: 'user@leadscope.com',
     passwordLabel: 'Password',
     passwordPlaceholder: '••••••••',
+    confirmPasswordLabel: 'Confirm Password',
+    confirmPasswordPlaceholder: '••••••••',
+    passwordMismatch: 'Passwords do not match.',
     rememberMe: 'Keep me logged in',
     forgotPassword: 'Forgot Password?',
     signInButton: 'Sign In',
     signingIn: 'Signing in...',
+    submitRegisterBtn: 'Submit Access Request',
+    submittingRegisterBtn: 'Submitting request...',
+    registerSuccessNotice: 'Access request submitted successfully! Please wait for administrator approval to sign in.',
+    noAccountPrompt: "Don't have a corporate account?",
+    requestAccessAction: 'Request access.',
+    alreadyHaveAccountPrompt: 'Already have an account?',
+    signInAction: 'Sign in.',
     serverWaking: 'Cloud server is waking up (Render). Please wait a moment...',
     orDivider: 'Or',
     googleButton: 'Sign in with Google',
@@ -149,13 +182,17 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
   const { isDark, toggleTheme } = useTheme();
   const [lang, setLang] = useState<Language>('pt');
   const [showLangMenu, setShowLangMenu] = useState(false);
+  const [mode, setMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [loading, setLoading] = useState(false);
   const [coldStartNotice, setColdStartNotice] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
 
   // Modais funcionais
   const [showForgotModal, setShowForgotModal] = useState(false);
@@ -192,6 +229,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
+    setSuccessMsg(null);
     setColdStartNotice(false);
 
     const noticeTimer = setTimeout(() => {
@@ -199,34 +237,55 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
     }, 2000);
 
     try {
-      const response = await api.auth.login({ email, password });
+      if (mode === 'REGISTER') {
+        if (password !== confirmPassword) {
+          setError(t.passwordMismatch);
+          setLoading(false);
+          clearTimeout(noticeTimer);
+          return;
+        }
 
-      const token = response.accessToken || (response as any).token;
+        await api.auth.register({
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
+          password,
+          confirmPassword
+        });
 
-      if (rememberMe) {
-        localStorage.setItem('token', token);
-        localStorage.setItem('user', JSON.stringify(response.user));
-        localStorage.setItem('crm_auth_token', token);
-        localStorage.setItem('crm_user_info', JSON.stringify(response.user));
-        sessionStorage.removeItem('token');
-        sessionStorage.removeItem('user');
-        sessionStorage.removeItem('crm_auth_token');
-        sessionStorage.removeItem('crm_user_info');
+        setSuccessMsg(t.registerSuccessNotice);
+        setMode('LOGIN');
+        setPassword('');
+        setConfirmPassword('');
       } else {
-        sessionStorage.setItem('token', token);
-        sessionStorage.setItem('user', JSON.stringify(response.user));
-        sessionStorage.setItem('crm_auth_token', token);
-        sessionStorage.setItem('crm_user_info', JSON.stringify(response.user));
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        localStorage.removeItem('crm_auth_token');
-        localStorage.removeItem('crm_user_info');
-      }
+        const response = await api.auth.login({ email, password });
 
-      onLoginSuccess(response.user);
+        const token = response.accessToken || (response as any).token;
+
+        if (rememberMe) {
+          localStorage.setItem('token', token);
+          localStorage.setItem('user', JSON.stringify(response.user));
+          localStorage.setItem('crm_auth_token', token);
+          localStorage.setItem('crm_user_info', JSON.stringify(response.user));
+          sessionStorage.removeItem('token');
+          sessionStorage.removeItem('user');
+          sessionStorage.removeItem('crm_auth_token');
+          sessionStorage.removeItem('crm_user_info');
+        } else {
+          sessionStorage.setItem('token', token);
+          sessionStorage.setItem('user', JSON.stringify(response.user));
+          sessionStorage.setItem('crm_auth_token', token);
+          sessionStorage.setItem('crm_user_info', JSON.stringify(response.user));
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          localStorage.removeItem('crm_auth_token');
+          localStorage.removeItem('crm_user_info');
+        }
+
+        onLoginSuccess(response.user);
+      }
     } catch (err: any) {
-      console.error('Falha na autenticação:', err);
-      const msg = err.message || (lang === 'pt' ? 'Credenciais inválidas ou erro ao conectar com o servidor.' : 'Invalid credentials or server connection failed.');
+      console.error('Falha na autenticação/registro:', err);
+      const msg = err.message || (lang === 'pt' ? 'Credenciais inválidas ou erro ao processar requisição.' : 'Invalid credentials or failed to process request.');
       setError(msg);
     } finally {
       clearTimeout(noticeTimer);
@@ -495,7 +554,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
             flexDirection: 'column'
           }}>
             {/* Título & Subtítulo */}
-            <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '18px' }}>
               <h1 style={{
                 fontSize: '1.95rem',
                 fontWeight: '700',
@@ -503,7 +562,7 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 color: isDark ? '#ffffff' : '#0f172a',
                 margin: '0 0 6px 0'
               }}>
-                {t.title}
+                {mode === 'LOGIN' ? t.loginTitle : t.registerTitle}
               </h1>
               <p style={{
                 fontSize: '0.9rem',
@@ -511,8 +570,57 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 margin: 0,
                 lineHeight: '1.45'
               }}>
-                {t.subtitle}
+                {mode === 'LOGIN' ? t.loginSubtitle : t.registerSubtitle}
               </p>
+            </div>
+
+            {/* Alternador de Modo: Entrar / Solicitar Acesso */}
+            <div style={{
+              display: 'flex',
+              background: isDark ? '#1a1c22' : '#f1f5f9',
+              padding: '4px',
+              borderRadius: '10px',
+              marginBottom: '20px',
+              border: isDark ? '1px solid #282c35' : '1px solid #e2e8f0'
+            }}>
+              <button
+                type="button"
+                onClick={() => { setMode('LOGIN'); setError(null); }}
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  borderRadius: '7px',
+                  border: 'none',
+                  background: mode === 'LOGIN' ? (isDark ? '#282d37' : '#ffffff') : 'transparent',
+                  color: mode === 'LOGIN' ? (isDark ? '#ffffff' : '#0f172a') : (isDark ? '#8c93a0' : '#64748b'),
+                  fontWeight: mode === 'LOGIN' ? '700' : '500',
+                  fontSize: '0.84rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  boxShadow: mode === 'LOGIN' ? (isDark ? '0 2px 8px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.06)') : 'none'
+                }}
+              >
+                {t.modeSignIn}
+              </button>
+              <button
+                type="button"
+                onClick={() => { setMode('REGISTER'); setError(null); }}
+                style={{
+                  flex: 1,
+                  padding: '8px 12px',
+                  borderRadius: '7px',
+                  border: 'none',
+                  background: mode === 'REGISTER' ? (isDark ? '#282d37' : '#ffffff') : 'transparent',
+                  color: mode === 'REGISTER' ? (isDark ? '#ffffff' : '#0f172a') : (isDark ? '#8c93a0' : '#64748b'),
+                  fontWeight: mode === 'REGISTER' ? '700' : '500',
+                  fontSize: '0.84rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                  boxShadow: mode === 'REGISTER' ? (isDark ? '0 2px 8px rgba(0,0,0,0.4)' : '0 2px 6px rgba(0,0,0,0.06)') : 'none'
+                }}
+              >
+                {t.modeRegister}
+              </button>
             </div>
 
             {/* Aviso de Render Cold Start */}
@@ -531,6 +639,25 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               }}>
                 <Loader2 size={15} className="spinner" />
                 <span>{t.serverWaking}</span>
+              </div>
+            )}
+
+            {/* Mensagem de Sucesso */}
+            {successMsg && (
+              <div style={{
+                padding: '10px 14px',
+                background: isDark ? 'rgba(16, 185, 129, 0.18)' : 'rgba(16, 185, 129, 0.12)',
+                border: isDark ? '1px solid rgba(16, 185, 129, 0.4)' : '1px solid rgba(16, 185, 129, 0.3)',
+                borderRadius: '8px',
+                color: isDark ? '#34d399' : '#059669',
+                fontSize: '0.82rem',
+                marginBottom: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                <CheckCircle2 size={16} />
+                <span>{successMsg}</span>
               </div>
             )}
 
@@ -553,8 +680,48 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
               </div>
             )}
 
-            {/* Formulário de Login */}
-            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            {/* Formulário de Login / Solicitação de Acesso */}
+            <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+              {/* Campo Nome Completo (Apenas em Solicitar Acesso) */}
+              {mode === 'REGISTER' && (
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.82rem',
+                    fontWeight: '600',
+                    color: isDark ? '#cbd5e1' : '#334155',
+                    marginBottom: '6px'
+                  }}>
+                    {t.fullNameLabel} <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <User size={16} color={isDark ? '#64748b' : '#94a3b8'} style={{ position: 'absolute', left: '14px', top: '14px' }} />
+                    <input
+                      type="text"
+                      required
+                      className="leadscope-login-input"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder={t.fullNamePlaceholder}
+                      style={{
+                        width: '100%',
+                        height: '44px',
+                        padding: '0 12px 0 42px',
+                        background: isDark ? '#1a1c22' : '#ffffff',
+                        border: isDark ? '1px solid #2e323b' : '1px solid #cbd5e1',
+                        borderRadius: '8px',
+                        color: isDark ? '#ffffff' : '#0f172a',
+                        colorScheme: isDark ? 'dark' : 'light',
+                        fontSize: '0.88rem',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                        transition: 'border-color 0.15s ease'
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
               {/* Campo de E-mail */}
               <div>
                 <label style={{
@@ -647,51 +814,93 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 </div>
               </div>
 
-              {/* Checkbox Manter-me conectado & Esqueceu a Senha */}
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                fontSize: '0.82rem',
-                marginTop: '1px',
-                marginBottom: '2px'
-              }}>
-                <label style={{
+              {/* Campo Confirmar Senha (Apenas em Solicitar Acesso) */}
+              {mode === 'REGISTER' && (
+                <div>
+                  <label style={{
+                    display: 'block',
+                    fontSize: '0.82rem',
+                    fontWeight: '600',
+                    color: isDark ? '#cbd5e1' : '#334155',
+                    marginBottom: '6px'
+                  }}>
+                    {t.confirmPasswordLabel} <span style={{ color: '#ef4444' }}>*</span>
+                  </label>
+                  <div style={{ position: 'relative' }}>
+                    <Lock size={16} color={isDark ? '#64748b' : '#94a3b8'} style={{ position: 'absolute', left: '14px', top: '14px' }} />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      className="leadscope-login-input"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      placeholder={t.confirmPasswordPlaceholder}
+                      style={{
+                        width: '100%',
+                        height: '44px',
+                        padding: '0 42px 0 42px',
+                        background: isDark ? '#1a1c22' : '#ffffff',
+                        border: isDark ? '1px solid #2e323b' : '1px solid #cbd5e1',
+                        borderRadius: '8px',
+                        color: isDark ? '#ffffff' : '#0f172a',
+                        colorScheme: isDark ? 'dark' : 'light',
+                        fontSize: '0.88rem',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                        transition: 'border-color 0.15s ease'
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Checkbox Manter-me conectado & Esqueceu a Senha (Apenas no Login) */}
+              {mode === 'LOGIN' && (
+                <div style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
-                  color: isDark ? '#94a3b8' : '#475569',
-                  cursor: 'pointer',
-                  userSelect: 'none'
+                  justifyContent: 'space-between',
+                  fontSize: '0.82rem',
+                  marginTop: '1px',
+                  marginBottom: '2px'
                 }}>
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    style={{
-                      accentColor: isDark ? '#38bdf8' : '#0f172a',
-                      width: '16px',
-                      height: '16px',
-                      cursor: 'pointer'
-                    }}
-                  />
-                  <span>{t.rememberMe}</span>
-                </label>
-
-                <span
-                  onClick={() => setShowForgotModal(true)}
-                  style={{
-                    color: isDark ? '#38bdf8' : '#0f172a',
-                    fontWeight: '600',
+                  <label style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    color: isDark ? '#94a3b8' : '#475569',
                     cursor: 'pointer',
-                    fontSize: '0.81rem'
-                  }}
-                >
-                  {t.forgotPassword}
-                </span>
-              </div>
+                    userSelect: 'none'
+                  }}>
+                    <input
+                      type="checkbox"
+                      checked={rememberMe}
+                      onChange={(e) => setRememberMe(e.target.checked)}
+                      style={{
+                        accentColor: isDark ? '#38bdf8' : '#0f172a',
+                        width: '16px',
+                        height: '16px',
+                        cursor: 'pointer'
+                      }}
+                    />
+                    <span>{t.rememberMe}</span>
+                  </label>
 
-              {/* Botão Entrar */}
+                  <span
+                    onClick={() => setShowForgotModal(true)}
+                    style={{
+                      color: isDark ? '#38bdf8' : '#0f172a',
+                      fontWeight: '600',
+                      cursor: 'pointer',
+                      fontSize: '0.81rem'
+                    }}
+                  >
+                    {t.forgotPassword}
+                  </span>
+                </div>
+              )}
+
+              {/* Botão de Envio (Entrar ou Solicitar Acesso) */}
               <button
                 type="submit"
                 disabled={loading}
@@ -714,103 +923,131 @@ export const LoginView: React.FC<LoginViewProps> = ({ onLoginSuccess }) => {
                 }}
               >
                 {loading && <Loader2 size={16} className="spinner" />}
-                <span>{loading ? t.signingIn : t.signInButton}</span>
+                <span>
+                  {loading
+                    ? (mode === 'LOGIN' ? t.signingIn : t.submittingRegisterBtn)
+                    : (mode === 'LOGIN' ? t.signInButton : t.submitRegisterBtn)}
+                </span>
               </button>
 
-              {/* Linha Divisória 'Ou' */}
-              <div style={{
-                position: 'relative',
-                textAlign: 'center',
-                margin: '6px 0 2px 0'
-              }}>
-                <div style={{
-                  position: 'absolute',
-                  top: '50%',
-                  left: 0,
-                  right: 0,
-                  borderTop: isDark ? '1px solid #282c35' : '1px solid #e2e8f0'
-                }} />
-                <span style={{
-                  position: 'relative',
-                  background: isDark ? '#14161a' : '#ffffff',
-                  padding: '0 12px',
-                  fontSize: '0.76rem',
-                  color: isDark ? '#64748b' : '#94a3b8',
-                  fontWeight: '500'
-                }}>
-                  {t.orDivider}
-                </span>
-              </div>
+              {/* Apenas no modo LOGIN: Divisor e Botões OAuth */}
+              {mode === 'LOGIN' && (
+                <>
+                  {/* Linha Divisória 'Ou' */}
+                  <div style={{
+                    position: 'relative',
+                    textAlign: 'center',
+                    margin: '4px 0 0 0'
+                  }}>
+                    <div style={{
+                      position: 'absolute',
+                      top: '50%',
+                      left: 0,
+                      right: 0,
+                      borderTop: isDark ? '1px solid #282c35' : '1px solid #e2e8f0'
+                    }} />
+                    <span style={{
+                      position: 'relative',
+                      background: isDark ? '#14161a' : '#ffffff',
+                      padding: '0 12px',
+                      fontSize: '0.76rem',
+                      color: isDark ? '#64748b' : '#94a3b8',
+                      fontWeight: '500'
+                    }}>
+                      {t.orDivider}
+                    </span>
+                  </div>
 
-              {/* Botões Sociais Google & Apple via Supabase OAuth */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <button
-                  type="button"
-                  onClick={() => handleOAuthLogin('google')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    height: '42px',
-                    borderRadius: '8px',
-                    border: isDark ? '1px solid #2e323b' : '1px solid #cbd5e1',
-                    background: isDark ? '#1a1c22' : '#ffffff',
-                    color: isDark ? '#e2e8f0' : '#334155',
-                    fontSize: '0.82rem',
-                    fontWeight: '600',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24">
-                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
-                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.27 21.36 7.35 24 12 24z"/>
-                    <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.97 0 12s.46 3.84 1.26 5.42l4.02-3.15z"/>
-                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.35 0 3.27 2.64 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.93 6.72-4.93z"/>
-                  </svg>
-                  <span>{t.googleButton}</span>
-                </button>
+                  {/* Botões Sociais Google & Apple via Supabase OAuth */}
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <button
+                      type="button"
+                      onClick={() => handleOAuthLogin('google')}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        height: '42px',
+                        borderRadius: '8px',
+                        border: isDark ? '1px solid #2e323b' : '1px solid #cbd5e1',
+                        background: isDark ? '#1a1c22' : '#ffffff',
+                        color: isDark ? '#e2e8f0' : '#334155',
+                        fontSize: '0.82rem',
+                        fontWeight: '600',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"/>
+                        <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.15C3.27 21.36 7.35 24 12 24z"/>
+                        <path fill="#FBBC05" d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.26C.46 8.16 0 9.97 0 12s.46 3.84 1.26 5.42l4.02-3.15z"/>
+                        <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.35 0 3.27 2.64 1.26 6.58l4.02 3.15c.95-2.83 3.6-4.93 6.72-4.93z"/>
+                      </svg>
+                      <span>{t.googleButton}</span>
+                    </button>
 
-                <button
-                  type="button"
-                  onClick={() => handleOAuthLogin('apple')}
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '8px',
-                    height: '42px',
-                    borderRadius: '8px',
-                    border: isDark ? '1px solid #2e323b' : '1px solid #cbd5e1',
-                    background: isDark ? '#1a1c22' : '#ffffff',
-                    color: isDark ? '#e2e8f0' : '#334155',
-                    fontSize: '0.82rem',
-                    fontWeight: '600',
-                    cursor: 'pointer'
-                  }}
-                >
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill={isDark ? '#ffffff' : '#000000'}>
-                    <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.76 1.06-1.82.94-2.88-.91.04-2.02.6-2.66 1.36-.57.65-.98 1.73-.85 2.76 1.02.08 2.05-.53 2.57-1.24z"/>
-                  </svg>
-                  <span>{t.appleButton}</span>
-                </button>
-              </div>
+                    <button
+                      type="button"
+                      onClick={() => handleOAuthLogin('apple')}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        height: '42px',
+                        borderRadius: '8px',
+                        border: isDark ? '1px solid #2e323b' : '1px solid #cbd5e1',
+                        background: isDark ? '#1a1c22' : '#ffffff',
+                        color: isDark ? '#e2e8f0' : '#334155',
+                        fontSize: '0.82rem',
+                        fontWeight: '600',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill={isDark ? '#ffffff' : '#000000'}>
+                        <path d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 6.37c.63-.76 1.06-1.82.94-2.88-.91.04-2.02.6-2.66 1.36-.57.65-.98 1.73-.85 2.76 1.02.08 2.05-.53 2.57-1.24z"/>
+                      </svg>
+                      <span>{t.appleButton}</span>
+                    </button>
+                  </div>
+                </>
+              )}
             </form>
 
-            {/* Link de Contato com Admin */}
-            <div style={{ textAlign: 'center', marginTop: '22px', fontSize: '0.83rem', color: isDark ? '#94a3b8' : '#64748b' }}>
-              <span>{t.noAccount} </span>
-              <span
-                onClick={() => setShowAdminModal(true)}
-                style={{
-                  color: isDark ? '#ffffff' : '#0f172a',
-                  cursor: 'pointer',
-                  fontWeight: '700',
-                  textDecoration: 'underline'
-                }}
-              >
-                {t.contactAdmin}
-              </span>
+            {/* Alternador de Modo no Rodapé */}
+            <div style={{ textAlign: 'center', marginTop: '20px', fontSize: '0.83rem', color: isDark ? '#94a3b8' : '#64748b' }}>
+              {mode === 'LOGIN' ? (
+                <>
+                  <span>{t.noAccountPrompt} </span>
+                  <span
+                    onClick={() => { setMode('REGISTER'); setError(null); setSuccessMsg(null); }}
+                    style={{
+                      color: isDark ? '#ffffff' : '#0f172a',
+                      cursor: 'pointer',
+                      fontWeight: '700',
+                      textDecoration: 'underline'
+                    }}
+                  >
+                    {t.requestAccessAction}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span>{t.alreadyHaveAccountPrompt} </span>
+                  <span
+                    onClick={() => { setMode('LOGIN'); setError(null); setSuccessMsg(null); }}
+                    style={{
+                      color: isDark ? '#ffffff' : '#0f172a',
+                      cursor: 'pointer',
+                      fontWeight: '700',
+                      textDecoration: 'underline'
+                    }}
+                  >
+                    {t.signInAction}
+                  </span>
+                </>
+              )}
             </div>
           </div>
 
