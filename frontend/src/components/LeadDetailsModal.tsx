@@ -23,7 +23,9 @@ import {
   Mail,
   ArrowRightLeft,
   Share2,
-  DollarSign
+  DollarSign,
+  ChevronDown,
+  Check
 } from 'lucide-react';
 
 interface LeadDetailsModalProps {
@@ -56,6 +58,8 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
 
   // Status Change & Discard Reason
   const [selectedStatusId, setSelectedStatusId] = useState<number>(lead?.statusId || 1);
+  const [internalStatuses, setInternalStatuses] = useState<LeadStatus[]>(statuses || []);
+  const [statusDropdownOpen, setStatusDropdownOpen] = useState(false);
   const [showDiscardReasonModal, setShowDiscardReasonModal] = useState(false);
   const [discardReason, setDiscardReason] = useState('');
   const [statusUpdating, setStatusUpdating] = useState(false);
@@ -71,6 +75,16 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
   const [editingValue, setEditingValue] = useState(false);
   const [leadValueInput, setLeadValueInput] = useState<string>('');
   const [savingValue, setSavingValue] = useState(false);
+
+  useEffect(() => {
+    if (statuses && statuses.length > 0) {
+      setInternalStatuses(statuses);
+    } else {
+      api.leadStatuses.list().then(res => {
+        if (res && res.length > 0) setInternalStatuses(res);
+      }).catch(console.error);
+    }
+  }, [statuses]);
 
   useEffect(() => {
     setCurrentLead(lead);
@@ -277,8 +291,8 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
           flexDirection: 'column',
           background: 'var(--bg-secondary)',
           borderRadius: 'var(--radius-lg)',
-          border: currentLead.assignedToId ? `1.5px solid ${leadTheme.border}80` : '1px solid var(--border-subtle)',
-          boxShadow: currentLead.assignedToId ? `0 25px 60px -15px rgba(0, 0, 0, 0.8), 0 0 24px ${leadTheme.glow}` : '0 25px 60px -15px rgba(0, 0, 0, 0.6)',
+          border: '1px solid var(--border-subtle)',
+          boxShadow: '0 25px 60px -15px rgba(0, 0, 0, 0.75)',
           overflow: 'hidden'
         }}>
           {/* Header */}
@@ -337,34 +351,120 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
               </h2>
             </div>
 
-            {/* Status Dropdown & Close */}
+            {/* Custom Status Dropdown & Close */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-              <div>
+              <div style={{ position: 'relative' }}>
                 <label style={{ display: 'block', fontSize: '0.72rem', color: 'var(--text-secondary)', marginBottom: '3px' }}>
                   Status do Funil
                 </label>
-                <select
-                  value={selectedStatusId}
-                  onChange={(e) => handleStatusChangeSelect(e.target.value)}
-                  disabled={statusUpdating}
-                  style={{
-                    padding: '6px 12px',
-                    borderRadius: '8px',
-                    background: 'var(--bg-secondary)',
-                    border: '1px solid var(--border-subtle)',
-                    color: 'var(--text-primary)',
-                    fontSize: '0.85rem',
-                    fontWeight: '600',
-                    cursor: 'pointer',
-                    outline: 'none'
-                  }}
-                >
-                  {statuses.map(s => (
-                    <option key={s.id} value={s.id}>
-                      {s.name}
-                    </option>
-                  ))}
-                </select>
+                {(() => {
+                  const currentStatus = internalStatuses.find(s => s.id === selectedStatusId) || { name: 'Status', color: '#3b82f6' };
+                  return (
+                    <>
+                      <button
+                        type="button"
+                        disabled={statusUpdating}
+                        onClick={() => setStatusDropdownOpen(!statusDropdownOpen)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          padding: '7px 12px',
+                          borderRadius: '8px',
+                          background: 'var(--bg-secondary)',
+                          border: '1px solid var(--border-subtle)',
+                          color: 'var(--text-primary)',
+                          fontSize: '0.85rem',
+                          fontWeight: '600',
+                          cursor: statusUpdating ? 'not-allowed' : 'pointer',
+                          outline: 'none',
+                          minWidth: '140px',
+                          justifyContent: 'space-between'
+                        }}
+                      >
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '7px' }}>
+                          <span style={{
+                            width: '8px',
+                            height: '8px',
+                            borderRadius: '50%',
+                            background: currentStatus.color || '#3b82f6'
+                          }} />
+                          <span>{currentStatus.name}</span>
+                        </span>
+                        <ChevronDown size={14} color="var(--text-muted)" />
+                      </button>
+
+                      {statusDropdownOpen && (
+                        <>
+                          <div
+                            onClick={() => setStatusDropdownOpen(false)}
+                            style={{ position: 'fixed', inset: 0, zIndex: 998 }}
+                          />
+                          <div
+                            style={{
+                              position: 'absolute',
+                              top: '100%',
+                              right: 0,
+                              marginTop: '4px',
+                              background: '#16181d',
+                              border: '1px solid rgba(255, 255, 255, 0.12)',
+                              borderRadius: '8px',
+                              boxShadow: '0 12px 30px rgba(0,0,0,0.8)',
+                              zIndex: 999,
+                              minWidth: '175px',
+                              padding: '5px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '2px'
+                            }}
+                          >
+                            {internalStatuses.map(s => {
+                              const isCurrent = s.id === selectedStatusId;
+                              return (
+                                <button
+                                  key={s.id}
+                                  type="button"
+                                  onClick={() => {
+                                    handleStatusChangeSelect(String(s.id));
+                                    setStatusDropdownOpen(false);
+                                  }}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    gap: '8px',
+                                    padding: '8px 10px',
+                                    borderRadius: '6px',
+                                    border: 'none',
+                                    background: isCurrent ? 'rgba(59, 130, 246, 0.15)' : 'transparent',
+                                    color: isCurrent ? '#60a5fa' : '#e5e7eb',
+                                    fontSize: '0.82rem',
+                                    fontWeight: isCurrent ? '700' : '500',
+                                    cursor: 'pointer',
+                                    textAlign: 'left',
+                                    width: '100%'
+                                  }}
+                                  onMouseEnter={e => {
+                                    if (!isCurrent) e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                                  }}
+                                  onMouseLeave={e => {
+                                    if (!isCurrent) e.currentTarget.style.background = 'transparent';
+                                  }}
+                                >
+                                  <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                    <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: s.color || '#3b82f6' }} />
+                                    <span>{s.name}</span>
+                                  </span>
+                                  {isCurrent && <Check size={14} color="#60a5fa" />}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </>
+                      )}
+                    </>
+                  );
+                })()}
               </div>
 
               <button
@@ -462,27 +562,28 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
                   alignItems: 'center',
                   justifyContent: 'space-between',
                   padding: '16px 20px',
-                  background: currentLead.assignedToId ? leadTheme.bgSubtle : 'rgba(255, 255, 255, 0.03)',
-                  border: currentLead.assignedToId ? `1.5px solid ${leadTheme.border}` : '1px solid var(--border-subtle)',
+                  background: 'rgba(255, 255, 255, 0.02)',
+                  border: '1px solid var(--border-subtle)',
+                  borderLeft: currentLead.assignedToId ? `4px solid ${leadTheme.border}` : '4px solid var(--border-subtle)',
                   borderRadius: '12px',
-                  boxShadow: currentLead.assignedToId ? `0 0 16px ${leadTheme.glow}` : 'none',
+                  boxShadow: 'none',
                   flexWrap: 'wrap',
                   gap: '14px'
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
                     <div style={{
-                      width: '40px',
-                      height: '40px',
+                      width: '38px',
+                      height: '38px',
                       borderRadius: '50%',
                       background: leadTheme.bg,
-                      border: `2px solid ${leadTheme.border}`,
+                      border: `1.5px solid ${leadTheme.border}`,
                       color: leadTheme.text,
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      fontWeight: '800',
-                      fontSize: '1rem',
-                      boxShadow: currentLead.assignedToId ? `0 0 10px ${leadTheme.glow}` : 'none',
+                      fontWeight: '700',
+                      fontSize: '0.95rem',
+                      boxShadow: 'none',
                       flexShrink: 0
                     }}>
                       {(currentLead.assignedToName || 'U').charAt(0).toUpperCase()}

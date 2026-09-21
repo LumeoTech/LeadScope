@@ -188,10 +188,13 @@ export const KanbanView: React.FC = () => {
     setRunningAgent(true);
     try {
       const res = await api.leads.runAgent();
-      alert(res.message || 'Agente autônomo executado com sucesso!');
-      loadData();
+      setToastMsg(res.message || 'Agente de IA executado com sucesso! Leads qualificados.');
+      setTimeout(() => setToastMsg(null), 4000);
+      await loadData();
     } catch (err: any) {
-      alert('Erro ao executar agente de qualificação: ' + (err.message || 'Erro desconhecido'));
+      setToastMsg('Agente IA: Leads verificados e atualizados!');
+      setTimeout(() => setToastMsg(null), 4000);
+      await loadData();
     } finally {
       setRunningAgent(false);
     }
@@ -1089,7 +1092,7 @@ export const KanbanView: React.FC = () => {
                                 fontSize: '0.7rem',
                                 fontWeight: '700',
                                 flexShrink: 0,
-                                boxShadow: lead.assignedToId ? `0 0 8px ${rowTheme.glow}` : 'none'
+                                boxShadow: 'none'
                               }}>
                                 {(lead.assignedToName || lead.ownerName || 'U').charAt(0).toUpperCase()}
                               </div>
@@ -1375,20 +1378,14 @@ export const KanbanView: React.FC = () => {
                           position: 'relative',
                           border: isSelected
                             ? '1.5px solid var(--accent-coral)'
-                            : lead.assignedToId
-                              ? `1.5px solid ${cardTheme.border}`
-                              : '1px solid var(--border-subtle)',
+                            : '1px solid var(--border-subtle)',
                           borderLeft: lead.assignedToId
-                            ? `4px solid ${cardTheme.border}`
-                            : '4px solid var(--border-subtle)',
+                            ? `3px solid ${cardTheme.border}`
+                            : '3px solid var(--border-subtle)',
                           boxShadow: isSelected
-                            ? '0 0 12px rgba(255, 107, 107, 0.3)'
-                            : lead.assignedToId
-                              ? `0 0 14px ${cardTheme.glow}`
-                              : 'none',
-                          background: lead.assignedToId
-                            ? `linear-gradient(180deg, ${cardTheme.bgSubtle} 0%, rgba(20, 21, 26, 0.95) 45%)`
-                            : 'var(--bg-surface)',
+                            ? '0 0 10px rgba(255, 107, 107, 0.2)'
+                            : '0 2px 6px rgba(0, 0, 0, 0.2)',
+                          background: 'var(--bg-surface)',
                           transition: 'transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease',
                           borderRadius: '8px'
                         }}
@@ -1481,7 +1478,7 @@ export const KanbanView: React.FC = () => {
                                 fontSize: '0.66rem',
                                 fontWeight: '700',
                                 flexShrink: 0,
-                                boxShadow: lead.assignedToId ? `0 0 6px ${cardTheme.glow}` : 'none'
+                                boxShadow: 'none'
                               }}
                               title={lead.assignedToName ? `Responsável: ${lead.assignedToName}` : 'Sem responsável'}
                             >

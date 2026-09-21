@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { api, Site, SiteEmailTemplate } from '../services/api';
-import { Globe, Mail, Plus, Trash2, Edit3, Copy, Check, ExternalLink, Code2, AlertCircle, ArrowLeft } from 'lucide-react';
+import { Globe, Mail, Plus, Trash2, Edit3, Copy, Check, ExternalLink, Code2, AlertCircle, ArrowLeft, X } from 'lucide-react';
 
 export const SitesView: React.FC = () => {
   const [sites, setSites] = useState<Site[]>([]);
@@ -238,14 +238,53 @@ export const SitesView: React.FC = () => {
               Carregando sites cadastrados...
             </div>
           ) : sites.length === 0 ? (
-            <div className="glass-panel" style={{ padding: '60px 20px', textAlign: 'center' }}>
-              <Globe size={48} style={{ color: 'var(--text-muted)', marginBottom: '16px', opacity: 0.5 }} />
-              <h3 style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '8px' }}>Nenhum site cadastrado</h3>
-              <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto 24px auto', fontSize: '0.9rem' }}>
-                Cadastre seu primeiro site ou landing page para gerar endpoints de captura e templates automáticos de email.
+            <div className="glass-panel" style={{
+              padding: '60px 30px',
+              textAlign: 'center',
+              borderRadius: '16px',
+              border: '1px dashed rgba(255, 255, 255, 0.15)',
+              background: 'rgba(255, 255, 255, 0.02)',
+              maxWidth: '680px',
+              margin: '30px auto'
+            }}>
+              <div style={{
+                width: '64px',
+                height: '64px',
+                borderRadius: '16px',
+                background: 'rgba(59, 130, 246, 0.12)',
+                color: '#60a5fa',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '20px'
+              }}>
+                <Globe size={32} />
+              </div>
+              <h3 style={{ fontSize: '1.4rem', fontWeight: '800', marginBottom: '10px', color: '#ffffff' }}>
+                Conecte seus Sites & Formulários
+              </h3>
+              <p style={{ color: 'var(--text-secondary)', maxWidth: '520px', margin: '0 auto 28px auto', fontSize: '0.92rem', lineHeight: '1.6' }}>
+                Cadastre suas landing pages ou websites para receber leads automaticamente no CRM via Webhook, com disparos de email de boas-vindas programados.
               </p>
-              <button onClick={() => handleOpenSiteModal()} className="btn btn-primary">
-                Cadastrar Primeiro Site
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginBottom: '30px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '0.8rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Check size={16} /> Webhook Automático
+                </span>
+                <span style={{ fontSize: '0.8rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Check size={16} /> Respostas em Tempo Real
+                </span>
+                <span style={{ fontSize: '0.8rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <Check size={16} /> Enriquecimento com IA
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleOpenSiteModal()}
+                className="btn btn-primary"
+                style={{ padding: '10px 24px', fontSize: '0.95rem' }}
+              >
+                <Plus size={18} />
+                <span>Cadastrar Primeiro Site</span>
               </button>
             </div>
           ) : (
@@ -504,15 +543,57 @@ export const SitesView: React.FC = () => {
 
       {/* Modal de Site */}
       {isSiteModalOpen && (
-        <div className="modal-backdrop" style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
-          <div className="glass-panel" style={{ width: '100%', maxWidth: '520px', padding: '28px', borderRadius: '12px' }}>
-            <h3 style={{ fontSize: '1.3rem', fontWeight: '700', marginBottom: '20px' }}>
-              {editingSite ? 'Editar Site' : 'Cadastrar Novo Site'}
-            </h3>
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          background: 'rgba(0,0,0,0.75)',
+          backdropFilter: 'blur(6px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div style={{
+            width: '100%',
+            maxWidth: '520px',
+            background: '#16181d',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            borderRadius: '14px',
+            boxShadow: '0 20px 50px rgba(0,0,0,0.8)',
+            padding: '26px'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '8px',
+                  background: 'rgba(59, 130, 246, 0.15)',
+                  color: '#60a5fa',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  <Globe size={20} />
+                </div>
+                <h3 style={{ fontSize: '1.25rem', fontWeight: '800', margin: 0, color: '#ffffff' }}>
+                  {editingSite ? 'Editar Site' : 'Cadastrar Novo Site'}
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsSiteModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-muted)', cursor: 'pointer', padding: '4px' }}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
             <form onSubmit={handleSaveSite}>
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
-                  Nome do Site / Portal
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
+                  Nome do Site / Portal *
                 </label>
                 <input
                   type="text"
@@ -524,13 +605,13 @@ export const SitesView: React.FC = () => {
                     const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '');
                     setSiteForm(prev => ({ ...prev, name, slug: editingSite ? prev.slug : slug }));
                   }}
-                  className="input-field"
+                  className="input"
                   style={{ width: '100%' }}
                 />
               </div>
 
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
                   URL do Website
                 </label>
                 <input
@@ -538,14 +619,14 @@ export const SitesView: React.FC = () => {
                   placeholder="https://exemplo.com.br"
                   value={siteForm.url}
                   onChange={e => setSiteForm({ ...siteForm, url: e.target.value })}
-                  className="input-field"
+                  className="input"
                   style={{ width: '100%' }}
                 />
               </div>
 
               <div style={{ marginBottom: '16px' }}>
-                <label style={{ display: 'block', fontSize: '0.85rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
-                  Slug de Captura (Identificador único na URL)
+                <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '600', marginBottom: '6px', color: 'var(--text-secondary)' }}>
+                  Slug de Captura (Identificador único na URL) *
                 </label>
                 <input
                   type="text"
@@ -553,25 +634,41 @@ export const SitesView: React.FC = () => {
                   placeholder="landing-sp"
                   value={siteForm.slug}
                   onChange={e => setSiteForm({ ...siteForm, slug: e.target.value })}
-                  className="input-field"
-                  style={{ width: '100%' }}
+                  className="input"
+                  style={{ width: '100%', fontFamily: 'monospace' }}
                 />
               </div>
 
-              <div style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '10px' }}>
+              {/* Webhook Preview Box */}
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.03)',
+                border: '1px solid rgba(255, 255, 255, 0.08)',
+                borderRadius: '8px',
+                padding: '12px',
+                marginBottom: '18px'
+              }}>
+                <span style={{ fontSize: '0.72rem', color: '#8c93a0', display: 'block', marginBottom: '4px' }}>
+                  Endpoint de Webhook Gerado:
+                </span>
+                <code style={{ fontSize: '0.78rem', color: '#10b981', wordBreak: 'break-all' }}>
+                  {window.location.origin}/api/sites/capture/{siteForm.slug || 'slug-do-site'}
+                </code>
+              </div>
+
+              <div style={{ marginBottom: '22px', display: 'flex', alignItems: 'center', gap: '10px' }}>
                 <input
                   type="checkbox"
                   id="siteActive"
                   checked={siteForm.active}
                   onChange={e => setSiteForm({ ...siteForm, active: e.target.checked })}
-                  style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  style={{ width: '18px', height: '18px', cursor: 'pointer', accentColor: 'var(--accent-coral)' }}
                 />
-                <label htmlFor="siteActive" style={{ fontSize: '0.9rem', cursor: 'pointer' }}>
+                <label htmlFor="siteActive" style={{ fontSize: '0.85rem', cursor: 'pointer', color: '#f3f4f6' }}>
                   Site Ativo para recebimento de leads
                 </label>
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px' }}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px' }}>
                 <button type="button" onClick={() => setIsSiteModalOpen(false)} className="btn btn-secondary">
                   Cancelar
                 </button>

@@ -213,9 +213,21 @@ export const TemplatesView: React.FC = () => {
         <div className="glass-panel" style={{ padding: '60px 20px', textAlign: 'center' }}>
           <Globe size={48} style={{ color: 'var(--text-muted)', marginBottom: '16px', opacity: 0.5 }} />
           <h3 style={{ fontSize: '1.2rem', fontWeight: '700', marginBottom: '8px' }}>Nenhum site cadastrado</h3>
-          <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto 20px auto', fontSize: '0.9rem' }}>
+          <p style={{ color: 'var(--text-secondary)', maxWidth: '500px', margin: '0 auto 16px auto', fontSize: '0.9rem' }}>
             Para criar templates de e-mail automáticos, cadastre primeiro um site na aba "Sites".
           </p>
+          <button
+            type="button"
+            onClick={() => {
+              const sitesTabBtn = document.querySelector('button[title="Sites"]') as HTMLButtonElement;
+              if (sitesTabBtn) sitesTabBtn.click();
+            }}
+            className="btn btn-primary"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+          >
+            <Plus size={16} />
+            <span>Cadastrar Site Agora</span>
+          </button>
         </div>
       ) : filteredTemplates.length === 0 ? (
         <div className="glass-panel" style={{ padding: '60px 20px', textAlign: 'center' }}>

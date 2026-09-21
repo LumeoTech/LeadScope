@@ -35,13 +35,25 @@ public class DailyAutoLeadScannerService {
     private final AuditService auditService;
 
     private LocalDateTime lastRunTimestamp = LocalDateTime.now();
+    private volatile int scheduledHour = 6;
+    private volatile int scheduledMinute = 0;
+    private volatile boolean scheduleActive = true;
 
     public record DailyScanStatus(
             long leadsToday,
             int dailyTarget,
             boolean autoScanActive,
             LocalDateTime lastRun,
-            String scheduleDescription
+            String scheduleDescription,
+            String scheduledTime
+    ) {}
+
+    public record ScheduleConfig(
+            int hour,
+            int minute,
+            boolean active,
+            String timeString,
+            String formattedDescription
     ) {}
 
     private record ProspectTemplate(
@@ -403,16 +415,63 @@ public class DailyAutoLeadScannerService {
         return createdResponses;
     }
 
+    @Scheduled(cron = "0 * * * * *")
+    public void executeConfiguredScheduleCheck() {
+        if (!scheduleActive) return;
+        LocalDateTime now = LocalDateTime.now();
+        if (now.getHour() == scheduledHour && now.getMinute() == scheduledMinute) {
+            LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
+            long countToday = leadRepository.countBySourceAndCreatedAtAfter("SCANNER_AUTO", startOfDay);
+            if (countToday < 10) {
+                int needed = (int) (10 - countToday);
+                log.info("[Scanner Agendado] Horário configurado atingido ({}:{:02d}). Gerando {} leads...", scheduledHour, scheduledMinute, needed);
+                scanAndGenerateDailyLeads(needed, null);
+            }
+        }
+    }
+
     public DailyScanStatus getDailyScanStatus() {
         LocalDateTime startOfDay = LocalDate.now().atStartOfDay();
         long countToday = leadRepository.countBySourceAndCreatedAtAfter("SCANNER_AUTO", startOfDay);
+        String timeStr = String.format("%02d:%02d", scheduledHour, scheduledMinute);
         return new DailyScanStatus(
                 countToday,
                 10,
-                true,
+                scheduleActive,
                 lastRunTimestamp,
-                "Busca programada para rodar diariamente às 06:00 (10 leads/dia)"
+                String.format("Busca diária programada para %s (10 leads/dia)", timeStr),
+                timeStr
         );
+    }
+
+    public ScheduleConfig getScheduleConfig() {
+        String timeStr = String.format("%02d:%02d", scheduledHour, scheduledMinute);
+        return new ScheduleConfig(
+                scheduledHour,
+                scheduledMinute,
+                scheduleActive,
+                timeStr,
+                String.format("Captura programada para rodar diariamente às %s", timeStr)
+        );
+    }
+
+    public ScheduleConfig updateScheduleConfig(String timeString, Boolean active) {
+        if (timeString != null && timeString.contains(":")) {
+            String[] parts = timeString.trim().split(":");
+            try {
+                int h = Integer.parseInt(parts[0]);
+                int m = Integer.parseInt(parts[1]);
+                if (h >= 0 && h <= 23 && m >= 0 && m <= 59) {
+                    this.scheduledHour = h;
+                    this.scheduledMinute = m;
+                }
+            } catch (NumberFormatException ignored) {}
+        }
+        if (active != null) {
+            this.scheduleActive = active;
+        }
+        log.info("[Scanner Agendado] Horário de captura atualizado para {}:{:02d} (ativo: {})", scheduledHour, scheduledMinute, scheduleActive);
+        return getScheduleConfig();
     }
 
     private User resolveDefaultCreator(User triggerUser) {

@@ -506,6 +506,13 @@ export const api = {
       }),
     getDailyScanStatus: () =>
       request<DailyScanStatus>('/leads/auto-scan-status'),
+    getSchedule: () =>
+      request<{ hour: number; minute: number; active: boolean; timeString: string; formattedDescription: string }>('/leads/auto-scan-schedule'),
+    updateSchedule: (data: { time: string; active?: boolean }) =>
+      request<{ hour: number; minute: number; active: boolean; timeString: string; formattedDescription: string }>('/leads/auto-scan-schedule', {
+        method: 'POST',
+        body: JSON.stringify(data),
+      }),
   },
 
   activities: {

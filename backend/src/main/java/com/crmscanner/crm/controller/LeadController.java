@@ -141,7 +141,7 @@ public class LeadController {
         return ResponseEntity.status(HttpStatus.CREATED).body(leadService.addNote(id, request.content(), currentUser));
     }
 
-    @PostMapping("/agent/run")
+    @RequestMapping(value = {"/agent/run", "/agent"}, method = {RequestMethod.POST, RequestMethod.GET})
     @Operation(summary = "Executar Agente de Qualificação", description = "Dispara manualmente a rotina autônoma de qualificação e scoring de leads")
     public ResponseEntity<java.util.Map<String, Object>> runAgent() {
         int count = leadService.runAutonomousLeadQualificationAgent();
@@ -162,5 +162,21 @@ public class LeadController {
     @Operation(summary = "Status da busca diária", description = "Retorna o status atual da rotina de 10 leads por dia")
     public ResponseEntity<DailyAutoLeadScannerService.DailyScanStatus> getDailyScanStatus() {
         return ResponseEntity.ok(dailyAutoLeadScannerService.getDailyScanStatus());
+    }
+
+    @GetMapping("/auto-scan-schedule")
+    @Operation(summary = "Obter agendamento da busca diária", description = "Retorna horário configurado para captura de leads")
+    public ResponseEntity<DailyAutoLeadScannerService.ScheduleConfig> getAutoScanSchedule() {
+        return ResponseEntity.ok(dailyAutoLeadScannerService.getScheduleConfig());
+    }
+
+    @PostMapping("/auto-scan-schedule")
+    @Operation(summary = "Configurar horário da busca diária", description = "Atualiza o horário e status da captura automática de leads")
+    public ResponseEntity<DailyAutoLeadScannerService.ScheduleConfig> updateAutoScanSchedule(
+            @RequestBody java.util.Map<String, Object> body
+    ) {
+        String time = (String) body.get("time");
+        Boolean active = body.get("active") != null ? (Boolean) body.get("active") : null;
+        return ResponseEntity.ok(dailyAutoLeadScannerService.updateScheduleConfig(time, active));
     }
 }
