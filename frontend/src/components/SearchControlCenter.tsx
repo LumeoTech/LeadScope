@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   AutoScanSettings,
   AutoScanAnalytics,
@@ -54,11 +54,7 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [lastRunResult, setLastRunResult] = useState<{ count: number; message: string } | null>(null);
 
-  useEffect(() => {
-    loadAllData();
-  }, []);
-
-  const loadAllData = async () => {
+  const loadAllData = useCallback(async () => {
     setLoading(true);
     try {
       const [fetchedSettings, fetchedAnalytics] = await Promise.all([
@@ -86,7 +82,11 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadAllData();
+  }, [loadAllData]);
 
   const handleSaveSettings = async () => {
     setSaving(true);
@@ -168,7 +168,6 @@ export const SearchControlCenter: React.FC<SearchControlCenterProps> = ({ onNavi
   const corporateBlueHover = '#1d4ed8';
   const borderSubtle = 'rgba(255, 255, 255, 0.08)';
   const borderCard = '#334155';
-  const controlBg = '#0f172a';
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', maxWidth: '1280px', margin: '0 auto' }}>

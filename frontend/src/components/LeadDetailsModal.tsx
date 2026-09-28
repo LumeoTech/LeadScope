@@ -21,14 +21,11 @@ import {
   ShieldCheck,
   ExternalLink,
   Mail,
-  ArrowRightLeft,
-  Share2,
   DollarSign,
   ChevronDown,
   Check,
   Edit2,
-  Sparkles,
-  RefreshCw
+  Sparkles
 } from 'lucide-react';
 
 interface LeadDetailsModalProps {
@@ -79,6 +76,14 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
   const [leadValueInput, setLeadValueInput] = useState<string>('');
   const [savingValue, setSavingValue] = useState(false);
 
+  // Website and Email quick edits
+  const [editingWebsite, setEditingWebsite] = useState(false);
+  const [editingEmail, setEditingEmail] = useState(false);
+  const [websiteInput, setWebsiteInput] = useState('');
+  const [emailInput, setEmailInput] = useState('');
+  const [isEnrichingSite, setIsEnrichingSite] = useState(false);
+  const [enrichMessage, setEnrichMessage] = useState<string | null>(null);
+
   useEffect(() => {
     if (statuses && statuses.length > 0) {
       setInternalStatuses(statuses);
@@ -94,6 +99,8 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
     if (lead) {
       setSelectedStatusId(lead.statusId);
       setLeadValueInput(lead.value && Number(lead.value) > 0 ? String(lead.value) : '');
+      setWebsiteInput(lead.companyWebsite || lead.website || '');
+      setEmailInput(lead.companyEmail || (lead as any).email || '');
       loadLeadDetails(lead.id);
       loadSystemUsers();
     }
@@ -192,12 +199,6 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
 
   const isAdmin = currentUser?.role === 'ADMIN';
   const isViewer = currentUser?.role === 'VIEWER';
-  const isAssigned = currentLead?.assignedToId && currentUser?.id === currentLead.assignedToId;
-  const canReassign = isAdmin || isAssigned;
-
-  const discardedStatus = statuses.find(s =>
-    s.name.toLowerCase().includes('descart') || s.name.toLowerCase().includes('perdid')
-  );
 
   const handleStatusChangeSelect = async (newStatusIdStr: string) => {
     if (isViewer) {
@@ -280,17 +281,6 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
     ? currentLead.googleReviewsCount
     : ((currentLead as any).reviewsCount != null ? (currentLead as any).reviewsCount : 128);
 
-  const [editingWebsite, setEditingWebsite] = useState(false);
-  const [editingEmail, setEditingEmail] = useState(false);
-  const [websiteInput, setWebsiteInput] = useState(website || '');
-  const [emailInput, setEmailInput] = useState(email || '');
-  const [isEnrichingSite, setIsEnrichingSite] = useState(false);
-  const [enrichMessage, setEnrichMessage] = useState<string | null>(null);
-
-  useEffect(() => {
-    setWebsiteInput(website || '');
-    setEmailInput(email || '');
-  }, [website, email]);
 
   const handleSaveWebsite = async () => {
     if (!currentLead.companyId) return;

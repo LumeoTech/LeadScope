@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { api, PlaceLead } from '../services/api';
+import { api } from '../services/api';
 import { SearchControlCenter } from '../components/SearchControlCenter';
 import {
   MapPin,
@@ -18,7 +18,6 @@ import {
   Compass,
   Building2,
   Trash2,
-  Filter,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -164,72 +163,6 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
   // ——————————————————————————————————————————————————————————
   // Inicialização e Gerenciamento do Mapa Leaflet
   // ——————————————————————————————————————————————————————————
-  const initMap = () => {
-    if (!mapContainerRef.current || mapInstanceRef.current) return;
-
-    try {
-      const initialLat = selectedCoords?.lat || -23.5505;
-      const initialLng = selectedCoords?.lng || -46.6333;
-
-      const map = L.map(mapContainerRef.current, {
-        center: [initialLat, initialLng],
-        zoom: 13,
-        zoomControl: false
-      });
-
-      L.control.zoom({ position: 'bottomright' }).addTo(map);
-
-      // OpenStreetMap padrão: gratuito, livre e sem "API KEY REQUIRED"
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-        maxZoom: 19
-      }).addTo(map);
-
-      mapInstanceRef.current = map;
-
-      // Coloca marcador inicial
-      updateMapMarker(initialLat, initialLng);
-
-      // Evento de clique no mapa
-      map.on('click', (e: L.LeafletMouseEvent) => {
-        const { lat, lng } = e.latlng;
-        setSelectedCoords({ lat, lng });
-        updateMapMarker(lat, lng);
-        reverseGeocode(lat, lng);
-      });
-    } catch (err) {
-      console.warn('Erro ao inicializar mapa:', err);
-    }
-  };
-
-  // Reage à troca de aba ou montagem para garantir que o Leaflet renderize
-  useEffect(() => {
-    if (scannerTab === 'radar') {
-      if (!mapInstanceRef.current) {
-        initMap();
-      }
-      const t1 = setTimeout(() => {
-        mapInstanceRef.current?.invalidateSize();
-      }, 50);
-      const t2 = setTimeout(() => {
-        mapInstanceRef.current?.invalidateSize();
-      }, 250);
-      return () => {
-        clearTimeout(t1);
-        clearTimeout(t2);
-      };
-    }
-  }, [scannerTab]);
-
-  useEffect(() => {
-    return () => {
-      if (mapInstanceRef.current) {
-        mapInstanceRef.current.remove();
-        mapInstanceRef.current = null;
-      }
-    };
-  }, []);
-
   const createCustomPin = () => {
     return L.divIcon({
       className: 'kaptar-map-pin',
@@ -291,6 +224,72 @@ export const ScannerView: React.FC<ScannerViewProps> = ({ onNavigate }) => {
       setGeocoding(false);
     }
   };
+
+  const initMap = useCallback(() => {
+    if (!mapContainerRef.current || mapInstanceRef.current) return;
+
+    try {
+      const initialLat = selectedCoords?.lat || -23.5505;
+      const initialLng = selectedCoords?.lng || -46.6333;
+
+      const map = L.map(mapContainerRef.current, {
+        center: [initialLat, initialLng],
+        zoom: 13,
+        zoomControl: false
+      });
+
+      L.control.zoom({ position: 'bottomright' }).addTo(map);
+
+      // OpenStreetMap padrão: gratuito, livre e sem "API KEY REQUIRED"
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19
+      }).addTo(map);
+
+      mapInstanceRef.current = map;
+
+      // Coloca marcador inicial
+      updateMapMarker(initialLat, initialLng);
+
+      // Evento de clique no mapa
+      map.on('click', (e: L.LeafletMouseEvent) => {
+        const { lat, lng } = e.latlng;
+        setSelectedCoords({ lat, lng });
+        updateMapMarker(lat, lng);
+        reverseGeocode(lat, lng);
+      });
+    } catch (err) {
+      console.warn('Erro ao inicializar mapa:', err);
+    }
+  }, [selectedCoords]);
+
+  // Reage à troca de aba ou montagem para garantir que o Leaflet renderize
+  useEffect(() => {
+    if (scannerTab === 'radar') {
+      if (!mapInstanceRef.current) {
+        initMap();
+      }
+      const t1 = setTimeout(() => {
+        mapInstanceRef.current?.invalidateSize();
+      }, 50);
+      const t2 = setTimeout(() => {
+        mapInstanceRef.current?.invalidateSize();
+      }, 250);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+  }, [scannerTab, initMap]);
+
+  useEffect(() => {
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+        mapInstanceRef.current = null;
+      }
+    };
+  }, []);
 
   const clearLocation = () => {
     setSelectedCoords(null);

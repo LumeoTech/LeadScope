@@ -35,18 +35,6 @@ export const App: React.FC = () => {
   const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
-  // Check for public digital acceptance route (/aceite/:token)
-  const pathname = window.location.pathname;
-  if (pathname.startsWith('/aceite/')) {
-    const token = pathname.replace('/aceite/', '').split('/')[0];
-    return <PublicAgreementView token={token} />;
-  }
-
-  // Check for accept invite route or supabase invite link (/invite, /accept-invite, or #type=invite)
-  if (pathname.startsWith('/invite') || pathname.startsWith('/accept-invite') || window.location.hash.includes('type=invite')) {
-    return <AcceptInviteView onLoginSuccess={(loggedInUser) => setUser(loggedInUser)} />;
-  }
-
   const loadPendingUsersCount = useCallback(async () => {
     try {
       const count = await api.users.countPending();
@@ -200,6 +188,18 @@ export const App: React.FC = () => {
     sessionStorage.removeItem('user');
     setUser(null);
   };
+
+  // Check for public digital acceptance route (/aceite/:token)
+  const pathname = window.location.pathname;
+  if (pathname.startsWith('/aceite/')) {
+    const token = pathname.replace('/aceite/', '').split('/')[0];
+    return <PublicAgreementView token={token} />;
+  }
+
+  // Check for accept invite route or supabase invite link (/invite, /accept-invite, or #type=invite)
+  if (pathname.startsWith('/invite') || pathname.startsWith('/accept-invite') || window.location.hash.includes('type=invite')) {
+    return <AcceptInviteView onLoginSuccess={(loggedInUser) => setUser(loggedInUser)} />;
+  }
 
   if (initializing) {
     return null;

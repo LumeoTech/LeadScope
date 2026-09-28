@@ -1,13 +1,11 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import { api, Lead, Company, AuditLog } from '../services/api';
 import { ActiveTab } from '../components/Sidebar';
 import {
   Flag,
-  Calendar as CalendarIcon,
   Building2,
   Crosshair,
   TrendingUp,
-  TrendingDown,
   MoreHorizontal,
   SlidersHorizontal,
   Clock,
@@ -17,6 +15,8 @@ import {
   ShoppingBag,
   ChevronRight
 } from 'lucide-react';
+
+const HOURLY_SLOTS = ['19:00', '21:00', '23:00', '01:00', '03:00', '05:00', '07:00', '09:00', '11:00', '13:00', '15:00', '17:00'];
 
 interface DashboardViewProps {
   setActiveTab: (tab: ActiveTab) => void;
@@ -33,11 +33,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
   const [timeRange, setTimeRange] = useState<'Last 7 days' | 'Today' | 'Last 30 days' | 'All time'>('Last 7 days');
   const [activeStatTab, setActiveStatTab] = useState<'orders' | 'leads'>('orders');
 
-  useEffect(() => {
-    loadDashboardData();
-  }, []);
-
-  const loadDashboardData = async () => {
+  const loadDashboardData = useCallback(async () => {
     setLoading(true);
     try {
       const [leadsRes, compRes, auditRes] = await Promise.all([
@@ -53,16 +49,27 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, [loadDashboardData]);
 
   // ==================== REAL DATA CALCULATIONS ====================
-  const now = new Date();
-  const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const yesterdayStart = new Date(todayStart);
-  yesterdayStart.setDate(yesterdayStart.getDate() - 1);
-
-  const firstDayThisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-  const firstDayLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+  const { todayStart, yesterdayStart, firstDayThisMonth, firstDayLastMonth } = useMemo(() => {
+    const d = new Date();
+    const today = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const thisMonth = new Date(d.getFullYear(), d.getMonth(), 1);
+    const lastMonth = new Date(d.getFullYear(), d.getMonth() - 1, 1);
+    return {
+      todayStart: today,
+      yesterdayStart: yesterday,
+      firstDayThisMonth: thisMonth,
+      firstDayLastMonth: lastMonth
+    };
+  }, []);
 
   // 1. KPI: Active Campaigns (Active leads in pipeline)
   const activeLeads = useMemo(() => {
@@ -164,11 +171,8 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
     : (revenueToday > 0 ? '100.0' : '0.0');
   const isRevPositive = Number(revenueGrowth) >= 0;
 
-  // Hourly distribution for the Gross Revenue chart based on real leads/actions
-  const hourlySlots = ['19:00', '21:00', '23:00', '01:00', '03:00', '05:00', '07:00', '09:00', '11:00', '13:00', '15:00', '17:00'];
-  
   const hourlyData = useMemo(() => {
-    return hourlySlots.map((slot) => {
+    return HOURLY_SLOTS.map((slot) => {
       const slotHour = parseInt(slot.split(':')[0], 10);
       
       const countToday = leads.filter(l => {

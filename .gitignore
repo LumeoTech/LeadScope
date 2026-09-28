@@ -6,6 +6,7 @@
 *.pem
 *.key
 install.cmd
+*TestDB*
 
 # Dependências (Node, Python, Java, Go, PHP, .NET)
 node_modules/

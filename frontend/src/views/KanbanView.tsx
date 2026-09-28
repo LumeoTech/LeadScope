@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { api, Lead, LeadStatus, Company, UserInfo, DailyScanStatus } from '../services/api';
 import { permissionsService } from '../services/permissionsService';
 import { LeadDetailsModal } from '../components/LeadDetailsModal';
@@ -10,7 +10,6 @@ import {
   ChevronLeft,
   ChevronsRight,
   ChevronsLeft,
-  Building,
   Trash2,
   AlertTriangle,
   User,
@@ -30,7 +29,6 @@ import {
   Table as TableIcon,
   Kanban as KanbanIcon,
   Check,
-  Filter as FilterIcon,
   Columns,
   Bot,
   Zap,
@@ -45,9 +43,15 @@ export const KanbanView: React.FC = () => {
   const [companies, setCompanies] = useState<Company[]>([]);
   const [systemUsers, setSystemUsers] = useState<UserInfo[]>([]);
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [currentUser, setCurrentUser] = useState<UserInfo | null>(null);
+  const [currentUser, setCurrentUser] = useState<UserInfo | null>(() => {
+    try {
+      const u = localStorage.getItem('user');
+      return u ? JSON.parse(u) : null;
+    } catch {
+      return null;
+    }
+  });
   const [leadScope, setLeadScope] = useState<'MY' | 'ALL'>('ALL');
   const [runningAgent, setRunningAgent] = useState(false);
   const [dailyScanStatus, setDailyScanStatus] = useState<DailyScanStatus | null>(null);
@@ -86,9 +90,8 @@ export const KanbanView: React.FC = () => {
   const [showBatchDeleteModal, setShowBatchDeleteModal] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  // Batch Tag/Code Modal
+  // Batch Tag/Priority Modal
   const [showBatchTagModal, setShowBatchTagModal] = useState(false);
-  const [batchTagValue, setBatchTagValue] = useState('');
 
   // Modals
   const [showNewLeadModal, setShowNewLeadModal] = useState(false);
@@ -134,20 +137,7 @@ export const KanbanView: React.FC = () => {
     return () => window.removeEventListener('click', handleOutsideClick);
   }, []);
 
-  useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setCurrentUser(JSON.parse(storedUser));
-      } catch (e) {
-        console.error('Error parsing stored user', e);
-      }
-    }
-    loadData();
-  }, []);
-
-  const loadData = async () => {
-    setLoading(true);
+  const loadData = useCallback(async () => {
     try {
       const [statusRes, leadsRes, compRes, usersRes, scanStatusRes, scheduleRes] = await Promise.all([
         api.leadStatuses.list(),
@@ -165,10 +155,12 @@ export const KanbanView: React.FC = () => {
       if (scheduleRes?.timeString) setScheduledTime(scheduleRes.timeString);
     } catch (e) {
       console.error(e);
-    } finally {
-      setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const userRole = currentUser?.role || 'VENDEDOR';
   const canCreateLeads = permissionsService.hasPermission(userRole, 'can_create_leads');
@@ -288,7 +280,7 @@ export const KanbanView: React.FC = () => {
       setToastMsg(res.message || 'Agente de IA executado com sucesso! Leads qualificados.');
       setTimeout(() => setToastMsg(null), 4000);
       await loadData();
-    } catch (err: any) {
+    } catch {
       setToastMsg('Agente IA: Leads verificados e atualizados!');
       setTimeout(() => setToastMsg(null), 4000);
       await loadData();
