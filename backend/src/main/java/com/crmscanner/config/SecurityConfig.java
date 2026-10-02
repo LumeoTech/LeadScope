@@ -32,6 +32,7 @@ public class SecurityConfig {
     // ——— Endpoints públicos (sem autenticação) ———
     private static final String[] PUBLIC_ENDPOINTS = {
         "/api/auth/login",
+        "/api/auth/google",
         "/api/auth/register",
         "/api/auth/refresh",
         "/api/contracts/webhook",

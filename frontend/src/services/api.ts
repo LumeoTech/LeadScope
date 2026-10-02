@@ -1,4 +1,4 @@
-// Cliente HTTP centralizado e integração com a API REST do CRM LeadScope
+// Cliente HTTP centralizado e integração com a API REST do CRM Lumeo
 const rawApiUrl = import.meta.env.VITE_API_URL ? String(import.meta.env.VITE_API_URL) : '';
 const urlMatch = rawApiUrl.match(/https?:\/\/[a-zA-Z0-9.-]+(:\d+)?/);
 const isBrowser = typeof window !== 'undefined';
@@ -457,6 +457,7 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     localStorage.removeItem('crm_user_info');
     sessionStorage.removeItem('crm_auth_token');
     sessionStorage.removeItem('crm_user_info');
+    window.dispatchEvent(new CustomEvent('lumeo_auth_expired'));
     window.dispatchEvent(new CustomEvent('leadscope_auth_expired'));
     throw new Error('Sessão expirada. Faça login novamente.');
   }
@@ -491,6 +492,11 @@ export const api = {
       request<AuthResponse>('/auth/login', {
         method: 'POST',
         body: JSON.stringify(credentials),
+      }),
+    google: (idToken: string) =>
+      request<AuthResponse>('/auth/google', {
+        method: 'POST',
+        body: JSON.stringify({ idToken }),
       }),
     register: (data: { name: string; email: string; password: string; confirmPassword?: string }) =>
       request<AuthResponse>('/auth/register', {

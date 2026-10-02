@@ -90,7 +90,7 @@ export const AcceptInviteView: React.FC<AcceptInviteViewProps> = ({ onLoginSucce
             <LumeoLogo size={48} />
           </div>
           <h1 style={{ fontSize: '1.5rem', fontWeight: '800', margin: '0 0 8px 0' }}>
-            Ativar Acesso ao LeadScope
+            Ativar Acesso ao Lumeo
           </h1>
           <p style={{ color: 'var(--text-secondary)', fontSize: '0.88rem', margin: 0 }}>
             Você foi convidado para a equipe. Defina sua senha pessoal para acessar o CRM.

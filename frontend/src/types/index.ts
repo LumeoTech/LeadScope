@@ -1,4 +1,4 @@
-// Tipos centralizados do sistema LeadScope
+// Tipos centralizados do sistema Lumeo
 export type {
   UserInfo,
   AuthResponse,

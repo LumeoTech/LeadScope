@@ -4,119 +4,156 @@
    Modo claro e escuro automáticos (prefers-color-scheme)
    ============================================================ */
 
-/* ── TOKENS (DARK — padrão Apple Dark Mode) ── */
+/* ── TOKENS (LIGHT — padrão Apple) ── */
 :root {
-  --bg-main:            #000000;
-  --bg-surface:         #1c1c1e;
-  --bg-surface-2:       #2c2c2e;
-  --bg-surface-3:       #3a3a3c;
-  --bg-input:           #1c1c1e;
-  --bg-hover:           rgba(255,255,255,0.06);
-  --bg-overlay:         rgba(0,0,0,0.72);
+  --bg:         #f5f5f7;
+  --surface:    #ffffff;
+  --surface-2:  #fbfbfd;
+  --text:       #1d1d1f;
+  --text-2:     #6e6e73;
+  --text-3:     #86868b;
+  --line:       rgba(0,0,0,0.08);
+  --accent:     #0071e3;
+  --accent-hover: #0077ed;
+  --ok:         #34c759;
+  --warn:       #ff9f0a;
+  --danger:     #ff3b30;
 
-  /* Apple Accent Palette */
-  --accent:             #0071e3;
-  --accent-hover:       #0077ed;
+  /* Aliases compatíveis */
+  --bg-main:            var(--bg);
+  --bg-surface:         var(--surface);
+  --bg-surface-2:       var(--surface-2);
+  --bg-surface-3:       #e5e5ea;
+  --bg-input:           var(--surface-2);
+  --bg-hover:           rgba(0,0,0,0.05);
+  --bg-overlay:         rgba(0,0,0,0.40);
+
   --accent-active:      #0062c4;
-  --accent-subtle:      rgba(0,113,227,0.15);
-
-  /* Alias compat */
-  --accent-coral:       #0071e3;
-  --btn-primary-bg:     #0071e3;
+  --accent-subtle:      rgba(0,113,227,0.12);
+  --btn-primary-bg:     var(--accent);
   --btn-primary-text:   #ffffff;
-  --btn-primary-hover:  #0077ed;
-  --accent-primary:     #0071e3;
-  --accent-primary-hover: #0077ed;
+  --btn-primary-hover:  var(--accent-hover);
 
-  --border-subtle:      rgba(255,255,255,0.09);
-  --border-focus:       rgba(0,113,227,0.65);
-  --border-glass:       rgba(255,255,255,0.14);
+  --border-subtle:      var(--line);
+  --border-focus:       var(--accent);
+  --border-glass:       rgba(0,0,0,0.08);
 
-  --text-primary:       #f5f5f7;
-  --text-secondary:     #86868b;
-  --text-muted:         #6e6e73;
+  --text-primary:       var(--text);
+  --text-secondary:     var(--text-2);
+  --text-muted:         var(--text-3);
 
-  /* Cores funcionais Apple */
-  --color-success:      #34c759;
-  --color-warning:      #ff9f0a;
-  --color-danger:       #ff3b30;
-  --color-info:         #0071e3;
+  --color-success:      var(--ok);
+  --color-warning:      var(--warn);
+  --color-danger:       var(--danger);
+  --color-info:         var(--accent);
 
-  --badge-blue-bg:      rgba(0,113,227,0.16);
-  --badge-blue-text:    #64b5f6;
-  --badge-red-bg:       rgba(255,59,48,0.14);
-  --badge-red-text:     #ff6961;
-  --badge-amber-bg:     rgba(255,159,10,0.15);
-  --badge-amber-text:   #ffb340;
-  --badge-green-bg:     rgba(52,199,89,0.15);
-  --badge-green-text:   #30d158;
+  --badge-blue-bg:      rgba(0,113,227,0.12);
+  --badge-blue-text:    #0071e3;
+  --badge-red-bg:       rgba(255,59,48,0.12);
+  --badge-red-text:     #ff3b30;
+  --badge-amber-bg:     rgba(255,159,10,0.12);
+  --badge-amber-text:   #f57c00;
+  --badge-green-bg:     rgba(52,199,89,0.12);
+  --badge-green-text:   #248a3d;
 
-  /* Radius — Apple Human Interface Guidelines */
+  /* Escala de raios Apple */
   --radius-xs:   6px;
   --radius-sm:   10px;
-  --radius-md:   14px;
-  --radius-lg:   18px;
-  --radius-xl:   24px;
+  --radius-md:   12px;
+  --radius-lg:   16px;
+  --radius-xl:   20px;
+  --radius-modal: 24px;
   --radius-full: 9999px;
 
-  /* Sombras Apple com dispersão suave */
-  --shadow-xs:  0 1px 2px rgba(0,0,0,0.24);
-  --shadow-sm:  0 2px 8px rgba(0,0,0,0.36);
-  --shadow-md:  0 8px 24px rgba(0,0,0,0.48);
-  --shadow-lg:  0 16px 40px rgba(0,0,0,0.60);
-  --shadow-xl:  0 24px 64px rgba(0,0,0,0.75);
+  /* Sombras Apple */
+  --shadow-xs:  0 1px 2px rgba(0,0,0,0.04);
+  --shadow-sm:  0 2px 8px rgba(0,0,0,0.06);
+  --shadow-md:  0 8px 24px rgba(0,0,0,0.08);
+  --shadow-lg:  0 16px 40px rgba(0,0,0,0.12);
 
-  /* Tipografia SF Pro & Inter */
-  --font-sans:    -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, sans-serif;
-  --font-heading: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Inter", system-ui, sans-serif;
+  /* Tipografia oficial Apple */
+  --font-sans:    "SF Pro Display", "SF Pro Text", Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  --font-heading: "SF Pro Display", "SF Pro Text", Inter, -apple-system, BlinkMacSystemFont, sans-serif;
 
-  /* Curvas de Bézier Apple */
-  --ease-apple:     cubic-bezier(0.25, 0.1, 0.25, 1);
-  --ease-apple-in:  cubic-bezier(0.42, 0, 1, 1);
-  --ease-apple-out: cubic-bezier(0, 0, 0.58, 1);
-  --ease-spring:    cubic-bezier(0.34, 1.56, 0.64, 1);
-  --ease-out:       cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-std:       cubic-bezier(0.25, 0.1, 0.25, 1);
-
-  --dur-fast: 160ms;
-  --dur-std:  240ms;
-  --dur-slow: 360ms;
+  /* Curvas e tempos Apple */
+  --ease-std:   cubic-bezier(0.25, 0.1, 0.25, 1);
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+  --dur-fast:   150ms;
+  --dur-std:    250ms;
+  --dur-slow:   350ms;
 }
 
-/* ── TOKENS (LIGHT — Apple Clean Light Mode) ── */
-@media (prefers-color-scheme: light) {
+/* ── TOKENS (DARK — Apple Dark Mode via prefers-color-scheme ou classe .dark) ── */
+@media (prefers-color-scheme: dark) {
   :root {
-    --bg-main:           #fbfbfd;
-    --bg-surface:        #ffffff;
-    --bg-surface-2:      #f5f5f7;
-    --bg-surface-3:      #e5e5ea;
-    --bg-input:          #ffffff;
-    --bg-hover:          rgba(0,0,0,0.04);
-    --bg-overlay:        rgba(0,0,0,0.35);
+    --bg:         #000000;
+    --surface:    #1c1c1e;
+    --surface-2:  #2c2c2e;
+    --text:       #f5f5f7;
+    --text-2:     #a1a1a6;
+    --text-3:     #86868b;
+    --line:       rgba(255,255,255,0.12);
+    --accent:     #0a84ff;
+    --accent-hover: #0077ed;
 
-    --border-subtle:     rgba(0,0,0,0.08);
-    --border-focus:      rgba(0,113,227,0.50);
-    --border-glass:      rgba(0,0,0,0.08);
+    --bg-main:            var(--bg);
+    --bg-surface:         var(--surface);
+    --bg-surface-2:       var(--surface-2);
+    --bg-surface-3:       #3a3a3c;
+    --bg-input:           var(--surface-2);
+    --bg-hover:           rgba(255,255,255,0.06);
+    --bg-overlay:         rgba(0,0,0,0.70);
 
-    --text-primary:      #1d1d1f;
-    --text-secondary:    #86868b;
-    --text-muted:        #a1a1a6;
+    --border-subtle:      var(--line);
+    --border-focus:       var(--accent);
+    --border-glass:       rgba(255,255,255,0.14);
 
-    --badge-blue-bg:     rgba(0,113,227,0.10);
-    --badge-blue-text:   #0071e3;
-    --badge-red-bg:      rgba(255,59,48,0.10);
-    --badge-red-text:    #ff3b30;
-    --badge-amber-bg:    rgba(255,159,10,0.12);
-    --badge-amber-text:  #f57c00;
-    --badge-green-bg:    rgba(52,199,89,0.12);
-    --badge-green-text:  #248a3d;
+    --text-primary:       var(--text);
+    --text-secondary:     var(--text-2);
+    --text-muted:         var(--text-3);
 
-    --shadow-xs:  0 1px 2px rgba(0,0,0,0.04);
-    --shadow-sm:  0 2px 8px rgba(0,0,0,0.06);
-    --shadow-md:  0 8px 24px rgba(0,0,0,0.08);
-    --shadow-lg:  0 16px 40px rgba(0,0,0,0.10);
-    --shadow-xl:  0 24px 64px rgba(0,0,0,0.14);
+    --badge-blue-bg:      rgba(10,132,255,0.15);
+    --badge-blue-text:    #70b5ff;
+    --badge-red-bg:       rgba(255,69,58,0.15);
+    --badge-red-text:     #ff6961;
+    --badge-amber-bg:     rgba(255,159,10,0.15);
+    --badge-amber-text:   #ffb340;
+    --badge-green-bg:     rgba(50,215,75,0.15);
+    --badge-green-text:   #30d158;
+
+    --shadow-xs:  0 1px 2px rgba(0,0,0,0.3);
+    --shadow-sm:  0 2px 8px rgba(0,0,0,0.45);
+    --shadow-md:  0 8px 24px rgba(0,0,0,0.55);
+    --shadow-lg:  0 16px 40px rgba(0,0,0,0.70);
   }
+}
+
+body.dark {
+  --bg:         #000000;
+  --surface:    #1c1c1e;
+  --surface-2:  #2c2c2e;
+  --text:       #f5f5f7;
+  --text-2:     #a1a1a6;
+  --text-3:     #86868b;
+  --line:       rgba(255,255,255,0.12);
+  --accent:     #0a84ff;
+  --accent-hover: #0077ed;
+
+  --bg-main:            var(--bg);
+  --bg-surface:         var(--surface);
+  --bg-surface-2:       var(--surface-2);
+  --bg-surface-3:       #3a3a3c;
+  --bg-input:           var(--surface-2);
+  --bg-hover:           rgba(255,255,255,0.06);
+  --bg-overlay:         rgba(0,0,0,0.70);
+
+  --border-subtle:      var(--line);
+  --border-focus:       var(--accent);
+  --border-glass:       rgba(255,255,255,0.14);
+
+  --text-primary:       var(--text);
+  --text-secondary:     var(--text-2);
+  --text-muted:         var(--text-3);
 }
 
 /* ── RESET ── */
@@ -432,10 +469,32 @@ select option {
   border-radius: var(--radius-sm);
 }
 
-/* ── SIDEBAR ── */
-.sidebar {
-  background: #0a0b0d;
-  border-right: 1px solid var(--border-subtle);
+/* ── SIDEBAR & MOBILE TABBAR (Referência B & Apple Design) ── */
+.lumeo-sidebar {
+  box-sizing: border-box;
+}
+
+@media (max-width: 768px) {
+  .lumeo-sidebar {
+    display: none !important;
+  }
+  .lumeo-mobile-tabbar {
+    display: flex !important;
+  }
+  .main-content {
+    padding-bottom: 76px !important;
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95) translateY(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 /* ── NAVBAR ── */

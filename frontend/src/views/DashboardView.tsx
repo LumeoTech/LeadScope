@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
-import { api, Lead, Company, AuditLog } from '../services/api';
+import { api, Lead, Company, AuditLog, UserInfo } from '../services/api';
 import { ActiveTab } from '../components/Sidebar';
 import {
   Flag,
@@ -20,9 +20,10 @@ const HOURLY_SLOTS = ['19:00', '21:00', '23:00', '01:00', '03:00', '05:00', '07:
 
 interface DashboardViewProps {
   setActiveTab: (tab: ActiveTab) => void;
+  currentUser?: UserInfo | null;
 }
 
-export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) => {
+export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab, currentUser }) => {
   const [leads, setLeads] = useState<Lead[]>([]);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
@@ -325,8 +326,26 @@ export const DashboardView: React.FC<DashboardViewProps> = ({ setActiveTab }) =>
   }, [timeRange]);
 
   return (
-    <div style={{ animation: 'fadeIn 0.2s ease', color: '#ffffff', maxWidth: '1440px', margin: '0 auto' }}>
+    <div style={{ animation: 'fadeIn 0.2s ease', color: 'var(--text, #ffffff)', maxWidth: '1440px', margin: '0 auto', padding: '0 8px 32px' }}>
       
+      {/* ==================== SAUDAÇÃO COM NOME REAL ==================== */}
+      <div style={{ marginBottom: '24px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+        <h1
+          style={{
+            fontSize: '32px',
+            fontWeight: 600,
+            letterSpacing: '-0.022em',
+            margin: 0,
+            color: 'var(--text, #f5f5f7)'
+          }}
+        >
+          {currentUser?.name ? `Olá, ${currentUser.name}` : 'Visão Geral'}
+        </h1>
+        <p style={{ margin: 0, fontSize: '14px', color: 'var(--text-2, #86868b)' }}>
+          {dateRangeDisplay} • Acompanhe a saúde do pipeline e prospecções comerciais.
+        </p>
+      </div>
+
       {/* ==================== ROW 1: 4 KPI CARDS ==================== */}
       <div style={{
         display: 'grid',

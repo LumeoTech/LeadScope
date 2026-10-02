@@ -24,7 +24,7 @@ public class HealthController {
     public ResponseEntity<Map<String, Object>> health() {
         Map<String, Object> map = new LinkedHashMap<>();
         map.put("status", "UP");
-        map.put("service", "Lumeo LeadScope API");
+        map.put("service", "Lumeo API");
         map.put("version", "1.0.1");
         map.put("timestamp", LocalDateTime.now().toString());
 

@@ -27,9 +27,27 @@ export const App: React.FC = () => {
   const [pendingUsersCount, setPendingUsersCount] = useState<number>(0);
 
   // Modals & UI States
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    try {
+      return localStorage.getItem('lumeo_sidebar_collapsed') === 'true';
+    } catch {
+      return false;
+    }
+  });
   const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
+  const toggleSidebar = () => {
+    setIsSidebarCollapsed((prev) => {
+      const next = !prev;
+      try {
+        localStorage.setItem('lumeo_sidebar_collapsed', String(next));
+      } catch {
+        // ignore
+      }
+      return next;
+    });
+  };
 
   const loadPendingUsersCount = useCallback(async () => {
     try {
@@ -60,7 +78,7 @@ export const App: React.FC = () => {
           const oauthUser: UserInfo = {
             id: 1,
             name: payload.user_metadata?.full_name || payload.user_metadata?.name || payload.email?.split('@')[0] || 'Usuário',
-            email: payload.email || 'usuario@leadscope.com',
+            email: payload.email || 'usuario@lumeo.com',
             role: payload.app_metadata?.role || 'ADMIN'
           };
           localStorage.setItem('token', accessToken);
@@ -208,7 +226,7 @@ export const App: React.FC = () => {
   }
 
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', background: '#0c0d0f' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', background: 'var(--bg, #f5f5f7)', color: 'var(--text, #1d1d1f)' }}>
       <Sidebar
         activeTab={activeTab}
         setActiveTab={setActiveTab}
@@ -218,7 +236,7 @@ export const App: React.FC = () => {
         onOpenHelp={() => setIsHelpOpen(true)}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         isCollapsed={isSidebarCollapsed}
-        onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
+        onToggleCollapse={toggleSidebar}
         onLogout={handleLogout}
         onAccountSwitched={(newUser) => setUser(newUser)}
       />
@@ -233,7 +251,7 @@ export const App: React.FC = () => {
 
         <main className="main-content" style={{ flex: 1, paddingTop: '12px' }}>
           <Suspense fallback={<ViewSkeleton />}>
-            {activeTab === 'dashboard' && <DashboardView setActiveTab={setActiveTab} />}
+            {activeTab === 'dashboard' && <DashboardView setActiveTab={setActiveTab} currentUser={user} />}
             {activeTab === 'kanban' && <KanbanView />}
             {activeTab === 'scanner' && <ScannerView onNavigate={(tab) => setActiveTab(tab)} />}
             {activeTab === 'companies' && <CompaniesView />}

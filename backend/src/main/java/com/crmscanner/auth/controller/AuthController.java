@@ -34,6 +34,12 @@ public class AuthController {
         return ResponseEntity.ok(authService.login(request));
     }
 
+    @PostMapping("/google")
+    @Operation(summary = "Login com Google", description = "Autentica via OpenID Connect Google ID Token")
+    public ResponseEntity<AuthResponse> google(@Valid @RequestBody com.crmscanner.auth.dto.GoogleLoginRequest request) {
+        return ResponseEntity.ok(authService.loginWithGoogle(request));
+    }
+
     @PostMapping("/accept-invite")
     @Operation(summary = "Aceitar Convite", description = "Define a senha do usuário convidado e realiza o login")
     public ResponseEntity<AuthResponse> acceptInvite(@Valid @RequestBody com.crmscanner.auth.dto.AcceptInviteRequest request) {

@@ -33,17 +33,17 @@ interface TemplatesViewProps {
 const DEFAULT_STARTER_SITES: Site[] = [
   {
     id: 1,
-    name: 'LeadScope Landing Page Principal',
-    url: 'https://leadscope.app',
-    slug: 'leadscope-main',
-    webhookUrl: '/api/webhooks/sites/leadscope-main',
+    name: 'Lumeo Landing Page Principal',
+    url: 'https://lumeo.com',
+    slug: 'lumeo-main',
+    webhookUrl: '/api/webhooks/sites/lumeo-main',
     active: true,
     createdAt: '2026-09-20T10:00:00Z',
   },
   {
     id: 2,
     name: 'Portal Corporativo B2B',
-    url: 'https://lumeotech.com',
+    url: 'https://lumeo.com',
     slug: 'portal-corp',
     webhookUrl: '/api/webhooks/sites/portal-corp',
     active: true,
@@ -55,22 +55,22 @@ const DEFAULT_STARTER_TEMPLATES: SiteEmailTemplate[] = [
   {
     id: 1,
     siteId: 1,
-    siteName: 'LeadScope Landing Page Principal',
+    siteName: 'Lumeo Landing Page Principal',
     name: 'Boas-Vindas & Qualificação Imediata',
     triggerEvent: 'LEAD_CAPTURED',
-    subject: 'Recebemos seu contato - LeadScope Inteligência Comercial',
-    bodyHtml: '<div style="font-family: sans-serif; color: #222; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff;"><h2>Olá {{lead_name}},</h2><p>Recebemos seus dados através de <strong>{{site_name}}</strong> com sucesso.</p><p>Nossa equipe de inteligência comercial já iniciou a análise do perfil da sua empresa (Score: <strong>{{score}}%</strong>).</p><p>Em instantes um especialista entrará em contato direto com você.</p><br><p style="color: #64748b; font-size: 13px;">Equipe LeadScope • Automação e Qualificação de Leads</p></div>',
+    subject: 'Recebemos seu contato - Lumeo Inteligência Comercial',
+    bodyHtml: '<div style="font-family: sans-serif; color: #222; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff;"><h2>Olá {{lead_name}},</h2><p>Recebemos seus dados através de <strong>{{site_name}}</strong> com sucesso.</p><p>Nossa equipe de inteligência comercial já iniciou a análise do perfil da sua empresa (Score: <strong>{{score}}%</strong>).</p><p>Em instantes um especialista entrará em contato direto com você.</p><br><p style="color: #64748b; font-size: 13px;">Equipe Lumeo • Automação e Qualificação de Leads</p></div>',
     active: true,
     createdAt: '2026-09-20T10:00:00Z',
   },
   {
     id: 2,
     siteId: 1,
-    siteName: 'LeadScope Landing Page Principal',
+    siteName: 'Lumeo Landing Page Principal',
     name: 'Apresentação Comercial & Agendamento',
     triggerEvent: 'STATUS_CHANGED',
-    subject: 'Sua demonstração exclusiva da plataforma LeadScope',
-    bodyHtml: '<div style="font-family: sans-serif; color: #222; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff;"><h2>Olá {{lead_name}},</h2><p>Identificamos um forte alinhamento entre o LeadScope e o modelo comercial da sua empresa.</p><p>Separamos uma demonstração guiada para mostrar como automatizar a prospecção e enriquecimento de sites em tempo real.</p><p><a href="https://leadscope.app/demo" style="display: inline-block; padding: 10px 18px; background: #10b981; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold;">Agendar Demonstração Agora</a></p></div>',
+    subject: 'Sua demonstração exclusiva da plataforma Lumeo',
+    bodyHtml: '<div style="font-family: sans-serif; color: #222; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff;"><h2>Olá {{lead_name}},</h2><p>Identificamos um forte alinhamento entre o Lumeo e o modelo comercial da sua empresa.</p><p>Separamos uma demonstração guiada para mostrar como automatizar a prospecção e enriquecimento de sites em tempo real.</p><p><a href="https://lumeo.com/demo" style="display: inline-block; padding: 10px 18px; background: #10b981; color: #fff; text-decoration: none; border-radius: 4px; font-weight: bold;">Agendar Demonstração Agora</a></p></div>',
     active: true,
     createdAt: '2026-09-20T10:00:00Z',
   },
@@ -80,7 +80,7 @@ const DEFAULT_STARTER_TEMPLATES: SiteEmailTemplate[] = [
     siteName: 'Portal Corporativo B2B',
     name: 'Follow-up de Proposta Comercial',
     triggerEvent: 'LEAD_CAPTURED',
-    subject: 'Proposta Corporativa LeadScope B2B',
+    subject: 'Proposta Corporativa Lumeo B2B',
     bodyHtml: '<div style="font-family: sans-serif; color: #222; padding: 20px; border-radius: 8px; border: 1px solid #e2e8f0; background: #ffffff;"><h2>Prezado(a) {{lead_name}},</h2><p>Agradecemos o interesse em nossas soluções corporativas B2B.</p><p>Nossa proposta personalizada está disponível para revisão imediata no portal.</p></div>',
     active: true,
     createdAt: '2026-09-20T10:00:00Z',
@@ -196,7 +196,7 @@ export const TemplatesView: React.FC<TemplatesViewProps> = ({ onNavigate }) => {
         siteId: sites.length > 0 ? sites[0].id : 1,
         name: '',
         triggerEvent: 'LEAD_CAPTURED',
-        subject: 'Recebemos seu contato - LeadScope',
+        subject: 'Recebemos seu contato - Lumeo',
         bodyHtml: '<h2>Olá {{lead_name}},</h2><p>Recebemos sua mensagem com sucesso através do portal {{site_name}}.</p><p>Em breve nosso especialista entrará em contato.</p>',
         active: true,
       });
@@ -698,7 +698,7 @@ export const TemplatesView: React.FC<TemplatesViewProps> = ({ onNavigate }) => {
                 }}>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <span style={{ color: 'var(--text-muted)', width: '60px' }}>De:</span>
-                    <span style={{ color: '#ffffff', fontWeight: '600' }}>LeadScope Automations &lt;noreply@leadscope.app&gt;</span>
+                    <span style={{ color: '#ffffff', fontWeight: '600' }}>Lumeo Automations &lt;noreply@lumeo.com&gt;</span>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <span style={{ color: 'var(--text-muted)', width: '60px' }}>Para:</span>
@@ -773,7 +773,7 @@ export const TemplatesView: React.FC<TemplatesViewProps> = ({ onNavigate }) => {
             {activeInspectorTab === 'VARIABLES' && (
               <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 <div style={{ fontSize: '0.76rem', color: 'var(--text-secondary)', lineHeight: '1.4' }}>
-                  Clique em qualquer variável para copiar diretamente para o seu template. Ao ser disparado, o LeadScope preenche os valores automaticamente com os dados do lead capturado:
+                  Clique em qualquer variável para copiar diretamente para o seu template. Ao ser disparado, o Lumeo preenche os valores automaticamente com os dados do lead capturado:
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px' }}>
@@ -781,7 +781,7 @@ export const TemplatesView: React.FC<TemplatesViewProps> = ({ onNavigate }) => {
                     { tag: '{{lead_name}}', desc: 'Nome completo do lead capturado', sample: 'Nome do Lead' },
                     { tag: '{{lead_email}}', desc: 'E-mail informado no formulário', sample: 'email@empresa.com' },
                     { tag: '{{lead_phone}}', desc: 'Telefone / WhatsApp com DDD', sample: '(11) 98765-4321' },
-                    { tag: '{{site_name}}', desc: 'Nome do site ou landing page', sample: selectedTemplate.siteName || 'LeadScope' },
+                    { tag: '{{site_name}}', desc: 'Nome do site ou landing page', sample: selectedTemplate.siteName || 'Lumeo' },
                     { tag: '{{empresa}}', desc: 'Empresa do lead enriquecida via CNPJ', sample: 'Lumeo Tech' },
                     { tag: '{{score}}', desc: 'Score de qualificação calculado (0-100)', sample: '88' },
                   ].map(v => (

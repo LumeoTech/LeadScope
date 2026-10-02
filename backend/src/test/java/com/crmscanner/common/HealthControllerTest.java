@@ -20,6 +20,6 @@ class HealthControllerTest {
         assertEquals(200, response.getStatusCode().value());
         assertNotNull(response.getBody());
         assertEquals("UP", response.getBody().get("status"));
-        assertEquals("Lumeo LeadScope API", response.getBody().get("service"));
+        assertEquals("Lumeo API", response.getBody().get("service"));
     }
 }

@@ -709,7 +709,7 @@ export const LeadDetailsModal: React.FC<LeadDetailsModalProps> = ({
                   </div>
                 </div>
 
-                {/* AI Qualification Panel (LeadScope Autonomous Agent) */}
+                {/* AI Qualification Panel (Lumeo Autonomous Agent) */}
                 <div className="card" style={{
                   padding: '18px',
                   background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.8) 100%)',

@@ -8,16 +8,16 @@ import {
   HelpCircle,
   Settings,
   Search,
-  ChevronsLeft,
-  ChevronsRight,
-  ChevronDown,
+  PanelLeftClose,
+  PanelLeft,
   UserPlus,
   LogOut,
   X,
   ScanSearch,
-  ShieldCheck
+  ShieldCheck,
+  ChevronDown
 } from 'lucide-react';
-import { UserInfo, api } from '../services/api';
+import { UserInfo } from '../services/api';
 import { accountManager, StoredAccount } from '../services/accountManager';
 import { getUserTheme } from '../utils/userColors';
 import { permissionsService } from '../services/permissionsService';
@@ -50,6 +50,13 @@ interface SidebarProps {
   onAccountSwitched?: (user: UserInfo) => void;
 }
 
+interface NavItemDef {
+  tab: ActiveTab;
+  label: string;
+  icon: React.ElementType;
+  badge?: number;
+}
+
 export const Sidebar: React.FC<SidebarProps> = ({
   activeTab,
   setActiveTab,
@@ -65,11 +72,27 @@ export const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [isAccountMenuOpen, setIsAccountMenuOpen] = useState(false);
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState('');
+  const [inviteSuccess, setInviteSuccess] = useState(false);
   const [savedAccounts, setSavedAccounts] = useState<StoredAccount[]>([]);
   const [addEmail, setAddEmail] = useState('');
   const [addPassword, setAddPassword] = useState('');
   const [addLoading, setAddLoading] = useState(false);
   const [addError, setAddError] = useState<string | null>(null);
+  const [hoveredTab, setHoveredTab] = useState<string | null>(null);
+
+  // Keyboard shortcut ⌘/Ctrl+B
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && (e.key === 'b' || e.key === 'B')) {
+        e.preventDefault();
+        onToggleCollapse?.();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [onToggleCollapse]);
 
   useEffect(() => {
     const list = accountManager.getAccounts();
@@ -130,420 +153,1371 @@ export const Sidebar: React.FC<SidebarProps> = ({
     }
   };
 
-  const navItem = (
-    tab: ActiveTab,
-    label: string,
-    Icon: React.ElementType,
-    badge?: number
-  ) => {
-    const isActive = activeTab === tab;
-    return (
-      <button
-        onClick={() => setActiveTab(tab)}
-        title={label}
-        aria-current={isActive ? 'page' : undefined}
-        style={navItemStyle(isActive, isCollapsed)}
-        onMouseEnter={(e) => {
-          if (!isActive) e.currentTarget.style.background = 'rgba(255,255,255,0.06)';
-        }}
-        onMouseLeave={(e) => {
-          if (!isActive) e.currentTarget.style.background = 'transparent';
-        }}
-      >
-        <Icon size={16} style={{ flexShrink: 0 }} />
-        {!isCollapsed && (
-          <>
-            <span style={{ flex: 1, textAlign: 'left' }}>{label}</span>
-            {badge != null && badge > 0 && (
-              <span style={{
-                background: '#ef4444',
-                color: '#fff',
-                fontSize: '0.65rem',
-                fontWeight: '700',
-                padding: '1px 5px',
-                borderRadius: '10px',
-                minWidth: '18px',
-                textAlign: 'center'
-              }}>
-                {badge}
-              </span>
-            )}
-          </>
-        )}
-        {isCollapsed && badge != null && badge > 0 && (
-          <span style={{
-            position: 'absolute',
-            top: '4px',
-            right: '4px',
-            width: '8px',
-            height: '8px',
-            borderRadius: '50%',
-            background: '#ef4444'
-          }} />
-        )}
-      </button>
-    );
+  const handleSendInvite = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!inviteEmail) return;
+    setInviteSuccess(true);
+    setTimeout(() => {
+      setInviteSuccess(false);
+      setIsInviteModalOpen(false);
+      setInviteEmail('');
+    }, 1400);
   };
 
+  const mainNavItems: NavItemDef[] = [
+    { tab: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
+    ...(canSeeLeads ? [{ tab: 'kanban' as ActiveTab, label: 'Leads', icon: Kanban }] : []),
+    ...(canSeeAnalytics ? [{ tab: 'scanner' as ActiveTab, label: 'Prospecção', icon: ScanSearch }] : []),
+    ...(canSeeCompanies ? [{ tab: 'companies' as ActiveTab, label: 'Clientes', icon: Building2 }] : []),
+    ...(canSeeAgenda ? [{ tab: 'agenda' as ActiveTab, label: 'Agenda', icon: CalendarDays }] : [])
+  ];
+
+  const adminNavItems: NavItemDef[] = isAdmin ? [
+    { tab: 'users', label: 'Equipe', icon: Users, badge: pendingUsersCount },
+    { tab: 'audit', label: 'Auditoria', icon: ShieldCheck }
+  ] : [];
+
+  const userInitials = (activeUser?.name || 'U')
+    .split(' ')
+    .slice(0, 2)
+    .map((n: string) => n[0])
+    .join('')
+    .toUpperCase();
+
   return (
-    <aside
-      style={{
-        width: isCollapsed ? '68px' : '232px',
-        minWidth: isCollapsed ? '68px' : '232px',
-        background: '#0a0b0d',
-        borderRight: '1px solid rgba(255,255,255,0.06)',
-        padding: '16px 10px',
-        display: 'flex',
-        flexDirection: 'column',
-        position: 'sticky',
-        top: 0,
-        height: '100vh',
-        zIndex: 100,
-        transition: 'width 0.22s cubic-bezier(0.4,0,0.2,1), min-width 0.22s cubic-bezier(0.4,0,0.2,1)',
-        overflowX: 'hidden'
-      }}
-    >
-      {/* Header: Workspace + collapse toggle */}
-      <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: isCollapsed ? 'center' : 'space-between',
-        marginBottom: '20px',
-        padding: '0 4px'
-      }}>
+    <>
+      {/* ── DESKTOP SIDEBAR (ClickUp style: 240px expanded ↔ 64px rail) ── */}
+      <aside
+        className="lumeo-sidebar"
+        style={{
+          width: isCollapsed ? '64px' : '240px',
+          minWidth: isCollapsed ? '64px' : '240px',
+          maxWidth: isCollapsed ? '64px' : '240px',
+          height: '100vh',
+          position: 'sticky',
+          top: 0,
+          background: 'var(--surface-glass, rgba(17, 18, 22, 0.85))',
+          backdropFilter: 'saturate(180%) blur(20px)',
+          WebkitBackdropFilter: 'saturate(180%) blur(20px)',
+          borderRight: '1px solid var(--line, rgba(255, 255, 255, 0.08))',
+          display: 'flex',
+          flexDirection: 'column',
+          zIndex: 100,
+          transition: 'width 280ms cubic-bezier(0.32, 0.72, 0, 1), min-width 280ms cubic-bezier(0.32, 0.72, 0, 1), max-width 280ms cubic-bezier(0.32, 0.72, 0, 1)',
+          overflowX: 'visible',
+          overflowY: 'hidden',
+          userSelect: 'none',
+          boxSizing: 'border-box'
+        }}
+      >
+        {/* Top Header: Logo + Collapse/Expand Button */}
         <div
-          onClick={() => setIsAccountMenuOpen(p => !p)}
-          title="Conta e workspace"
           style={{
+            height: '60px',
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            cursor: 'pointer',
-            padding: '5px 6px',
-            borderRadius: '8px',
-            background: isAccountMenuOpen ? 'rgba(255,255,255,0.07)' : 'transparent',
-            transition: 'background 0.15s ease',
-            minWidth: 0,
-            flex: isCollapsed ? undefined : 1
+            justifyContent: isCollapsed ? 'center' : 'space-between',
+            padding: isCollapsed ? '0 8px' : '0 14px',
+            borderBottom: '1px solid var(--line, rgba(255, 255, 255, 0.06))',
+            position: 'relative'
           }}
         >
-          {/* Lumeo logo mark */}
-          <div style={{
-            width: '26px', height: '26px', borderRadius: '7px',
-            background: 'linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            flexShrink: 0, boxShadow: '0 2px 8px rgba(37,99,235,0.4)'
-          }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M4 6h16"/><path d="M4 12h10"/>
-              <circle cx="18" cy="12" r="2.5" fill="white" stroke="none"/>
-              <path d="M4 18h14"/>
-            </svg>
-          </div>
-          {!isCollapsed && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '5px', minWidth: 0 }}>
-              <span style={{ fontSize: '0.88rem', fontWeight: '700', color: '#f1f5f9', letterSpacing: '-0.01em', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                Lumeo
-              </span>
-              <ChevronDown size={12} color="#64748b" style={{ flexShrink: 0, transform: isAccountMenuOpen ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s ease' }} />
+          {isCollapsed ? (
+            <button
+              type="button"
+              onClick={onToggleCollapse}
+              onMouseEnter={() => setHoveredTab('brand-toggle')}
+              onMouseLeave={() => setHoveredTab(null)}
+              title="Expandir barra lateral (⌘B)"
+              aria-label="Expandir barra lateral"
+              style={{
+                width: '36px',
+                height: '36px',
+                borderRadius: '8px',
+                background: hoveredTab === 'brand-toggle' ? 'rgba(128, 128, 128, 0.12)' : 'linear-gradient(135deg, #1d2433 0%, #0d121c 100%)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 180ms ease',
+                position: 'relative',
+                padding: 0
+              }}
+            >
+              {hoveredTab === 'brand-toggle' ? (
+                <PanelLeft size={18} strokeWidth={1.75} color="var(--accent, #0071e3)" />
+              ) : (
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M4 6h16" />
+                  <path d="M4 12h10" />
+                  <circle cx="18" cy="12" r="2.5" fill="#3b82f6" stroke="none" />
+                  <path d="M4 18h14" />
+                </svg>
+              )}
+              {hoveredTab === 'brand-toggle' && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: '46px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: '#1d1d1f',
+                    color: '#ffffff',
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    padding: '4px 9px',
+                    borderRadius: '6px',
+                    whiteSpace: 'nowrap',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                    pointerEvents: 'none',
+                    zIndex: 1000,
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }}
+                >
+                  Expandir barra lateral (⌘B)
+                </div>
+              )}
+            </button>
+          ) : (
+            <>
+              {/* Logo Brand Link */}
+              <div
+                onClick={() => setActiveTab('dashboard')}
+                title="Lumeo"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  cursor: 'pointer',
+                  minWidth: 0,
+                  textDecoration: 'none'
+                }}
+              >
+                {/* Lumeo 32px Icon */}
+                <div
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '8px',
+                    background: 'linear-gradient(135deg, #1d2433 0%, #0d121c 100%)',
+                    border: '1px solid rgba(255, 255, 255, 0.12)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.35)'
+                  }}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 6h16" />
+                    <path d="M4 12h10" />
+                    <circle cx="18" cy="12" r="2.5" fill="#3b82f6" stroke="none" />
+                    <path d="M4 18h14" />
+                  </svg>
+                </div>
+
+                {/* Brand text (only visible when expanded) */}
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    minWidth: 0
+                  }}
+                >
+                  <span
+                    style={{
+                      fontSize: '15px',
+                      fontWeight: 600,
+                      color: 'var(--text, #f5f5f7)',
+                      letterSpacing: '-0.02em',
+                      lineHeight: 1.2
+                    }}
+                  >
+                    Lumeo
+                  </span>
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      color: 'var(--text-3, #86868b)',
+                      letterSpacing: '-0.01em'
+                    }}
+                  >
+                    Inteligência Comercial
+                  </span>
+                </div>
+              </div>
+
+              {/* Toggle Panel Button */}
+              <button
+                type="button"
+                onClick={onToggleCollapse}
+                title="Recolher barra lateral (⌘B)"
+                aria-label="Recolher barra lateral"
+                style={{
+                  width: '28px',
+                  height: '28px',
+                  borderRadius: '7px',
+                  background: 'transparent',
+                  border: 'none',
+                  color: 'var(--text-2, #86868b)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  transition: 'background 150ms ease, color 150ms ease'
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.background = 'rgba(128, 128, 128, 0.12)';
+                  e.currentTarget.style.color = 'var(--text, #f5f5f7)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.background = 'transparent';
+                  e.currentTarget.style.color = 'var(--text-2, #86868b)';
+                }}
+              >
+                <PanelLeftClose size={18} strokeWidth={1.75} />
+              </button>
+            </>
+          )}
+        </div>
+
+        {/* Quick Search Button (⌘K) */}
+        <div style={{ padding: isCollapsed ? '10px 8px 6px' : '12px 14px 8px' }}>
+          {isCollapsed ? (
+            <div style={{ position: 'relative', display: 'flex', justifyContent: 'center' }}>
+              <button
+                type="button"
+                onClick={onOpenCommandPalette}
+                onMouseEnter={() => setHoveredTab('search')}
+                onMouseLeave={() => setHoveredTab(null)}
+                title="Pesquisar (⌘K)"
+                aria-label="Pesquisar (⌘K)"
+                style={{
+                  width: '48px',
+                  height: '38px',
+                  borderRadius: '10px',
+                  border: '1px solid var(--line, rgba(255, 255, 255, 0.08))',
+                  background: 'rgba(128, 128, 128, 0.06)',
+                  color: 'var(--text-2, #86868b)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  transition: 'background 150ms ease, color 150ms ease'
+                }}
+              >
+                <Search size={18} strokeWidth={1.75} />
+              </button>
+
+              {/* Tooltip on hover */}
+              {hoveredTab === 'search' && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: '56px',
+                    top: '50%',
+                    transform: 'translateY(-50%)',
+                    background: '#1d1d1f',
+                    color: '#ffffff',
+                    fontSize: '11px',
+                    fontWeight: 500,
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    whiteSpace: 'nowrap',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                    pointerEvents: 'none',
+                    zIndex: 1000,
+                    border: '1px solid rgba(255,255,255,0.1)'
+                  }}
+                >
+                  Pesquisar (⌘K)
+                </div>
+              )}
+            </div>
+          ) : (
+            <div
+              onClick={onOpenCommandPalette}
+              title="Pesquisar (⌘K)"
+              style={{
+                width: '100%',
+                height: '36px',
+                padding: '0 10px',
+                borderRadius: '10px',
+                border: '1px solid var(--line, rgba(255, 255, 255, 0.08))',
+                background: 'rgba(128, 128, 128, 0.06)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                cursor: 'pointer',
+                color: 'var(--text-2, #86868b)',
+                fontSize: '13px',
+                transition: 'background 150ms ease, border-color 150ms ease'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Search size={15} strokeWidth={1.75} />
+                <span>Pesquisar...</span>
+              </div>
+              <kbd
+                style={{
+                  fontSize: '10px',
+                  fontFamily: 'inherit',
+                  padding: '2px 5px',
+                  borderRadius: '5px',
+                  background: 'rgba(128, 128, 128, 0.14)',
+                  color: 'var(--text-2, #86868b)'
+                }}
+              >
+                ⌘K
+              </kbd>
             </div>
           )}
         </div>
 
-        {!isCollapsed && (
-          <button
-            type="button"
-            onClick={onToggleCollapse}
-            title="Recolher menu"
-            style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer', padding: '4px', borderRadius: '6px', display: 'flex', flexShrink: 0 }}
-            onMouseEnter={(e) => (e.currentTarget.style.color = '#94a3b8')}
-            onMouseLeave={(e) => (e.currentTarget.style.color = '#475569')}
-          >
-            <ChevronsLeft size={15} />
-          </button>
-        )}
-      </div>
-
-      {/* Search shortcut */}
-      {!isCollapsed ? (
-        <div
-          onClick={onOpenCommandPalette}
-          title="Pesquisar (⌘K)"
-          style={{ position: 'relative', marginBottom: '20px', cursor: 'pointer' }}
-        >
-          <Search size={13} color="#475569" style={{ position: 'absolute', left: '10px', top: '50%', transform: 'translateY(-50%)' }} />
-          <div style={{
-            width: '100%', padding: '7px 36px 7px 30px',
-            fontSize: '0.78rem', background: 'rgba(255,255,255,0.04)',
-            border: '1px solid rgba(255,255,255,0.07)', borderRadius: '8px',
-            color: '#64748b', cursor: 'pointer', userSelect: 'none'
-          }}>
-            Pesquisar...
-          </div>
-          <span style={{
-            position: 'absolute', right: '8px', top: '50%', transform: 'translateY(-50%)',
-            fontSize: '0.62rem', color: '#475569',
-            border: '1px solid rgba(255,255,255,0.07)',
-            padding: '1px 4px', borderRadius: '4px', background: '#111214'
-          }}>⌘K</span>
-        </div>
-      ) : (
-        <button
-          type="button"
-          onClick={onOpenCommandPalette}
-          title="Pesquisar (⌘K)"
+        {/* Navigation list */}
+        <nav
           style={{
-            width: '100%', height: '36px', borderRadius: '8px',
-            border: '1px solid rgba(255,255,255,0.07)',
-            background: 'rgba(255,255,255,0.04)',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            marginBottom: '20px', cursor: 'pointer', color: '#475569'
+            flex: 1,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: isCollapsed ? 'center' : 'stretch',
+            gap: isCollapsed ? '6px' : '2px',
+            padding: isCollapsed ? '8px 0' : '8px 10px',
+            overflowY: 'auto',
+            overflowX: 'hidden'
           }}
         >
-          <Search size={14} />
-        </button>
-      )}
+          {mainNavItems.map((item) => {
+            const isActive = activeTab === item.tab;
+            const Icon = item.icon;
+            const isHovered = hoveredTab === item.tab;
 
-      {/* ── MENU PRINCIPAL (5 itens core) ── */}
-      <nav style={{ display: 'flex', flexDirection: 'column', gap: '2px', flex: 1 }}>
-        {!isCollapsed && (
-          <p style={{ fontSize: '0.65rem', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#334155', padding: '0 8px 6px', margin: 0 }}>
-            Principal
-          </p>
-        )}
-
-        {navItem('dashboard', 'Dashboard', LayoutDashboard)}
-
-        {canSeeLeads && navItem('kanban', 'Leads', Kanban)}
-
-        {canSeeAnalytics && navItem('scanner', 'Prospecção', ScanSearch)}
-
-        {canSeeCompanies && navItem('companies', 'Clientes', Building2)}
-
-        {canSeeAgenda && navItem('agenda', 'Agenda', CalendarDays)}
-
-        {/* Separador Admin */}
-        {isAdmin && (
-          <>
-            <div style={{ height: '1px', background: 'rgba(255,255,255,0.05)', margin: '10px 4px' }} />
-            {!isCollapsed && (
-              <p style={{ fontSize: '0.65rem', fontWeight: '600', letterSpacing: '0.08em', textTransform: 'uppercase', color: '#334155', padding: '0 8px 6px', margin: 0 }}>
-                Admin
-              </p>
-            )}
-            {navItem('users', 'Equipe', Users, pendingUsersCount)}
-            {navItem('audit', 'Auditoria', ShieldCheck)}
-          </>
-        )}
-      </nav>
-
-      {/* ── FOOTER ── */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', borderTop: '1px solid rgba(255,255,255,0.06)', paddingTop: '12px' }}>
-        <button
-          type="button"
-          onClick={onOpenHelp}
-          title="Suporte"
-          style={navItemStyle(false, isCollapsed)}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-        >
-          <HelpCircle size={16} style={{ flexShrink: 0 }} />
-          {!isCollapsed && <span>Suporte</span>}
-        </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('audit')}
-          title="Configurações"
-          style={navItemStyle(false, isCollapsed)}
-          onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
-          onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-        >
-          <Settings size={16} style={{ flexShrink: 0 }} />
-          {!isCollapsed && <span>Configurações</span>}
-        </button>
-
-        {/* Expand toggle (collapsed state) */}
-        {isCollapsed && (
-          <button
-            type="button"
-            onClick={onToggleCollapse}
-            title="Expandir"
-            style={{ ...navItemStyle(false, true), marginTop: '4px' }}
-            onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.06)')}
-            onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
-          >
-            <ChevronsRight size={15} />
-          </button>
-        )}
-      </div>
-
-      {/* ── ACCOUNT MENU POPOVER ── */}
-      {isAccountMenuOpen && (
-        <>
-          <div
-            onClick={() => setIsAccountMenuOpen(false)}
-            style={{ position: 'fixed', inset: 0, zIndex: 9998 }}
-          />
-          <div style={{
-            position: 'fixed',
-            top: isCollapsed ? '16px' : '60px',
-            left: isCollapsed ? '72px' : '12px',
-            width: '280px',
-            background: '#111316',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: '14px',
-            boxShadow: '0 20px 48px rgba(0,0,0,0.8)',
-            zIndex: 9999,
-            overflow: 'hidden',
-          }}>
-            {/* Header */}
-            <div style={{ padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 6px #10b981', flexShrink: 0 }} />
-              <span style={{ fontSize: '0.82rem', fontWeight: '700', color: '#f1f5f9' }}>Workspace</span>
-            </div>
-
-            {/* Active account */}
-            <div style={{ padding: '12px 14px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-              <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#475569', fontWeight: '700', marginBottom: '8px' }}>Conta ativa</div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <div style={{
-                  width: '34px', height: '34px', borderRadius: '50%',
-                  background: activeTheme.bg, border: `2px solid ${activeTheme.border}`,
-                  color: activeTheme.text, display: 'flex', alignItems: 'center',
-                  justifyContent: 'center', fontWeight: '700', fontSize: '0.82rem', flexShrink: 0
-                }}>
-                  {(activeUser?.name || 'U').charAt(0).toUpperCase()}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontWeight: '600', fontSize: '0.84rem', color: '#f1f5f9', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {activeUser?.name || 'Usuário'}
-                  </div>
-                  <div style={{ fontSize: '0.7rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                    {activeUser?.email}
-                  </div>
-                </div>
-                <span style={{
-                  fontSize: '0.6rem', fontWeight: '700', padding: '2px 6px',
-                  borderRadius: '4px', background: activeTheme.bg, color: activeTheme.text,
-                  textTransform: 'uppercase', flexShrink: 0
-                }}>
-                  {activeUser?.role || 'User'}
-                </span>
-              </div>
-            </div>
-
-            {/* Other accounts */}
-            {otherAccounts.length > 0 && (
-              <div style={{ padding: '8px 6px', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
-                <div style={{ fontSize: '0.65rem', textTransform: 'uppercase', letterSpacing: '0.06em', color: '#475569', fontWeight: '700', padding: '4px 8px', marginBottom: '4px' }}>
-                  Alternar conta
-                </div>
-                {otherAccounts.map((acc) => {
-                  const accTheme = getUserTheme(acc.user.id, acc.user.name);
-                  return (
-                    <div
-                      key={acc.user.email}
-                      onClick={() => handleSwitchAccount(acc.user.email)}
-                      style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '7px 8px', borderRadius: '8px', cursor: 'pointer', gap: '8px', transition: 'background 0.15s ease' }}
-                      onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
-                      onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+            if (isCollapsed) {
+              return (
+                <div key={item.tab} style={{ position: 'relative' }}>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab(item.tab)}
+                    onMouseEnter={() => setHoveredTab(item.tab)}
+                    onMouseLeave={() => setHoveredTab(null)}
+                    aria-current={isActive ? 'page' : undefined}
+                    aria-label={item.label}
+                    style={{
+                      width: '48px',
+                      height: '52px',
+                      borderRadius: '10px',
+                      background: isActive
+                        ? 'rgba(0, 113, 227, 0.12)'
+                        : isHovered
+                        ? 'rgba(128, 128, 128, 0.08)'
+                        : 'transparent',
+                      border: 'none',
+                      color: isActive ? 'var(--accent, #0071e3)' : 'var(--text-2, #86868b)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '3px',
+                      cursor: 'pointer',
+                      padding: 0,
+                      position: 'relative',
+                      transition: 'background 150ms ease, color 150ms ease'
+                    }}
+                  >
+                    <Icon size={20} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+                    <span
+                      style={{
+                        fontSize: '10px',
+                        fontWeight: 500,
+                        lineHeight: 1,
+                        letterSpacing: '-0.01em',
+                        textAlign: 'center',
+                        maxWidth: '44px',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0, flex: 1 }}>
-                        <div style={{
-                          width: '26px', height: '26px', borderRadius: '50%',
-                          background: accTheme.bg, border: `1px solid ${accTheme.border}`,
-                          color: accTheme.text, display: 'flex', alignItems: 'center',
-                          justifyContent: 'center', fontSize: '0.7rem', fontWeight: '700', flexShrink: 0
-                        }}>
-                          {(acc.user.name || 'U').charAt(0).toUpperCase()}
-                        </div>
-                        <div style={{ minWidth: 0 }}>
-                          <div style={{ fontSize: '0.78rem', fontWeight: '600', color: '#e2e8f0', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{acc.user.name}</div>
-                          <div style={{ fontSize: '0.66rem', color: '#64748b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{acc.user.email}</div>
-                        </div>
-                      </div>
+                      {item.label}
+                    </span>
+                    {item.badge != null && item.badge > 0 && (
+                      <span
+                        style={{
+                          position: 'absolute',
+                          top: '4px',
+                          right: '6px',
+                          width: '7px',
+                          height: '7px',
+                          borderRadius: '50%',
+                          background: '#ff3b30'
+                        }}
+                      />
+                    )}
+                  </button>
+
+                  {/* Tooltip to the right on hover (ClickUp reference) */}
+                  {isHovered && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        left: '56px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: '#1d1d1f',
+                        color: '#ffffff',
+                        fontSize: '11px',
+                        fontWeight: 500,
+                        padding: '4px 9px',
+                        borderRadius: '6px',
+                        whiteSpace: 'nowrap',
+                        boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                        pointerEvents: 'none',
+                        zIndex: 1000,
+                        border: '1px solid rgba(255,255,255,0.1)'
+                      }}
+                    >
+                      {item.label}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            // Expanded mode item
+            return (
+              <button
+                key={item.tab}
+                type="button"
+                onClick={() => setActiveTab(item.tab)}
+                aria-current={isActive ? 'page' : undefined}
+                style={{
+                  width: '100%',
+                  height: '40px',
+                  borderRadius: '10px',
+                  background: isActive ? 'rgba(0, 113, 227, 0.12)' : 'transparent',
+                  border: 'none',
+                  color: isActive ? 'var(--accent, #0071e3)' : 'var(--text-2, #86868b)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '0 12px',
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  transition: 'background 150ms ease, color 150ms ease'
+                }}
+                onMouseEnter={(e) => {
+                  if (!isActive) e.currentTarget.style.background = 'rgba(128, 128, 128, 0.08)';
+                }}
+                onMouseLeave={(e) => {
+                  if (!isActive) e.currentTarget.style.background = 'transparent';
+                }}
+              >
+                <Icon size={20} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+                <span
+                  style={{
+                    fontSize: '13.5px',
+                    fontWeight: isActive ? 600 : 500,
+                    flex: 1,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis'
+                  }}
+                >
+                  {item.label}
+                </span>
+                {item.badge != null && item.badge > 0 && (
+                  <span
+                    style={{
+                      background: 'var(--danger, #ff3b30)',
+                      color: '#ffffff',
+                      fontSize: '10px',
+                      fontWeight: 700,
+                      padding: '1px 6px',
+                      borderRadius: '10px'
+                    }}
+                  >
+                    {item.badge}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+
+          {/* Admin section if present */}
+          {adminNavItems.length > 0 && (
+            <>
+              <div
+                style={{
+                  height: '1px',
+                  background: 'var(--line, rgba(255, 255, 255, 0.06))',
+                  margin: isCollapsed ? '8px 4px' : '10px 6px',
+                  width: isCollapsed ? '32px' : 'auto'
+                }}
+              />
+              {!isCollapsed && (
+                <div
+                  style={{
+                    fontSize: '10px',
+                    fontWeight: 600,
+                    letterSpacing: '0.06em',
+                    textTransform: 'uppercase',
+                    color: 'var(--text-3, #86868b)',
+                    padding: '2px 12px 4px'
+                  }}
+                >
+                  Administração
+                </div>
+              )}
+              {adminNavItems.map((item) => {
+                const isActive = activeTab === item.tab;
+                const Icon = item.icon;
+                const isHovered = hoveredTab === item.tab;
+
+                if (isCollapsed) {
+                  return (
+                    <div key={item.tab} style={{ position: 'relative' }}>
                       <button
                         type="button"
-                        onClick={(e) => handleRemoveAccount(e, acc.user.email)}
-                        title="Remover"
-                        style={{ background: 'none', border: 'none', color: '#475569', cursor: 'pointer', padding: '3px', borderRadius: '4px', display: 'flex' }}
-                        onMouseEnter={(e) => (e.currentTarget.style.color = '#ef4444')}
-                        onMouseLeave={(e) => (e.currentTarget.style.color = '#475569')}
+                        onClick={() => setActiveTab(item.tab)}
+                        onMouseEnter={() => setHoveredTab(item.tab)}
+                        onMouseLeave={() => setHoveredTab(null)}
+                        aria-current={isActive ? 'page' : undefined}
+                        aria-label={item.label}
+                        style={{
+                          width: '48px',
+                          height: '52px',
+                          borderRadius: '10px',
+                          background: isActive
+                            ? 'rgba(0, 113, 227, 0.12)'
+                            : isHovered
+                            ? 'rgba(128, 128, 128, 0.08)'
+                            : 'transparent',
+                          border: 'none',
+                          color: isActive ? 'var(--accent, #0071e3)' : 'var(--text-2, #86868b)',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '3px',
+                          cursor: 'pointer',
+                          padding: 0,
+                          position: 'relative',
+                          transition: 'background 150ms ease, color 150ms ease'
+                        }}
                       >
-                        <X size={12} />
+                        <Icon size={20} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+                        <span
+                          style={{
+                            fontSize: '10px',
+                            fontWeight: 500,
+                            lineHeight: 1,
+                            letterSpacing: '-0.01em',
+                            textAlign: 'center',
+                            maxWidth: '44px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap'
+                          }}
+                        >
+                          {item.label}
+                        </span>
                       </button>
+
+                      {isHovered && (
+                        <div
+                          style={{
+                            position: 'absolute',
+                            left: '56px',
+                            top: '50%',
+                            transform: 'translateY(-50%)',
+                            background: '#1d1d1f',
+                            color: '#ffffff',
+                            fontSize: '11px',
+                            fontWeight: 500,
+                            padding: '4px 9px',
+                            borderRadius: '6px',
+                            whiteSpace: 'nowrap',
+                            boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                            pointerEvents: 'none',
+                            zIndex: 1000,
+                            border: '1px solid rgba(255,255,255,0.1)'
+                          }}
+                        >
+                          {item.label}
+                        </div>
+                      )}
                     </div>
                   );
-                })}
+                }
+
+                return (
+                  <button
+                    key={item.tab}
+                    type="button"
+                    onClick={() => setActiveTab(item.tab)}
+                    aria-current={isActive ? 'page' : undefined}
+                    style={{
+                      width: '100%',
+                      height: '40px',
+                      borderRadius: '10px',
+                      background: isActive ? 'rgba(0, 113, 227, 0.12)' : 'transparent',
+                      border: 'none',
+                      color: isActive ? 'var(--accent, #0071e3)' : 'var(--text-2, #86868b)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '0 12px',
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      transition: 'background 150ms ease, color 150ms ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!isActive) e.currentTarget.style.background = 'rgba(128, 128, 128, 0.08)';
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) e.currentTarget.style.background = 'transparent';
+                    }}
+                  >
+                    <Icon size={20} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: '13.5px', fontWeight: isActive ? 600 : 500, flex: 1 }}>{item.label}</span>
+                  </button>
+                );
+              })}
+            </>
+          )}
+        </nav>
+
+        {/* ── Base do Trilho (ClickUp Reference: Convidar, Ajuda, Avatar) ── */}
+        <div
+          style={{
+            borderTop: '1px solid var(--line, rgba(255, 255, 255, 0.06))',
+            padding: isCollapsed ? '10px 0' : '10px 10px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: isCollapsed ? 'center' : 'stretch',
+            gap: '6px'
+          }}
+        >
+          {/* Convidar usuário */}
+          <div style={{ position: 'relative' }}>
+            <button
+              type="button"
+              onClick={() => setIsInviteModalOpen(true)}
+              onMouseEnter={() => setHoveredTab('invite')}
+              onMouseLeave={() => setHoveredTab(null)}
+              title="Convidar membro"
+              aria-label="Convidar membro"
+              style={{
+                width: isCollapsed ? '48px' : '100%',
+                height: isCollapsed ? '44px' : '36px',
+                borderRadius: '10px',
+                border: 'none',
+                background: 'transparent',
+                color: 'var(--text-2, #86868b)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: isCollapsed ? 'center' : 'flex-start',
+                gap: '10px',
+                padding: isCollapsed ? 0 : '0 12px',
+                cursor: 'pointer',
+                transition: 'background 150ms ease, color 150ms ease'
+              }}
+            >
+              <UserPlus size={20} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+              {!isCollapsed && <span style={{ fontSize: '13px', fontWeight: 500 }}>Convidar membro</span>}
+            </button>
+            {isCollapsed && hoveredTab === 'invite' && (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: '56px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: '#1d1d1f',
+                  color: '#ffffff',
+                  fontSize: '11px',
+                  fontWeight: 500,
+                  padding: '4px 9px',
+                  borderRadius: '6px',
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                  pointerEvents: 'none',
+                  zIndex: 1000,
+                  border: '1px solid rgba(255,255,255,0.1)'
+                }}
+              >
+                Convidar membro
               </div>
             )}
+          </div>
 
-            {/* Actions */}
-            <div style={{ padding: '6px' }}>
-              <button
-                type="button"
-                onClick={() => { setIsAccountMenuOpen(false); setIsAddAccountModalOpen(true); }}
-                style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px 10px', borderRadius: '8px', border: 'none', background: 'transparent', color: '#60a5fa', fontSize: '0.78rem', fontWeight: '600', cursor: 'pointer' }}
-                onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(59,130,246,0.08)')}
-                onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+          {/* Ajuda / Suporte */}
+          <div style={{ position: 'relative' }}>
+            <button
+              type="button"
+              onClick={onOpenHelp}
+              onMouseEnter={() => setHoveredTab('help')}
+              onMouseLeave={() => setHoveredTab(null)}
+              title="Ajuda & Suporte"
+              aria-label="Ajuda & Suporte"
+              style={{
+                width: isCollapsed ? '48px' : '100%',
+                height: isCollapsed ? '44px' : '36px',
+                borderRadius: '10px',
+                border: 'none',
+                background: 'transparent',
+                color: 'var(--text-2, #86868b)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: isCollapsed ? 'center' : 'flex-start',
+                gap: '10px',
+                padding: isCollapsed ? 0 : '0 12px',
+                cursor: 'pointer',
+                transition: 'background 150ms ease, color 150ms ease'
+              }}
+            >
+              <HelpCircle size={20} strokeWidth={1.75} style={{ flexShrink: 0 }} />
+              {!isCollapsed && <span style={{ fontSize: '13px', fontWeight: 500 }}>Ajuda</span>}
+            </button>
+            {isCollapsed && hoveredTab === 'help' && (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: '56px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: '#1d1d1f',
+                  color: '#ffffff',
+                  fontSize: '11px',
+                  fontWeight: 500,
+                  padding: '4px 9px',
+                  borderRadius: '6px',
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                  pointerEvents: 'none',
+                  zIndex: 1000,
+                  border: '1px solid rgba(255,255,255,0.1)'
+                }}
               >
-                <UserPlus size={14} /><span>Adicionar conta</span>
-              </button>
+                Ajuda & Suporte
+              </div>
+            )}
+          </div>
 
-              {onLogout && (
+          {/* User Profile Avatar / Switcher */}
+          <div style={{ position: 'relative', marginTop: '2px' }}>
+            <button
+              type="button"
+              onClick={() => setIsAccountMenuOpen(!isAccountMenuOpen)}
+              onMouseEnter={() => setHoveredTab('profile')}
+              onMouseLeave={() => setHoveredTab(null)}
+              title={activeUser?.name || 'Perfil'}
+              aria-label="Perfil de usuário e workspace"
+              style={{
+                width: isCollapsed ? '48px' : '100%',
+                height: isCollapsed ? '44px' : '44px',
+                borderRadius: '10px',
+                border: 'none',
+                background: isAccountMenuOpen ? 'rgba(128, 128, 128, 0.12)' : 'transparent',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: isCollapsed ? 'center' : 'space-between',
+                padding: isCollapsed ? 0 : '0 8px',
+                cursor: 'pointer',
+                transition: 'background 150ms ease'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                {/* Circular Avatar with Initials */}
+                <div
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    background: activeTheme.bg,
+                    border: `1.5px solid ${activeTheme.border}`,
+                    color: activeTheme.text,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 600,
+                    fontSize: '12px',
+                    flexShrink: 0
+                  }}
+                >
+                  {userInitials}
+                </div>
+
+                {!isCollapsed && (
+                  <div style={{ textAlign: 'left', minWidth: 0, flex: 1 }}>
+                    <div
+                      style={{
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: 'var(--text, #f5f5f7)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {activeUser?.name || 'Usuário'}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '11px',
+                        color: 'var(--text-3, #86868b)',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap'
+                      }}
+                    >
+                      {activeUser?.role || 'Lumeo'}
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              {!isCollapsed && (
+                <ChevronDown
+                  size={14}
+                  color="var(--text-3, #86868b)"
+                  style={{
+                    transform: isAccountMenuOpen ? 'rotate(180deg)' : 'none',
+                    transition: 'transform 200ms ease'
+                  }}
+                />
+              )}
+            </button>
+
+            {isCollapsed && hoveredTab === 'profile' && !isAccountMenuOpen && (
+              <div
+                style={{
+                  position: 'absolute',
+                  left: '56px',
+                  top: '50%',
+                  transform: 'translateY(-50%)',
+                  background: '#1d1d1f',
+                  color: '#ffffff',
+                  fontSize: '11px',
+                  fontWeight: 500,
+                  padding: '4px 9px',
+                  borderRadius: '6px',
+                  whiteSpace: 'nowrap',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.4)',
+                  pointerEvents: 'none',
+                  zIndex: 1000,
+                  border: '1px solid rgba(255,255,255,0.1)'
+                }}
+              >
+                {activeUser?.name || 'Perfil'}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── ACCOUNT POPOVER MODAL ── */}
+        {isAccountMenuOpen && (
+          <>
+            <div
+              onClick={() => setIsAccountMenuOpen(false)}
+              style={{ position: 'fixed', inset: 0, zIndex: 9998 }}
+            />
+            <div
+              style={{
+                position: 'fixed',
+                bottom: '16px',
+                left: isCollapsed ? '72px' : '248px',
+                width: '280px',
+                background: 'var(--surface, #1c1c1e)',
+                border: '1px solid var(--line, rgba(255,255,255,0.12))',
+                borderRadius: '16px',
+                boxShadow: '0 20px 48px rgba(0, 0, 0, 0.65)',
+                zIndex: 9999,
+                overflow: 'hidden',
+                animation: 'popIn 180ms cubic-bezier(0.32, 0.72, 0, 1)'
+              }}
+            >
+              {/* Header */}
+              <div
+                style={{
+                  padding: '12px 16px',
+                  borderBottom: '1px solid var(--line, rgba(255,255,255,0.08))',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px'
+                }}
+              >
+                <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#34c759' }} />
+                <span style={{ fontSize: '13px', fontWeight: 600, color: 'var(--text, #f5f5f7)' }}>Lumeo Workspace</span>
+              </div>
+
+              {/* Active user details */}
+              <div style={{ padding: '14px 16px', borderBottom: '1px solid var(--line, rgba(255,255,255,0.08))' }}>
+                <div style={{ fontSize: '11px', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-3, #86868b)', fontWeight: 600, marginBottom: '8px' }}>
+                  Conta Conectada
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <div
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '50%',
+                      background: activeTheme.bg,
+                      border: `1.5px solid ${activeTheme.border}`,
+                      color: activeTheme.text,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontWeight: 600,
+                      fontSize: '13px'
+                    }}
+                  >
+                    {userInitials}
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--text, #f5f5f7)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {activeUser?.name || 'Usuário'}
+                    </div>
+                    <div style={{ fontSize: '12px', color: 'var(--text-2, #86868b)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {activeUser?.email}
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Other saved accounts */}
+              {otherAccounts.length > 0 && (
+                <div style={{ padding: '8px', borderBottom: '1px solid var(--line, rgba(255,255,255,0.08))' }}>
+                  <div style={{ fontSize: '10px', textTransform: 'uppercase', letterSpacing: '0.04em', color: 'var(--text-3, #86868b)', fontWeight: 600, padding: '4px 8px' }}>
+                    Alternar Conta
+                  </div>
+                  {otherAccounts.map((acc) => {
+                    const accTheme = getUserTheme(acc.user.id, acc.user.name);
+                    return (
+                      <div
+                        key={acc.user.email}
+                        onClick={() => handleSwitchAccount(acc.user.email)}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '8px',
+                          borderRadius: '8px',
+                          cursor: 'pointer',
+                          gap: '8px'
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', minWidth: 0 }}>
+                          <div
+                            style={{
+                              width: '26px',
+                              height: '26px',
+                              borderRadius: '50%',
+                              background: accTheme.bg,
+                              color: accTheme.text,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              fontSize: '11px',
+                              fontWeight: 600
+                            }}
+                          >
+                            {(acc.user.name || 'U')[0].toUpperCase()}
+                          </div>
+                          <span style={{ fontSize: '13px', color: 'var(--text, #f5f5f7)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                            {acc.user.name}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => handleRemoveAccount(e, acc.user.email)}
+                          title="Remover"
+                          style={{ background: 'none', border: 'none', color: 'var(--text-3, #86868b)', cursor: 'pointer', padding: '2px' }}
+                        >
+                          <X size={12} />
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Action buttons */}
+              <div style={{ padding: '6px' }}>
                 <button
                   type="button"
-                  onClick={() => { setIsAccountMenuOpen(false); onLogout(); }}
-                  style={{ display: 'flex', alignItems: 'center', gap: '8px', width: '100%', padding: '8px 10px', borderRadius: '8px', border: 'none', background: 'transparent', color: '#f87171', fontSize: '0.78rem', fontWeight: '600', cursor: 'pointer' }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(239,68,68,0.08)')}
-                  onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
+                  onClick={() => {
+                    setIsAccountMenuOpen(false);
+                    setIsAddAccountModalOpen(true);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    width: '100%',
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: 'transparent',
+                    color: 'var(--accent, #0071e3)',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    cursor: 'pointer'
+                  }}
                 >
-                  <LogOut size={14} /><span>Sair</span>
+                  <UserPlus size={16} strokeWidth={1.75} />
+                  <span>Adicionar outra conta</span>
                 </button>
-              )}
-            </div>
-          </div>
-        </>
-      )}
 
-      {/* ── ADD ACCOUNT MODAL ── */}
-      {isAddAccountModalOpen && (
+                {onLogout && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsAccountMenuOpen(false);
+                      onLogout();
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      width: '100%',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: 'transparent',
+                      color: 'var(--danger, #ff3b30)',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    <LogOut size={16} strokeWidth={1.75} />
+                    <span>Sair da conta</span>
+                  </button>
+                )}
+              </div>
+            </div>
+          </>
+        )}
+      </aside>
+
+      {/* ── MOBILE TAB BAR (<768px: Translucent bottom navigation bar) ── */}
+      <nav
+        className="lumeo-mobile-tabbar"
+        style={{
+          position: 'fixed',
+          bottom: 0,
+          left: 0,
+          right: 0,
+          height: '60px',
+          background: 'var(--surface-glass, rgba(17, 18, 22, 0.9))',
+          backdropFilter: 'saturate(180%) blur(20px)',
+          WebkitBackdropFilter: 'saturate(180%) blur(20px)',
+          borderTop: '1px solid var(--line, rgba(255, 255, 255, 0.1))',
+          display: 'none',
+          alignItems: 'center',
+          justifyContent: 'space-around',
+          zIndex: 990,
+          padding: '0 8px'
+        }}
+      >
+        {mainNavItems.slice(0, 5).map((item) => {
+          const isActive = activeTab === item.tab;
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.tab}
+              type="button"
+              onClick={() => setActiveTab(item.tab)}
+              aria-current={isActive ? 'page' : undefined}
+              style={{
+                flex: 1,
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '2px',
+                background: 'transparent',
+                border: 'none',
+                color: isActive ? 'var(--accent, #0071e3)' : 'var(--text-2, #86868b)',
+                cursor: 'pointer',
+                padding: '4px 0'
+              }}
+            >
+              <Icon size={20} strokeWidth={1.75} />
+              <span style={{ fontSize: '10px', fontWeight: isActive ? 600 : 500, lineHeight: 1 }}>{item.label}</span>
+            </button>
+          );
+        })}
+      </nav>
+
+      {/* ── MODAL: CONVIDAR MEMBRO ── */}
+      {isInviteModalOpen && (
         <div
-          onClick={() => setIsAddAccountModalOpen(false)}
-          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.72)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 10000, padding: '20px' }}
+          onClick={() => setIsInviteModalOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.45)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000,
+            padding: '16px'
+          }}
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            style={{ width: '100%', maxWidth: '400px', background: '#111316', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', padding: '24px', boxShadow: '0 24px 64px rgba(0,0,0,0.85)' }}
+            style={{
+              width: '100%',
+              maxWidth: '420px',
+              background: 'var(--surface, #1c1c1e)',
+              borderRadius: '20px',
+              border: '1px solid var(--line, rgba(255,255,255,0.12))',
+              padding: '24px',
+              boxShadow: '0 24px 64px rgba(0,0,0,0.5)'
+            }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-              <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '700', color: '#f1f5f9' }}>Conectar outra conta</h3>
-              <button type="button" onClick={() => setIsAddAccountModalOpen(false)} style={{ background: 'none', border: 'none', color: '#64748b', cursor: 'pointer', padding: '4px', display: 'flex' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 600, color: 'var(--text, #f5f5f7)' }}>
+                Convidar membro para o Lumeo
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsInviteModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-2, #86868b)', cursor: 'pointer', padding: '4px' }}
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {inviteSuccess ? (
+              <div
+                style={{
+                  padding: '12px',
+                  borderRadius: '12px',
+                  background: 'rgba(52, 199, 89, 0.12)',
+                  color: 'var(--ok, #34c759)',
+                  fontSize: '13px',
+                  textAlign: 'center',
+                  fontWeight: 500
+                }}
+              >
+                Convite enviado com sucesso!
+              </div>
+            ) : (
+              <form onSubmit={handleSendInvite} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--text-2, #86868b)', marginBottom: '6px' }}>
+                    E-mail do novo membro
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                    placeholder="colega@suaempresa.com"
+                    style={{
+                      width: '100%',
+                      height: '42px',
+                      borderRadius: '10px',
+                      border: '1px solid var(--line, rgba(255,255,255,0.12))',
+                      background: 'var(--surface-2, #2c2c2e)',
+                      color: 'var(--text, #f5f5f7)',
+                      padding: '0 12px',
+                      fontSize: '14px',
+                      outline: 'none',
+                      boxSizing: 'border-box'
+                    }}
+                  />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '4px' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsInviteModalOpen(false)}
+                    style={{
+                      height: '38px',
+                      padding: '0 16px',
+                      borderRadius: '10px',
+                      background: 'rgba(128, 128, 128, 0.12)',
+                      border: 'none',
+                      color: 'var(--text, #f5f5f7)',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="submit"
+                    style={{
+                      height: '38px',
+                      padding: '0 18px',
+                      borderRadius: '10px',
+                      background: 'var(--accent, #0071e3)',
+                      border: 'none',
+                      color: '#ffffff',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Enviar Convite
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* ── MODAL: CONECTAR OUTRA CONTA ── */}
+      {isAddAccountModalOpen && (
+        <div
+          onClick={() => setIsAddAccountModalOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            background: 'rgba(0, 0, 0, 0.45)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            zIndex: 10000,
+            padding: '16px'
+          }}
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '400px',
+              background: 'var(--surface, #1c1c1e)',
+              borderRadius: '20px',
+              border: '1px solid var(--line, rgba(255,255,255,0.12))',
+              padding: '24px',
+              boxShadow: '0 24px 64px rgba(0,0,0,0.5)'
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+              <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 600, color: 'var(--text, #f5f5f7)' }}>
+                Conectar outra conta
+              </h3>
+              <button
+                type="button"
+                onClick={() => setIsAddAccountModalOpen(false)}
+                style={{ background: 'none', border: 'none', color: 'var(--text-2, #86868b)', cursor: 'pointer', padding: '4px' }}
+              >
                 <X size={18} />
               </button>
             </div>
 
             {addError && (
-              <div style={{ padding: '10px 12px', borderRadius: '8px', background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.25)', color: '#f87171', fontSize: '0.8rem', marginBottom: '16px' }}>
+              <div
+                style={{
+                  padding: '10px 12px',
+                  borderRadius: '10px',
+                  background: 'rgba(255, 59, 48, 0.12)',
+                  border: '1px solid rgba(255, 59, 48, 0.25)',
+                  color: 'var(--danger, #ff3b30)',
+                  fontSize: '12px',
+                  marginBottom: '14px'
+                }}
+              >
                 {addError}
               </div>
             )}
 
             <form onSubmit={handleAddAccountSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '600', color: '#94a3b8', marginBottom: '6px' }}>E-mail *</label>
-                <input type="email" required value={addEmail} onChange={(e) => setAddEmail(e.target.value)} placeholder="email@empresa.com" className="input" style={{ width: '100%' }} />
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--text-2, #86868b)', marginBottom: '6px' }}>
+                  E-mail
+                </label>
+                <input
+                  type="email"
+                  required
+                  value={addEmail}
+                  onChange={(e) => setAddEmail(e.target.value)}
+                  placeholder="usuario@empresa.com"
+                  style={{
+                    width: '100%',
+                    height: '42px',
+                    borderRadius: '10px',
+                    border: '1px solid var(--line, rgba(255,255,255,0.12))',
+                    background: 'var(--surface-2, #2c2c2e)',
+                    color: 'var(--text, #f5f5f7)',
+                    padding: '0 12px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '600', color: '#94a3b8', marginBottom: '6px' }}>Senha *</label>
-                <input type="password" required value={addPassword} onChange={(e) => setAddPassword(e.target.value)} placeholder="Sua senha" className="input" style={{ width: '100%' }} />
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: 500, color: 'var(--text-2, #86868b)', marginBottom: '6px' }}>
+                  Senha
+                </label>
+                <input
+                  type="password"
+                  required
+                  value={addPassword}
+                  onChange={(e) => setAddPassword(e.target.value)}
+                  placeholder="Sua senha"
+                  style={{
+                    width: '100%',
+                    height: '42px',
+                    borderRadius: '10px',
+                    border: '1px solid var(--line, rgba(255,255,255,0.12))',
+                    background: 'var(--surface-2, #2c2c2e)',
+                    color: 'var(--text, #f5f5f7)',
+                    padding: '0 12px',
+                    fontSize: '14px',
+                    outline: 'none',
+                    boxSizing: 'border-box'
+                  }}
+                />
               </div>
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '10px', paddingTop: '4px' }}>
-                <button type="button" onClick={() => setIsAddAccountModalOpen(false)} className="btn btn-secondary" disabled={addLoading}>
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', paddingTop: '4px' }}>
+                <button
+                  type="button"
+                  onClick={() => setIsAddAccountModalOpen(false)}
+                  style={{
+                    height: '38px',
+                    padding: '0 16px',
+                    borderRadius: '10px',
+                    background: 'rgba(128, 128, 128, 0.12)',
+                    border: 'none',
+                    color: 'var(--text, #f5f5f7)',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    cursor: 'pointer'
+                  }}
+                  disabled={addLoading}
+                >
                   Cancelar
                 </button>
-                <button type="submit" className="btn btn-primary" disabled={addLoading || !addEmail || !addPassword}>
+                <button
+                  type="submit"
+                  style={{
+                    height: '38px',
+                    padding: '0 18px',
+                    borderRadius: '10px',
+                    background: 'var(--accent, #0071e3)',
+                    border: 'none',
+                    color: '#ffffff',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    cursor: 'pointer'
+                  }}
+                  disabled={addLoading || !addEmail || !addPassword}
+                >
                   {addLoading ? 'Conectando...' : 'Conectar'}
                 </button>
               </div>
@@ -551,26 +1525,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
           </div>
         </div>
       )}
-    </aside>
+    </>
   );
 };
-
-const navItemStyle = (isActive: boolean, isCollapsed: boolean): React.CSSProperties => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: isCollapsed ? 'center' : 'flex-start',
-  gap: '10px',
-  padding: isCollapsed ? '9px' : '8px 10px',
-  borderRadius: '9px',
-  background: isActive ? 'rgba(255,255,255,0.08)' : 'transparent',
-  color: isActive ? '#f1f5f9' : '#64748b',
-  fontSize: '0.82rem',
-  fontWeight: isActive ? '600' : '500',
-  cursor: 'pointer',
-  border: 'none',
-  width: '100%',
-  textAlign: 'left',
-  transition: 'background 0.15s ease, color 0.15s ease',
-  position: 'relative',
-  minHeight: '36px',
-});
