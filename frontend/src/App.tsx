@@ -1,27 +1,24 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense, lazy } from 'react';
 import { UserInfo, api } from './services/api';
 import { accountManager } from './services/accountManager';
 import { Navbar } from './components/Navbar';
 import { Sidebar, ActiveTab } from './components/Sidebar';
 import { LoginView } from './views/LoginView';
-import { DashboardView } from './views/DashboardView';
-import { KanbanView } from './views/KanbanView';
-import { ScannerView } from './views/ScannerView';
-import { CompaniesView } from './views/CompaniesView';
-import { ProposalsView } from './views/ProposalsView';
-import { AgendaView } from './views/AgendaView';
-import { AuditView } from './views/AuditView';
-import { UsersView } from './views/UsersView';
-import { CampaignsView } from './views/CampaignsView';
-import { GoalsView } from './views/GoalsView';
 import { HelpModal } from './components/HelpModal';
-import { UpgradeModal } from './components/UpgradeModal';
 import { CommandPaletteModal } from './components/CommandPaletteModal';
-import { PublicAgreementView } from './views/PublicAgreementView';
-import { SitesView } from './views/SitesView';
-import { TemplatesView } from './views/TemplatesView';
-import { AcceptInviteView } from './views/AcceptInviteView';
 import { permissionsService } from './services/permissionsService';
+
+// ── Lazy-loaded views (cada uma em chunk separado) ────────────────────
+const DashboardView      = lazy(() => import('./views/DashboardView').then(m => ({ default: m.DashboardView })));
+const KanbanView         = lazy(() => import('./views/KanbanView').then(m => ({ default: m.KanbanView })));
+const ScannerView        = lazy(() => import('./views/ScannerView').then(m => ({ default: m.ScannerView })));
+const CompaniesView      = lazy(() => import('./views/CompaniesView').then(m => ({ default: m.CompaniesView })));
+const ProposalsView      = lazy(() => import('./views/ProposalsView').then(m => ({ default: m.ProposalsView })));
+const AgendaView         = lazy(() => import('./views/AgendaView').then(m => ({ default: m.AgendaView })));
+const AuditView          = lazy(() => import('./views/AuditView').then(m => ({ default: m.AuditView })));
+const UsersView          = lazy(() => import('./views/UsersView').then(m => ({ default: m.UsersView })));
+const PublicAgreementView = lazy(() => import('./views/PublicAgreementView').then(m => ({ default: m.PublicAgreementView })));
+const AcceptInviteView   = lazy(() => import('./views/AcceptInviteView').then(m => ({ default: m.AcceptInviteView })));
 
 export const App: React.FC = () => {
   const [user, setUser] = useState<UserInfo | null>(null);
@@ -32,7 +29,6 @@ export const App: React.FC = () => {
   // Modals & UI States
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isHelpOpen, setIsHelpOpen] = useState(false);
-  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
 
   const loadPendingUsersCount = useCallback(async () => {
@@ -118,7 +114,7 @@ export const App: React.FC = () => {
       localStorage.getItem('crm_auth_token') ||
       sessionStorage.getItem('crm_auth_token');
     if (user && token) {
-      accountManager.saveCurrentSession(token, user, 'Efferd LLC');
+      accountManager.saveCurrentSession(token, user);
     }
   }, [user]);
 
@@ -147,13 +143,7 @@ export const App: React.FC = () => {
       setActiveTab('dashboard');
     } else if (activeTab === 'agenda' && !permissionsService.hasPermission(role, 'can_view_agenda')) {
       setActiveTab('dashboard');
-    } else if (activeTab === 'campaigns' && !permissionsService.hasPermission(role, 'can_view_campaigns')) {
-      setActiveTab('dashboard');
-    } else if (activeTab === 'sites' && !permissionsService.hasPermission(role, 'can_view_sites')) {
-      setActiveTab('dashboard');
-    } else if (activeTab === 'templates' && !permissionsService.hasPermission(role, 'can_view_templates')) {
-      setActiveTab('dashboard');
-    } else if ((activeTab === 'scanner' || activeTab === 'goals') && !permissionsService.hasPermission(role, 'can_view_analytics')) {
+    } else if (activeTab === 'scanner' && !permissionsService.hasPermission(role, 'can_view_analytics')) {
       setActiveTab('dashboard');
     }
   }, [user, activeTab]);
@@ -193,12 +183,20 @@ export const App: React.FC = () => {
   const pathname = window.location.pathname;
   if (pathname.startsWith('/aceite/')) {
     const token = pathname.replace('/aceite/', '').split('/')[0];
-    return <PublicAgreementView token={token} />;
+    return (
+      <Suspense fallback={<ViewSkeleton />}>
+        <PublicAgreementView token={token} />
+      </Suspense>
+    );
   }
 
   // Check for accept invite route or supabase invite link (/invite, /accept-invite, or #type=invite)
   if (pathname.startsWith('/invite') || pathname.startsWith('/accept-invite') || window.location.hash.includes('type=invite')) {
-    return <AcceptInviteView onLoginSuccess={(loggedInUser) => setUser(loggedInUser)} />;
+    return (
+      <Suspense fallback={<ViewSkeleton />}>
+        <AcceptInviteView onLoginSuccess={(loggedInUser) => setUser(loggedInUser)} />
+      </Suspense>
+    );
   }
 
   if (initializing) {
@@ -218,7 +216,6 @@ export const App: React.FC = () => {
         userRole={user.role}
         pendingUsersCount={pendingUsersCount}
         onOpenHelp={() => setIsHelpOpen(true)}
-        onOpenUpgrade={() => setIsUpgradeOpen(true)}
         onOpenCommandPalette={() => setIsCommandPaletteOpen(true)}
         isCollapsed={isSidebarCollapsed}
         onToggleCollapse={() => setIsSidebarCollapsed(prev => !prev)}
@@ -235,33 +232,39 @@ export const App: React.FC = () => {
         />
 
         <main className="main-content" style={{ flex: 1, paddingTop: '12px' }}>
-          {activeTab === 'dashboard' && <DashboardView setActiveTab={setActiveTab} />}
-          {activeTab === 'kanban' && <KanbanView />}
-          {activeTab === 'scanner' && <ScannerView onNavigate={(tab) => setActiveTab(tab)} />}
-          {activeTab === 'companies' && <CompaniesView />}
-          {activeTab === 'proposals' && <ProposalsView />}
-          {activeTab === 'agenda' && <AgendaView />}
-          {activeTab === 'campaigns' && <CampaignsView />}
-          {activeTab === 'goals' && <GoalsView />}
-          {activeTab === 'users' && <UsersView onRefreshPendingCount={loadPendingUsersCount} />}
-          {activeTab === 'audit' && <AuditView />}
-          {activeTab === 'sites' && <SitesView />}
-          {activeTab === 'templates' && <TemplatesView onNavigate={(tab) => setActiveTab(tab as any)} />}
+          <Suspense fallback={<ViewSkeleton />}>
+            {activeTab === 'dashboard' && <DashboardView setActiveTab={setActiveTab} />}
+            {activeTab === 'kanban' && <KanbanView />}
+            {activeTab === 'scanner' && <ScannerView onNavigate={(tab) => setActiveTab(tab)} />}
+            {activeTab === 'companies' && <CompaniesView />}
+            {activeTab === 'proposals' && <ProposalsView />}
+            {activeTab === 'agenda' && <AgendaView />}
+            {activeTab === 'users' && <UsersView onRefreshPendingCount={loadPendingUsersCount} />}
+            {activeTab === 'audit' && <AuditView />}
+          </Suspense>
         </main>
       </div>
 
       {/* Global Modals */}
       <HelpModal isOpen={isHelpOpen} onClose={() => setIsHelpOpen(false)} />
-      <UpgradeModal isOpen={isUpgradeOpen} onClose={() => setIsUpgradeOpen(false)} />
       <CommandPaletteModal
         isOpen={isCommandPaletteOpen}
         onClose={() => setIsCommandPaletteOpen(false)}
         onSelectTab={(tab) => setActiveTab(tab)}
         onOpenHelp={() => setIsHelpOpen(true)}
-        onOpenUpgrade={() => setIsUpgradeOpen(true)}
       />
     </div>
   );
 };
+
+// ── Skeleton fallback para Suspense ──────────────────────────────────
+const ViewSkeleton: React.FC = () => (
+  <div style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+    <div className="skeleton" style={{ height: '32px', width: '240px', borderRadius: '8px' }} />
+    <div className="skeleton" style={{ height: '120px', borderRadius: '12px' }} />
+    <div className="skeleton" style={{ height: '80px', borderRadius: '12px' }} />
+    <div className="skeleton" style={{ height: '80px', borderRadius: '12px' }} />
+  </div>
+);
 
 export default App;

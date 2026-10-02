@@ -4,9 +4,11 @@ spring:
 
   # ==================== BANCO DE DADOS ====================
   datasource:
-    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST:aws-0-us-east-2.pooler.supabase.com}:${DB_PORT:6543}/${DB_NAME:postgres}${DB_PARAMS:?sslmode=require&prepareThreshold=0}}
-    username: ${DB_USER:postgres.xfhaqicwyyliesisfrjq}
-    password: ${DB_PASSWORD:@Biel.2006123}
+    # SPRING_DATASOURCE_URL sobrescreve toda a URL (útil em Render/Railway).
+    # Se não definido, monta a partir das variáveis individuais.
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${DB_HOST}:${DB_PORT:6543}/${DB_NAME:postgres}${DB_PARAMS:?sslmode=require&prepareThreshold=0}}
+    username: ${DB_USER}
+    password: ${DB_PASSWORD}
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 5
@@ -18,8 +20,6 @@ spring:
   # ==================== JPA / HIBERNATE ====================
   jpa:
     hibernate:
-      # validate: Hibernate verifica se o schema bate com as entidades, sem alterar nada
-      # (Flyway que cuida das alterações de schema)
       ddl-auto: validate
     show-sql: false
     properties:
@@ -33,14 +33,11 @@ spring:
     enabled: true
     baseline-on-migrate: true
     locations: classpath:db/migration
-    # Cada script SQL fica em: src/main/resources/db/migration/
-    # Nomeados como: V1__create_users.sql, V2__create_leads.sql, etc.
 
 # ==================== SERVIDOR ====================
 server:
   port: ${SERVER_PORT:8080}
   error:
-    # Não expõe detalhes de erro em produção
     include-message: never
     include-stacktrace: never
 
@@ -50,27 +47,30 @@ springdoc:
     path: /v3/api-docs
   swagger-ui:
     path: /swagger-ui.html
-    # Agrupa os endpoints por tag (módulo)
     tags-sorter: alpha
     operations-sorter: alpha
 
 # ==================== JWT ====================
 app:
   jwt:
-    secret: ${JWT_SECRET:chave-secreta-local-minimo-256-bits-troque-em-producao}
-    # Tempo de vida do access token (24 horas em ms em dev)
+    secret: ${JWT_SECRET}
     access-token-expiration: ${JWT_ACCESS_EXPIRATION:86400000}
-    # Tempo de vida do refresh token (7 dias em ms)
     refresh-token-expiration: ${JWT_REFRESH_EXPIRATION:604800000}
   google:
     places:
       api-key: ${GOOGLE_MAPS_API_KEY:}
+  cors:
+    allowed-origins: ${CORS_ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}
+
+# ==================== RATE LIMIT ====================
+bucket4j:
+  enabled: true
 
 # ==================== LOGGING ====================
 logging:
   level:
-    com.crmscanner: DEBUG
-    org.springframework.security: INFO
+    com.crmscanner: INFO
+    org.springframework.security: WARN
     org.flywaydb: INFO
   pattern:
     console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"

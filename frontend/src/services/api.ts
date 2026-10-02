@@ -12,6 +12,7 @@ export interface UserInfo {
   name: string;
   email: string;
   role: string;
+  companyName?: string;
   status?: string;
   active?: boolean;
   createdAt?: string;
@@ -424,8 +425,8 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   };
 
   const controller = new AbortController();
-  // Permite até 75s para rotas de autenticação (devido a cold start do Render) e 45s para outras
-  const timeoutMs = endpoint.startsWith('/auth') ? 75000 : 45000;
+  // Permite até 60s para timeout com tratamento elegante
+  const timeoutMs = endpoint.startsWith('/auth') ? 60000 : 45000;
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
   let response: Response;
@@ -437,7 +438,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     });
   } catch (err: any) {
     if (err.name === 'AbortError') {
-      throw new Error(`O servidor na nuvem demorou para responder (cold start). Por favor, tente novamente.`);
+      throw new Error('O servidor demorou para responder. Por favor, tente novamente.');
+    }
+    if (err instanceof TypeError && err.message.toLowerCase().includes('failed to fetch')) {
+      throw new Error('Sem conexão com o servidor. Verifique sua internet ou tente novamente.');
     }
     throw err;
   } finally {
@@ -458,8 +462,20 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   }
 
   if (!response.ok) {
+    if (response.status === 401) {
+      throw new Error('E-mail ou senha incorretos. Verifique e tente novamente.');
+    }
+    if (response.status === 429) {
+      throw new Error('Muitas tentativas consecutivas. Por favor, aguarde alguns instantes.');
+    }
+    if (response.status === 404 && endpoint.startsWith('/auth')) {
+      throw new Error('E-mail não cadastrado no sistema.');
+    }
+    if (response.status >= 500) {
+      throw new Error('O servidor está temporariamente indisponível. Tente novamente em instantes.');
+    }
     const errorData = await response.json().catch(() => ({}));
-    throw new Error(errorData.message || errorData.detail || `Erro na requisição: ${response.statusText}`);
+    throw new Error(errorData.message || errorData.detail || 'Ocorreu um erro ao processar sua solicitação.');
   }
 
   if (response.status === 204) {
@@ -731,23 +747,12 @@ export const api = {
           localStorage.setItem('lumeo_cached_users', JSON.stringify(list));
           return list;
         }
-      } catch (err: any) {}
+      } catch {}
       const cached = localStorage.getItem('lumeo_cached_users');
       if (cached) {
-        try {
-          return JSON.parse(cached) as UserInfo[];
-        } catch {}
+        try { return JSON.parse(cached) as UserInfo[]; } catch {}
       }
-      return [
-        {
-          id: 1,
-          name: 'Gabriel Castro',
-          email: 'gabrielcastro.dev01@gmail.com',
-          role: 'ADMIN',
-          active: true,
-          status: 'ACTIVE'
-        }
-      ];
+      return [];
     },
     listPending: () => request<UserInfo[]>('/users/pending'),
     countPending: () => request<number>('/users/pending/count'),
@@ -788,47 +793,12 @@ export const api = {
           localStorage.setItem('lumeo_cached_sites', JSON.stringify(data));
           return data;
         }
-      } catch (err: any) {}
+      } catch {}
       const cached = localStorage.getItem('lumeo_cached_sites');
       if (cached) {
-        try {
-          return JSON.parse(cached) as Site[];
-        } catch {}
+        try { return JSON.parse(cached) as Site[]; } catch {}
       }
-      const initialSites: Site[] = [
-        {
-          id: 1,
-          name: 'Portal Dra. Camila Silveira Odontologia',
-          clientName: 'Dra. Camila Silveira',
-          url: 'https://dracamilasilveira.com.br',
-          thumbnail: 'https://images.unsplash.com/photo-1629909613654-28e377c37b09?w=600&auto=format&fit=crop&q=80',
-          deliveryDate: '2026-08-15',
-          status: 'Online',
-          createdAt: '2026-08-15T10:00:00Z',
-        },
-        {
-          id: 2,
-          name: 'Advocacia & Consultoria Jurídica Rocha',
-          clientName: 'Dr. Roberto Rocha',
-          url: 'https://rochajuridico.adv.br',
-          thumbnail: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&auto=format&fit=crop&q=80',
-          deliveryDate: '2026-09-02',
-          status: 'Online',
-          createdAt: '2026-09-02T10:00:00Z',
-        },
-        {
-          id: 3,
-          name: 'Studio Arquitetura & Interiores Forma',
-          clientName: 'Mariana Duarte Arquitetura',
-          url: 'https://formaarquitetura.com.br',
-          thumbnail: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=600&auto=format&fit=crop&q=80',
-          deliveryDate: '2026-09-18',
-          status: 'Em desenvolvimento',
-          createdAt: '2026-09-18T10:00:00Z',
-        }
-      ];
-      localStorage.setItem('lumeo_cached_sites', JSON.stringify(initialSites));
-      return initialSites;
+      return [];
     },
     get: (id: number) => request<Site>(`/sites/${id}`),
     create: async (data: Partial<Site>): Promise<Site> => {
@@ -838,7 +808,7 @@ export const api = {
           method: 'POST',
           body: JSON.stringify(data),
         });
-      } catch (err) {}
+      } catch {}
       const current = await api.sites.list();
       const siteItem: Site = created || {
         id: Date.now(),
@@ -862,7 +832,7 @@ export const api = {
           method: 'PUT',
           body: JSON.stringify(data),
         });
-      } catch (err) {}
+      } catch {}
       const current = await api.sites.list();
       const updatedList = current.map(s => s.id === id ? { ...s, ...(updatedRes || data) } : s);
       localStorage.setItem('lumeo_cached_sites', JSON.stringify(updatedList));
@@ -871,7 +841,7 @@ export const api = {
     delete: async (id: number): Promise<void> => {
       try {
         await request<void>(`/sites/${id}`, { method: 'DELETE' });
-      } catch (err) {}
+      } catch {}
       const current = await api.sites.list();
       const updatedList = current.filter(s => s.id !== id);
       localStorage.setItem('lumeo_cached_sites', JSON.stringify(updatedList));
@@ -883,50 +853,12 @@ export const api = {
           localStorage.setItem('lumeo_cached_templates', JSON.stringify(data));
           return data;
         }
-      } catch (err) {}
+      } catch {}
       const cached = localStorage.getItem('lumeo_cached_templates');
       if (cached) {
-        try {
-          return JSON.parse(cached) as SiteEmailTemplate[];
-        } catch {}
+        try { return JSON.parse(cached) as SiteEmailTemplate[]; } catch {}
       }
-      const initialTemplates: SiteEmailTemplate[] = [
-        {
-          id: 1,
-          siteId: 1,
-          siteName: 'LeadScope Landing Page Principal',
-          name: 'Boas-Vindas & Qualificação Imediata',
-          triggerEvent: 'LEAD_CAPTURED',
-          subject: 'Recebemos seu contato - LeadScope Inteligência Comercial',
-          bodyHtml: '<h2>Olá {{lead_name}},</h2><p>Recebemos seus dados através de {{site_name}}.</p><p>Um de nossos especialistas entrará em contato em breve.</p>',
-          active: true,
-          createdAt: '2026-09-20T10:00:00Z',
-        },
-        {
-          id: 2,
-          siteId: 1,
-          siteName: 'LeadScope Landing Page Principal',
-          name: 'Apresentação Comercial & Agendamento',
-          triggerEvent: 'STATUS_CHANGED',
-          subject: 'Sua demonstração exclusiva da plataforma LeadScope',
-          bodyHtml: '<h2>Olá {{lead_name}},</h2><p>Identificamos um forte alinhamento com seu negócio.</p><p>Acesse o link para escolher o melhor horário de demonstração.</p>',
-          active: true,
-          createdAt: '2026-09-20T10:00:00Z',
-        },
-        {
-          id: 3,
-          siteId: 2,
-          siteName: 'Portal Corporativo B2B',
-          name: 'Follow-up de Proposta Comercial',
-          triggerEvent: 'LEAD_CAPTURED',
-          subject: 'Proposta Corporativa LeadScope B2B',
-          bodyHtml: '<h2>Prezado(a) {{lead_name}},</h2><p>Agradecemos o interesse em nossas soluções corporativas.</p>',
-          active: true,
-          createdAt: '2026-09-20T10:00:00Z',
-        }
-      ];
-      localStorage.setItem('lumeo_cached_templates', JSON.stringify(initialTemplates));
-      return initialTemplates;
+      return [];
     },
     listTemplates: async (siteId: number): Promise<SiteEmailTemplate[]> => {
       try {

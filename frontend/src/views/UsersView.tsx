@@ -90,57 +90,13 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
         api.users.listAll().catch(() => []),
         api.users.listPending().catch(() => [])
       ]);
-      let usersList: UserInfo[] = (allRes && allRes.length > 0) ? allRes : [
-        {
-          id: 1,
-          name: 'Gabriel Castro',
-          email: 'gabrielcastro.dev01@gmail.com',
-          role: 'ADMIN',
-          active: true,
-          status: 'ACTIVE'
-        }
-      ];
-      const hasGabriel = usersList.some(u =>
-        (u.name && u.name.toLowerCase().includes('gabriel castro')) ||
-        (u.email && u.email.toLowerCase().trim() === 'gabrielcastro.dev01@gmail.com')
-      );
-      if (!hasGabriel) {
-        usersList = [
-          {
-            id: 1,
-            name: 'Gabriel Castro',
-            email: 'gabrielcastro.dev01@gmail.com',
-            role: 'ADMIN',
-            active: true,
-            status: 'ACTIVE'
-          },
-          ...usersList
-        ];
-      } else {
-        usersList = usersList.map(u => {
-          if ((u.name && u.name.toLowerCase().includes('gabriel castro')) ||
-              (u.email && u.email.toLowerCase().trim() === 'gabrielcastro.dev01@gmail.com')) {
-            return { ...u, role: 'ADMIN', active: true, status: 'ACTIVE' };
-          }
-          return u;
-        });
-      }
-      setAllUsers(usersList);
+      setAllUsers(allRes || []);
       setPendingUsers(pendingRes || []);
       if (onRefreshPendingCount) {
         onRefreshPendingCount();
       }
     } catch (err: any) {
-      setAllUsers([
-        {
-          id: 1,
-          name: 'Gabriel Castro',
-          email: 'gabrielcastro.dev01@gmail.com',
-          role: 'ADMIN',
-          active: true,
-          status: 'ACTIVE'
-        }
-      ]);
+      setAllUsers([]);
     } finally {
       setLoading(false);
     }
@@ -179,19 +135,15 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
     return email;
   };
 
-  // Função para verificar se é o usuário master intocável Gabriel Castro
-  const isGabrielCastro = (u?: { name?: string; email?: string } | null) => {
-    if (!u) return false;
-    const email = (u.email || '').toLowerCase().trim();
-    const name = (u.name || '').toLowerCase().trim();
-    return email === 'gabrielcastro.dev01@gmail.com' ||
-           (name.includes('gabriel castro') && (email.includes('gabrielcastro') || email.includes('gabriel@')));
+  // Função para verificar se um usuário é protegido contra alteração direta
+  const isProtectedUser = (_u?: { role?: string; id?: number } | null) => {
+    return false;
   };
 
-  // Alterar Cargo de um Usuário (Admin pode trocar de qualquer um, exceto Gabriel Castro)
+  // Alterar Cargo de um Usuário
   const handleChangeUserRole = async (targetUser: UserInfo, newRole: string) => {
-    if (isGabrielCastro(targetUser)) {
-      showToast('O usuário master Gabriel Castro é intocável e seu cargo não pode ser alterado.', 'error');
+    if (isProtectedUser(targetUser)) {
+      showToast('Este usuário possui cargo protegido do sistema.', 'error');
       return;
     }
 
@@ -262,11 +214,11 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
     }
   };
 
-  // Excluir Usuário (Apenas Gabriel Castro é intocável. admin@empresa.com pode ser excluído)
+  // Excluir Usuário
   const handleConfirmDelete = async () => {
     if (!userToDelete) return;
-    if (isGabrielCastro(userToDelete)) {
-      showToast('O usuário master Gabriel Castro é intocável e não pode ser excluído.', 'error');
+    if (isProtectedUser(userToDelete)) {
+      showToast('Este usuário é protegido e não pode ser excluído.', 'error');
       setUserToDelete(null);
       return;
     }
@@ -483,7 +435,7 @@ export const UsersView: React.FC<UsersViewProps> = ({ onRefreshPendingCount }) =
                   </tr>
                 ) : (
                   allUsers.map(user => {
-                    const isUntouchable = isGabrielCastro(user);
+                    const isUntouchable = isProtectedUser(user);
 
                     return (
                       <tr key={user.id} style={{ borderBottom: '1px solid var(--border-subtle)', transition: 'background 0.15s' }}>

@@ -77,11 +77,24 @@ class CompanyServiceTest {
     }
 
     @Test
-    @DisplayName("Deve lançar BusinessException ao tentar cadastrar empresa com CNPJ duplicado")
-    void shouldThrowExceptionWhenCnpjAlreadyExists() {
+    @DisplayName("Deve retornar empresa existente de forma idempotente quando CNPJ já existir")
+    void shouldReturnExistingCompanyWhenCnpjAlreadyExists() {
         when(companyRepository.existsByCnpj("12.345.678/0001-99")).thenReturn(true);
 
-        assertThrows(BusinessException.class, () -> companyService.create(request));
+        Company existingCompany = new Company();
+        existingCompany.setId(99L);
+        existingCompany.setCnpj("12.345.678/0001-99");
+        existingCompany.setRazaoSocial("Empresa Teste LTDA");
+        existingCompany.setActive(true);
+        existingCompany.setIsClient(false);
+
+        when(companyRepository.findByCnpj("12.345.678/0001-99")).thenReturn(java.util.Optional.of(existingCompany));
+
+        CompanyResponse response = companyService.create(request);
+
+        assertNotNull(response);
+        assertEquals(99L, response.id());
+        assertEquals("Empresa Teste LTDA", response.razaoSocial());
         verify(companyRepository, never()).save(any(Company.class));
     }
 }

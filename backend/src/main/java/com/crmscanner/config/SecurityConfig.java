@@ -26,6 +26,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final com.crmscanner.auth.filter.LoginRateLimitFilter loginRateLimitFilter;
     private final AppUserDetailsService userDetailsService;
 
     // ——— Endpoints públicos (sem autenticação) ———
@@ -63,6 +64,7 @@ public class SecurityConfig {
                 })
             )
             .authenticationProvider(authenticationProvider())
+            .addFilterBefore(loginRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

@@ -291,11 +291,11 @@ export const TemplatesView: React.FC<TemplatesViewProps> = ({ onNavigate }) => {
   // Substituição de variáveis simuladas para o preview
   const getRenderedPreviewHtml = (rawHtml: string) => {
     return rawHtml
-      .replace(/{{lead_name}}/g, 'Gabriel Castro')
-      .replace(/{{lead_email}}/g, 'gabrielcastro.dev01@gmail.com')
+      .replace(/{{lead_name}}/g, 'Contato Exemplo')
+      .replace(/{{lead_email}}/g, 'contato@empresa.com.br')
       .replace(/{{lead_phone}}/g, '(11) 98765-4321')
-      .replace(/{{site_name}}/g, selectedTemplate?.siteName || 'Portal LeadScope')
-      .replace(/{{empresa}}/g, 'Lumeo Tech')
+      .replace(/{{site_name}}/g, selectedTemplate?.siteName || 'Portal Comercial')
+      .replace(/{{empresa}}/g, 'Lumeo')
       .replace(/{{score}}/g, '88');
   };
 
@@ -702,12 +702,12 @@ export const TemplatesView: React.FC<TemplatesViewProps> = ({ onNavigate }) => {
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <span style={{ color: 'var(--text-muted)', width: '60px' }}>Para:</span>
-                    <span style={{ color: '#60a5fa' }}>Gabriel Castro &lt;gabrielcastro.dev01@gmail.com&gt;</span>
+                    <span style={{ color: '#60a5fa' }}>Contato Exemplo &lt;contato@empresa.com.br&gt;</span>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
                     <span style={{ color: 'var(--text-muted)', width: '60px' }}>Assunto:</span>
                     <span style={{ color: '#ffffff', fontWeight: '700' }}>
-                      {selectedTemplate.subject.replace(/{{lead_name}}/g, 'Gabriel Castro').replace(/{{site_name}}/g, selectedTemplate.siteName || 'Portal')}
+                      {selectedTemplate.subject.replace(/{{lead_name}}/g, 'Contato Exemplo').replace(/{{site_name}}/g, selectedTemplate.siteName || 'Portal')}
                     </span>
                   </div>
                 </div>
@@ -778,8 +778,8 @@ export const TemplatesView: React.FC<TemplatesViewProps> = ({ onNavigate }) => {
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px' }}>
                   {[
-                    { tag: '{{lead_name}}', desc: 'Nome completo do lead capturado', sample: 'Gabriel Castro' },
-                    { tag: '{{lead_email}}', desc: 'E-mail informado no formulário', sample: 'gabrielcastro.dev01@gmail.com' },
+                    { tag: '{{lead_name}}', desc: 'Nome completo do lead capturado', sample: 'Nome do Lead' },
+                    { tag: '{{lead_email}}', desc: 'E-mail informado no formulário', sample: 'email@empresa.com' },
                     { tag: '{{lead_phone}}', desc: 'Telefone / WhatsApp com DDD', sample: '(11) 98765-4321' },
                     { tag: '{{site_name}}', desc: 'Nome do site ou landing page', sample: selectedTemplate.siteName || 'LeadScope' },
                     { tag: '{{empresa}}', desc: 'Empresa do lead enriquecida via CNPJ', sample: 'Lumeo Tech' },

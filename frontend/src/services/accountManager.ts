@@ -21,8 +21,9 @@ export const accountManager = {
     }
   },
 
-  saveCurrentSession(token: string, user: UserInfo, workspaceName: string = 'Efferd LLC') {
+  saveCurrentSession(token: string, user: UserInfo, workspaceName?: string) {
     if (!token || !user || !user.email) return;
+    const resolvedWorkspaceName = workspaceName || user.companyName || 'Lumeo';
 
     const accounts = this.getAccounts();
     const existingIndex = accounts.findIndex(
@@ -32,7 +33,7 @@ export const accountManager = {
     const updatedAccount: StoredAccount = {
       token,
       user,
-      workspaceName,
+      workspaceName: resolvedWorkspaceName,
       lastActiveAt: Date.now()
     };
 
@@ -71,13 +72,14 @@ export const accountManager = {
     return accounts;
   },
 
-  async loginNewAccount(email: string, password: string, workspaceName: string = 'Efferd LLC'): Promise<StoredAccount> {
+  async loginNewAccount(email: string, password: string, workspaceName?: string): Promise<StoredAccount> {
     const res = await api.auth.login({ email, password });
-    this.saveCurrentSession(res.accessToken, res.user, workspaceName);
+    const resolvedName = workspaceName || res.user.companyName || 'Lumeo';
+    this.saveCurrentSession(res.accessToken, res.user, resolvedName);
     return {
       token: res.accessToken,
       user: res.user,
-      workspaceName,
+      workspaceName: resolvedName,
       lastActiveAt: Date.now()
     };
   }
